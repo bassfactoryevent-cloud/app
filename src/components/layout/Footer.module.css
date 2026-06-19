@@ -1,0 +1,114 @@
+.footerWrapper {
+  background-color: var(--color-black);
+  color: var(--color-white);
+  padding: var(--space-6) var(--space-3) var(--space-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: auto; /* Pushes footer to bottom if page content is short */
+}
+
+.footerContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.brandSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 300px;
+}
+
+.brandDescription {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  opacity: 0.7;
+  margin-top: var(--space-1);
+}
+
+.linksSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.linksTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+  color: var(--color-white);
+}
+
+.footerLink {
+  color: var(--color-white);
+  opacity: 0.7;
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  width: fit-content;
+}
+
+.footerLink:hover {
+  opacity: 1;
+  color: var(--color-magenta);
+  transform: translateX(4px);
+}
+
+.bottomBar {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.socialLinks {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.socialIcon {
+  color: var(--color-white);
+  transition: color 0.2s ease;
+}
+
+.socialIcon:hover {
+  color: var(--color-magenta);
+}
+
+/* Opcional: Filtro para invertir el logo si la fuente es negra pero el footer siempre es oscuro */
+.logoImage {
+  filter: brightness(0) invert(1);
+}
+
+@media (max-width: 900px) {
+  .footerContainer {
+    grid-template-columns: 1fr 1fr;
+  }
+  .brandSection {
+    grid-column: span 2;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .footerContainer {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  .brandSection {
+    grid-column: span 1;
+  }
+  .bottomBar {
+    flex-direction: column;
+    gap: var(--space-3);
+    text-align: center;
+  }
+}
