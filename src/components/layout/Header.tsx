@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./Header.module.css";
-import logo from "../../../public/bassfactorylogo1.png";
 
 export default function Header() {
   return (
@@ -27,7 +26,7 @@ export default function Header() {
         <div className={styles.logoContainer}>
           <Link href="/">
             <Image
-              src={logo}
+              src="/bassfactorylogo1.png"
               alt="Bassfactory Logo"
               width={180}
               height={45}
