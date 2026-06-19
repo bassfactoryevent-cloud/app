@@ -46,10 +46,10 @@
 
 /* --- Main Header --- */
 .mainHeader {
-  background-color: rgba(255, 255, 255, 0.85);
+  background-color: rgba(17, 17, 17, 0.95); /* Negro Profundo translúcido */
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(17, 17, 17, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   height: 72px;
   display: flex;
   align-items: center;
@@ -60,8 +60,7 @@
 
 @media (prefers-color-scheme: dark) {
   .mainHeader {
-    background-color: rgba(10, 10, 10, 0.85);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: rgba(10, 10, 10, 0.95);
   }
 }
 
@@ -84,7 +83,7 @@
 }
 
 .navLink {
-  color: var(--color-black);
+  color: var(--color-white); /* Texto blanco para contrastar con fondo negro */
   font-weight: 600;
   font-size: 0.9375rem;
   text-decoration: none;
@@ -121,7 +120,7 @@
 .cartBtn {
   background: transparent;
   border: none;
-  color: var(--color-black);
+  color: var(--color-white); /* Ícono de carrito en blanco */
   cursor: pointer;
   display: flex;
   align-items: center;
