@@ -1,0 +1,149 @@
+.headerWrapper {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Top Header --- */
+.topHeader {
+  background-color: var(--color-black);
+  color: var(--color-white);
+  padding: 6px var(--space-3);
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  letter-spacing: 0.03em;
+}
+
+.topHeaderLeft {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  opacity: 0.8;
+}
+
+.topHeaderRight {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.topLink {
+  color: inherit;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.topLink:hover {
+  opacity: 1;
+  color: var(--color-magenta);
+}
+
+/* --- Main Header --- */
+.mainHeader {
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(17, 17, 17, 0.08);
+  height: 72px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-3);
+  justify-content: space-between;
+  transition: all 0.3s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .mainHeader {
+    background-color: rgba(10, 10, 10, 0.85);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.logoContainer:hover {
+  opacity: 0.8;
+}
+
+/* Navigation */
+.nav {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.navLink {
+  color: var(--color-black);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  position: relative;
+}
+
+.navLink::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background-color: var(--color-magenta);
+  transition: width 0.2s ease;
+}
+
+.navLink:hover {
+  color: var(--color-magenta);
+}
+
+.navLink:hover::after {
+  width: 100%;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.cartBtn {
+  background: transparent;
+  border: none;
+  color: var(--color-black);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.cartBtn:hover {
+  background-color: rgba(17, 17, 17, 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  .cartBtn:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.loginBtn {
+  height: 40px;
+  padding: 0 var(--space-3);
+  font-size: 0.875rem;
+}
