@@ -1,9 +1,9 @@
 .footerWrapper {
-  background-color: var(--color-black);
-  color: var(--color-white);
+  background-color: #050505; /* Fondo oscuro absoluto para diferenciarlo del body */
+  color: #FFFFFF;
   padding: var(--space-6) var(--space-3) var(--space-4);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  margin-top: auto; /* Pushes footer to bottom if page content is short */
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: auto;
 }
 
 .footerContainer {
@@ -27,6 +27,7 @@
   line-height: 1.6;
   opacity: 0.7;
   margin-top: var(--space-1);
+  color: #FFFFFF;
 }
 
 .linksSection {
@@ -39,12 +40,11 @@
   font-size: 1rem;
   font-weight: 600;
   margin-bottom: var(--space-2);
-  color: var(--color-white);
+  color: #FFFFFF;
 }
 
 .footerLink {
-  color: var(--color-white);
-  opacity: 0.7;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 0.875rem;
   text-decoration: none;
   transition: all 0.2s ease;
@@ -52,7 +52,6 @@
 }
 
 .footerLink:hover {
-  opacity: 1;
   color: var(--color-magenta);
   transform: translateX(4px);
 }
@@ -66,7 +65,7 @@
   justify-content: space-between;
   align-items: center;
   font-size: 0.75rem;
-  opacity: 0.6;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .socialLinks {
@@ -75,17 +74,12 @@
 }
 
 .socialIcon {
-  color: var(--color-white);
+  color: rgba(255, 255, 255, 0.8);
   transition: color 0.2s ease;
 }
 
 .socialIcon:hover {
   color: var(--color-magenta);
-}
-
-/* Opcional: Filtro para invertir el logo si la fuente es negra pero el footer siempre es oscuro */
-.logoImage {
-  filter: brightness(0) invert(1);
 }
 
 @media (max-width: 900px) {

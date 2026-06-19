@@ -18,7 +18,6 @@ export default function Footer() {
               width={160}
               height={40}
               style={{ objectFit: "contain" }}
-              className={styles.logoImage}
             />
           </Link>
           <p className={styles.brandDescription}>
