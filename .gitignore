@@ -1,0 +1,10 @@
+# Archivos locales de configuración (NO SUBIR)
+.project_secrets.md
+.env*.local
+
+# Next.js / Node
+node_modules/
+.next/
+out/
+build/
+.DS_Store
