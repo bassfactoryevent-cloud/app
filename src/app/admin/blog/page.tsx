@@ -3,11 +3,21 @@ import { createClient } from "@/utils/supabase/server";
 import { PlusCircle, Edit, Trash2 } from "lucide-react";
 
 export default async function AdminBlogList() {
-  const supabase = await createClient();
-  const { data: posts, error } = await supabase
-    .from("posts")
-    .select("*")
-    .order("created_at", { ascending: false });
+  let posts: any[] | null = [];
+  let errorMsg = null;
+
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("posts")
+      .select("*")
+      .order("created_at", { ascending: false });
+    
+    posts = data;
+    if (error) errorMsg = error.message;
+  } catch (err: any) {
+    errorMsg = `System Error: ${err.message} | URL: ${process.env.NEXT_PUBLIC_SUPABASE_URL ? "Exists" : "Missing"} | KEY: ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "Exists" : "Missing"}`;
+  }
 
   return (
     <div>
@@ -32,7 +42,11 @@ export default async function AdminBlogList() {
         </Link>
       </div>
 
-      {error && <div style={{ color: 'red' }}>Error cargando artículos: {error.message}</div>}
+      {errorMsg && (
+        <div style={{ backgroundColor: 'rgba(255,0,0,0.1)', color: 'red', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '2rem' }}>
+          <strong>Error cargando artículos:</strong> {errorMsg}
+        </div>
+      )}
 
       <div style={{ backgroundColor: 'var(--color-white)', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)', overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
