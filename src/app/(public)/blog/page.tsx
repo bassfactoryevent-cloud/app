@@ -55,7 +55,6 @@ export default async function BlogFeed() {
                   flexDirection: 'column',
                   textDecoration: 'none',
                   color: 'inherit',
-                  group: 'article'
                 }}
                 className="blog-card"
               >
