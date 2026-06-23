@@ -35,7 +35,7 @@ export default async function PublicDjsPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '2rem' }}>
         {djs?.map((dj: any) => (
           <Link key={dj.id} href={`/djs/${dj.slug}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-            <div style={{ position: 'relative', height: '400px', borderRadius: '1rem', overflow: 'hidden', cursor: 'pointer', group: 'true' }}>
+            <div style={{ position: 'relative', height: '400px', borderRadius: '1rem', overflow: 'hidden', cursor: 'pointer' }} className="group">
               {dj.image_url ? (
                 <Image src={dj.image_url} alt={dj.stage_name} fill style={{ objectFit: 'cover', transition: 'transform 0.5s ease' }} className="dj-image" />
               ) : (
