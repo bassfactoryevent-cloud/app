@@ -44,7 +44,7 @@ export default async function MerchStorefront() {
           const primaryImage = product.merch_product_images?.find((img: any) => img.is_primary)?.image_url || product.merch_product_images?.[0]?.image_url;
 
           return (
-            <Link key={product.id} href={`/merch/${product.slug}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block', group: 'true' }}>
+            <Link key={product.id} href={`/merch/${product.slug}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
               <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', transition: 'all 0.3s ease', cursor: 'pointer' }}
                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}
                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'; }}>
