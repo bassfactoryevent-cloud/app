@@ -4,9 +4,6 @@ import { Megaphone, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { addAdToCampaign, deleteAd, updateCampaign } from "../actions";
 import Image from "next/image";
-import UploadFileButton from "@/components/admin/UploadFileButton"; // We'll assume we can build one if not existing, wait, does UploadFileButton exist?
-// Let's use a standard input type="text" for now for image_url, or a simple form if we don't have a generic uploader. I'll use a text input for the URL since the media bucket logic is handled elsewhere.
-// Wait, I can create an AdsImageUpload component.
 
 export default async function CampaignDetailsPage({ params }: { params: { id: string } }) {
   const supabase = await createClient();
