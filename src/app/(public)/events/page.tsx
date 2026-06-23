@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
+import AdBanner from "@/components/AdBanner";
 import { Calendar, MapPin, ArrowRight } from "lucide-react";
 
 export const metadata = {
@@ -23,6 +24,10 @@ export default async function EventsPage() {
         <h1 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '-0.02em' }}>Próximos Eventos</h1>
         <p style={{ fontSize: '1.25rem', opacity: 0.7, maxWidth: '600px', margin: '0 auto' }}>Reserva tus entradas para los mejores shows y fiestas de la escena.</p>
       </header>
+
+      <div style={{ margin: '0 auto 4rem auto', maxWidth: '800px', width: '100%' }}>
+        <AdBanner placementName="events_sidebar" />
+      </div>
 
       {(!events || events.length === 0) ? (
         <div style={{ textAlign: 'center', padding: '4rem', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>

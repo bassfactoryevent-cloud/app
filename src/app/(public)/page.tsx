@@ -1,4 +1,5 @@
 import styles from "./page.module.css";
+import AdBanner from "@/components/AdBanner";
 
 export default function Home() {
   return (
@@ -18,6 +19,10 @@ export default function Home() {
           <button className="btn btn-secondary">
             Acceso DJs
           </button>
+        </div>
+
+        <div style={{ margin: '3rem auto', maxWidth: '800px', width: '100%' }}>
+          <AdBanner placementName="home_hero" />
         </div>
 
         <div className={styles.featuresGrid}>
