@@ -25,7 +25,7 @@ export default async function AdBanner({ placementName, className = "" }: AdBann
     .limit(1);
 
   if (!ads || ads.length === 0) return null;
-  const ad = ads[0];
+  const ad = ads[0] as any;
 
   // If there's an end date, make sure campaign is still active date-wise
   if (ad.ad_campaigns.end_date) {
