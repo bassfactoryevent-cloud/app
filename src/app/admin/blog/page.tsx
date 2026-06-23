@@ -23,23 +23,43 @@ export default async function AdminBlogList() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1>Gestión de Blog</h1>
-        <Link 
-          href="/admin/blog/new" 
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '0.5rem', 
-            backgroundColor: 'var(--color-magenta)', 
-            color: 'white', 
-            padding: '0.5rem 1rem', 
-            borderRadius: 'var(--radius-md)',
-            textDecoration: 'none',
-            fontWeight: 500
-          }}
-        >
-          <PlusCircle size={18} />
-          Nuevo Artículo
-        </Link>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <Link 
+            href="/admin/blog/categories" 
+            style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', textDecoration: 'none', color: 'inherit' }}
+          >
+            Categorías
+          </Link>
+          <Link 
+            href="/admin/blog/genres" 
+            style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', textDecoration: 'none', color: 'inherit' }}
+          >
+            Géneros
+          </Link>
+          <Link 
+            href="/admin/blog/tags" 
+            style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', textDecoration: 'none', color: 'inherit' }}
+          >
+            Etiquetas
+          </Link>
+          <Link 
+            href="/admin/blog/new" 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem', 
+              backgroundColor: 'var(--color-magenta)', 
+              color: 'white', 
+              padding: '0.5rem 1rem', 
+              borderRadius: 'var(--radius-md)',
+              textDecoration: 'none',
+              fontWeight: 500
+            }}
+          >
+            <PlusCircle size={18} />
+            Nuevo Artículo
+          </Link>
+        </div>
       </div>
 
       {errorMsg && (

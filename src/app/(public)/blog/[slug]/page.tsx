@@ -3,15 +3,42 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { ArrowLeft } from "lucide-react";
-import BlogRendererClient from "./BlogRendererClient";
+import { Metadata, ResolvingMetadata } from "next";
+import styles from "../../../admin/components/TiptapEditor.module.css"; // Reuse tiptap styles for public render
 
 export const revalidate = 60;
 
-export default async function BlogPostPage({
-  params,
-}: {
+type Props = {
   params: Promise<{ slug: string }>;
-}) {
+};
+
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = await createClient();
+
+  const { data: post } = await supabase
+    .from("posts")
+    .select("meta_title, meta_description, title, excerpt, cover_image")
+    .eq("slug", slug)
+    .single();
+
+  if (!post) {
+    return { title: "Artículo no encontrado" };
+  }
+
+  return {
+    title: post.meta_title || post.title,
+    description: post.meta_description || post.excerpt || "Lee más en Bassfactory Journal",
+    openGraph: {
+      images: post.cover_image ? [post.cover_image] : [],
+    },
+  };
+}
+
+export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
   const supabase = await createClient();
 
@@ -21,6 +48,16 @@ export default async function BlogPostPage({
       *,
       categories (
         name
+      ),
+      post_genres (
+        genres (
+          name
+        )
+      ),
+      post_tags (
+        tags (
+          name
+        )
       )
     `)
     .eq("slug", slug)
@@ -29,6 +66,9 @@ export default async function BlogPostPage({
   if (error || !post || !post.is_published) {
     notFound();
   }
+
+  const genres = post.post_genres?.map((pg: any) => pg.genres?.name).filter(Boolean) || [];
+  const tags = post.post_tags?.map((pt: any) => pt.tags?.name).filter(Boolean) || [];
 
   return (
     <article style={{ minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
@@ -68,29 +108,37 @@ export default async function BlogPostPage({
             {post.title}
           </h1>
           
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', opacity: 0.6, fontSize: '1rem', color: 'var(--color-black)' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem', opacity: 0.6, fontSize: '1rem', color: 'var(--color-black)', marginBottom: '1rem' }}>
             <time>
               {new Date(post.created_at).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })}
             </time>
           </div>
+
+          {/* Taxonomies display */}
+          {(genres.length > 0 || tags.length > 0) && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+              {genres.map((g: string) => (
+                <span key={g} style={{ backgroundColor: 'rgba(0,0,0,0.05)', color: 'black', padding: '0.25rem 0.75rem', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 600 }}>
+                  🎵 {g}
+                </span>
+              ))}
+              {tags.map((t: string) => (
+                <span key={t} style={{ backgroundColor: 'rgba(0,0,0,0.05)', color: 'black', padding: '0.25rem 0.75rem', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 600 }}>
+                  # {t}
+                </span>
+              ))}
+            </div>
+          )}
         </header>
 
-        {/* Rich Text Markdown Renderizado */}
-        <div className="blog-content">
-          <BlogRendererClient source={post.content} />
-        </div>
+        {/* Rich Text HTML Renderizado */}
+        <div 
+          className={styles.prose} 
+          style={{ padding: 0, minHeight: 'auto', color: 'black' }}
+          dangerouslySetInnerHTML={{ __html: post.content }} 
+        />
 
       </div>
-
-      {/* Basic overrides to make markdown images responsive */}
-      <style>{`
-        .blog-content img {
-          max-width: 100%;
-          border-radius: 8px;
-          margin: 2rem auto;
-          display: block;
-        }
-      `}</style>
     </article>
   );
 }

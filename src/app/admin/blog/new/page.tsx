@@ -7,7 +7,8 @@ import BlogEditorClient from "./BlogEditorClient";
 export default async function NewBlogPost() {
   const supabase = await createClient();
   const { data: categories } = await supabase.from("categories").select("*").order("name");
-
+  const { data: genres } = await supabase.from("genres").select("*").order("name");
+  const { data: tags } = await supabase.from("tags").select("*").order("name");
   return (
     <div style={{ maxWidth: '1000px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
@@ -23,7 +24,12 @@ export default async function NewBlogPost() {
         </div>
       </div>
 
-      <BlogEditorClient categories={categories || []} action={createBlogPost} />
+      <BlogEditorClient 
+        categories={categories || []} 
+        genres={genres || []}
+        tags={tags || []}
+        action={createBlogPost} 
+      />
     </div>
   );
 }

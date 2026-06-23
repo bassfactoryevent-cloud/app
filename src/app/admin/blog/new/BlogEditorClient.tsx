@@ -1,29 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import dynamic from "next/dynamic";
 import { createClient } from "@/utils/supabase/client";
 import { Save, Image as ImageIcon, Loader2 } from "lucide-react";
-// Importar CSS requerido por react-md-editor
-import "@uiw/react-md-editor/markdown-editor.css";
-import "@uiw/react-markdown-preview/markdown.css";
-
-// Dynamic import para evitar errores de SSR con MDEditor
-const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
+import TiptapEditor from "../../components/TiptapEditor";
 
 export default function BlogEditorClient({ 
   categories, 
+  genres,
+  tags,
   action 
 }: { 
   categories: any[], 
+  genres: any[],
+  tags: any[],
   action: (formData: FormData) => void 
 }) {
   const supabase = createClient();
   const [content, setContent] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [isUploadingCover, setIsUploadingCover] = useState(false);
-  const [isUploadingInline, setIsUploadingInline] = useState(false);
-  const [inlineImageUrl, setInlineImageUrl] = useState("");
 
   const handleFileUpload = async (file: File) => {
     const fileExt = file.name.split('.').pop();
@@ -59,33 +55,22 @@ export default function BlogEditorClient({
     }
   };
 
-  const onInlineImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    setIsUploadingInline(true);
-    try {
-      const url = await handleFileUpload(e.target.files[0]);
-      setInlineImageUrl(`![Imagen](${url})`);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsUploadingInline(false);
-    }
-  };
-
   return (
-    <form action={action} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', backgroundColor: 'var(--color-bg)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
+    <form action={action} style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
       
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <label htmlFor="title" style={{ fontWeight: 600 }}>Título del Artículo</label>
-        <input 
-          type="text" id="title" name="title" required 
-          placeholder="Ej. El resurgir del Techno en Bogotá"
-          style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(255,255,255,0.05)', color: 'inherit', fontSize: '1rem' }}
-        />
-      </div>
+      {/* Columna Izquierda: Contenido Principal */}
+      <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '1.5rem', backgroundColor: 'var(--color-bg)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <label htmlFor="title" style={{ fontWeight: 600 }}>Título del Artículo</label>
+          <input 
+            type="text" id="title" name="title" required 
+            placeholder="Ej. El resurgir del Techno en Bogotá"
+            style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(255,255,255,0.05)', color: 'inherit', fontSize: '1.25rem', fontWeight: 600 }}
+          />
+        </div>
 
-      <div style={{ display: 'flex', gap: '1rem' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <label htmlFor="slug" style={{ fontWeight: 600 }}>URL Slug</label>
           <input 
             type="text" id="slug" name="slug" required 
@@ -93,73 +78,138 @@ export default function BlogEditorClient({
             style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(255,255,255,0.05)', color: 'inherit', fontSize: '1rem' }}
           />
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
-          <label htmlFor="category_id" style={{ fontWeight: 600 }}>Categoría</label>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <label style={{ fontWeight: 600 }}>Contenido del Artículo (Visual)</label>
+          <TiptapEditor 
+            content={content} 
+            onChange={setContent} 
+            onImageUpload={handleFileUpload}
+          />
+          <input type="hidden" name="content" value={content} />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <label htmlFor="excerpt" style={{ fontWeight: 600 }}>Resumen Corto (Excerpt)</label>
+          <textarea 
+            id="excerpt" name="excerpt" rows={3}
+            placeholder="Un resumen atractivo para la tarjeta del blog..."
+            style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(255,255,255,0.05)', color: 'inherit', fontSize: '1rem', resize: 'vertical' }}
+          />
+        </div>
+
+        {/* SEO Settings */}
+        <div style={{ marginTop: '1rem', padding: '1.5rem', backgroundColor: 'rgba(128,128,128,0.05)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.1)' }}>
+          <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Optimización para Buscadores (SEO)</h3>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <label htmlFor="meta_title" style={{ fontWeight: 500, fontSize: '0.875rem' }}>Meta Título</label>
+              <input 
+                type="text" id="meta_title" name="meta_title"
+                placeholder="Título para Google (Max 60 caracteres)"
+                style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }}
+              />
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <label htmlFor="meta_description" style={{ fontWeight: 500, fontSize: '0.875rem' }}>Meta Descripción</label>
+              <textarea 
+                id="meta_description" name="meta_description" rows={2}
+                placeholder="Descripción para Google (Max 160 caracteres)"
+                style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit', resize: 'vertical' }}
+              />
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Columna Derecha: Sidebar (Taxonomías y Publicación) */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        
+        {/* Caja de Publicación */}
+        <div style={{ backgroundColor: 'var(--color-bg)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
+          <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', borderBottom: '1px solid rgba(128,128,128,0.2)', paddingBottom: '0.5rem' }}>Publicación</h3>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+            <input type="checkbox" id="is_published" name="is_published" style={{ width: '1.2rem', height: '1.2rem' }} defaultChecked />
+            <label htmlFor="is_published" style={{ fontWeight: 500 }}>Publicar Inmediatamente</label>
+          </div>
+
+          <button 
+            type="submit"
+            style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', border: 'none', fontSize: '1rem', fontWeight: 600, cursor: 'pointer' }}
+          >
+            <Save size={20} />
+            Guardar Artículo
+          </button>
+        </div>
+
+        {/* Caja de Portada */}
+        <div style={{ backgroundColor: 'var(--color-bg)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
+          <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', borderBottom: '1px solid rgba(128,128,128,0.2)', paddingBottom: '0.5rem' }}>Imagen Destacada</h3>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {coverImageUrl ? (
+              <div style={{ width: '100%', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid rgba(128,128,128,0.2)' }}>
+                <img src={coverImageUrl} alt="Portada" style={{ width: '100%', height: 'auto', display: 'block' }} />
+              </div>
+            ) : null}
+            
+            <label style={{ cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', backgroundColor: 'rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: 'var(--radius-md)', width: '100%', textAlign: 'center' }}>
+              {isUploadingCover ? <Loader2 className="animate-spin" size={18} /> : <ImageIcon size={18} />}
+              {isUploadingCover ? "Subiendo..." : coverImageUrl ? "Cambiar Imagen" : "Subir Portada"}
+              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={onCoverImageChange} disabled={isUploadingCover} />
+            </label>
+            <input type="hidden" name="cover_image" value={coverImageUrl} />
+          </div>
+        </div>
+
+        {/* Caja de Categoría */}
+        <div style={{ backgroundColor: 'var(--color-bg)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
+          <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', borderBottom: '1px solid rgba(128,128,128,0.2)', paddingBottom: '0.5rem' }}>Categoría Principal</h3>
+          
           <select 
             id="category_id" name="category_id" required
-            style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(255,255,255,0.05)', color: 'inherit', fontSize: '1rem' }}
+            style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }}
           >
             <option value="" disabled selected>Selecciona una categoría</option>
             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
-      </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <label style={{ fontWeight: 600 }}>Imagen de Portada</label>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <label style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'rgba(255,255,255,0.1)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)' }}>
-            {isUploadingCover ? <Loader2 className="animate-spin" size={18} /> : <ImageIcon size={18} />}
-            {isUploadingCover ? "Subiendo..." : "Subir Portada"}
-            <input type="file" accept="image/*" style={{ display: 'none' }} onChange={onCoverImageChange} disabled={isUploadingCover} />
-          </label>
-          {coverImageUrl && <span style={{ color: '#00A050', fontSize: '0.875rem' }}>✓ Portada subida exitosamente</span>}
-        </div>
-        <input type="hidden" name="cover_image" value={coverImageUrl} />
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-          <label style={{ fontWeight: 600 }}>Contenido (Editor Markdown)</label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
-            <span style={{ opacity: 0.7 }}>¿Necesitas una imagen en el texto?</span>
-            <label style={{ cursor: 'pointer', color: 'var(--color-magenta)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              {isUploadingInline ? <Loader2 className="animate-spin" size={14} /> : "Sube una aquí"}
-              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={onInlineImageChange} disabled={isUploadingInline} />
-            </label>
+        {/* Caja de Géneros */}
+        <div style={{ backgroundColor: 'var(--color-bg)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
+          <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', borderBottom: '1px solid rgba(128,128,128,0.2)', paddingBottom: '0.5rem' }}>Géneros Musicales</h3>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '150px', overflowY: 'auto' }}>
+            {genres.map(g => (
+              <label key={g.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <input type="checkbox" name="genres[]" value={g.id} />
+                {g.name}
+              </label>
+            ))}
+            {genres.length === 0 && <span style={{ opacity: 0.5, fontSize: '0.875rem' }}>No hay géneros creados.</span>}
           </div>
         </div>
-        
-        {inlineImageUrl && (
-          <div style={{ backgroundColor: 'rgba(255,255,255,0.05)', padding: '0.5rem', borderRadius: '4px', fontSize: '0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span>Copia y pega esto en el editor: <code style={{ color: 'var(--color-magenta)', userSelect: 'all' }}>{inlineImageUrl}</code></span>
-            <button type="button" onClick={() => setInlineImageUrl("")} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', opacity: 0.5 }}>✕</button>
+
+        {/* Caja de Etiquetas */}
+        <div style={{ backgroundColor: 'var(--color-bg)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
+          <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', borderBottom: '1px solid rgba(128,128,128,0.2)', paddingBottom: '0.5rem' }}>Etiquetas (Tags)</h3>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '150px', overflowY: 'auto' }}>
+            {tags.map(t => (
+              <label key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <input type="checkbox" name="tags[]" value={t.id} />
+                {t.name}
+              </label>
+            ))}
+            {tags.length === 0 && <span style={{ opacity: 0.5, fontSize: '0.875rem' }}>No hay etiquetas creadas.</span>}
           </div>
-        )}
-
-        <div data-color-mode="dark">
-          <MDEditor
-            value={content}
-            onChange={(val) => setContent(val || "")}
-            height={400}
-            style={{ borderRadius: 'var(--radius-md)', overflow: 'hidden' }}
-          />
         </div>
-        <input type="hidden" name="content" value={content} />
-      </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
-        <input type="checkbox" id="is_published" name="is_published" style={{ width: '1.2rem', height: '1.2rem' }} defaultChecked />
-        <label htmlFor="is_published" style={{ fontWeight: 500 }}>Publicar inmediatamente</label>
       </div>
-
-      <button 
-        type="submit"
-        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', border: 'none', fontSize: '1rem', fontWeight: 600, cursor: 'pointer', marginTop: '1rem' }}
-      >
-        <Save size={20} />
-        Guardar Artículo
-      </button>
     </form>
   );
 }

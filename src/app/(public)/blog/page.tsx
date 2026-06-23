@@ -84,6 +84,11 @@ export default async function BlogFeed() {
                   <h2 style={{ fontSize: '1.5rem', fontWeight: 700, lineHeight: 1.3 }}>
                     {post.title}
                   </h2>
+                  {post.excerpt && (
+                    <p style={{ fontSize: '1rem', opacity: 0.8, margin: 0, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {post.excerpt}
+                    </p>
+                  )}
                   <div style={{ opacity: 0.6, fontSize: '0.875rem' }}>
                     {new Date(post.created_at).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })}
                   </div>
