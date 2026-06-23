@@ -53,6 +53,7 @@ export async function deleteSponsor(id: string) {
 export async function createEvent(formData: FormData) {
   const supabase = await createClient();
   
+  const event_id = formData.get("event_id") as string | null;
   const title = formData.get("title") as string;
   const slug = formData.get("slug") as string;
   const description = formData.get("description") as string;
@@ -68,28 +69,47 @@ export async function createEvent(formData: FormData) {
   const total_capacity = formData.get("total_capacity") ? parseInt(formData.get("total_capacity") as string, 10) : null;
   const status = formData.get("status") as string || "draft";
 
-  const { data: event, error } = await supabase.from("events").insert([
-    {
-      title,
-      slug,
-      description,
-      cover_image: cover_image || null,
-      start_date,
-      end_date,
-      location_name,
-      location_address,
-      is_free,
-      total_capacity,
-      status
-    }
-  ]).select("id").single();
+  const eventData = {
+    title,
+    slug,
+    description,
+    cover_image: cover_image || null,
+    start_date,
+    end_date,
+    location_name,
+    location_address,
+    is_free,
+    total_capacity,
+    status,
+    updated_at: new Date().toISOString()
+  };
 
-  if (error) {
-    console.error("Error creating Event:", error);
-    throw new Error(error.message);
+  let event: any;
+
+  if (event_id) {
+    // Modo Edición
+    const { data: updatedEvent, error } = await supabase.from("events").update(eventData).eq("id", event_id).select("id").single();
+    if (error) {
+      console.error("Error updating Event:", error);
+      throw new Error(error.message);
+    }
+    event = updatedEvent;
+    
+    // Eliminar relaciones antiguas para reemplazarlas
+    await supabase.from("ticket_tiers").delete().eq("event_id", event.id);
+    await supabase.from("event_djs").delete().eq("event_id", event.id);
+    await supabase.from("event_sponsors").delete().eq("event_id", event.id);
+  } else {
+    // Modo Creación
+    const { data: newEvent, error } = await supabase.from("events").insert([eventData]).select("id").single();
+    if (error) {
+      console.error("Error creating Event:", error);
+      throw new Error(error.message);
+    }
+    event = newEvent;
   }
 
-  // Si se crearon tickets (lo hacemos por JSON escondido o inputs múltiples en el front)
+  // Insertar boletas (Etapas)
   const ticketsJson = formData.get("tickets_json") as string;
   if (ticketsJson && event) {
     try {
@@ -100,6 +120,8 @@ export async function createEvent(formData: FormData) {
           name: t.name,
           price: parseFloat(t.price),
           quantity_available: parseInt(t.quantity, 10),
+          sales_start: t.sales_start ? new Date(t.sales_start).toISOString() : null,
+          sales_end: t.sales_end ? new Date(t.sales_end).toISOString() : null,
         }));
         await supabase.from("ticket_tiers").insert(ticketInserts);
       }
@@ -122,11 +144,11 @@ export async function createEvent(formData: FormData) {
         await supabase.from("event_djs").insert(djInserts);
       }
     } catch (e) {
-      console.error("Error parsing DJs JSON", e);
+      console.error("Error parsing djs JSON", e);
     }
   }
 
-  // Sponsors
+  // Patrocinadores
   const sponsorsJson = formData.get("sponsors_json") as string;
   if (sponsorsJson && event) {
     try {
@@ -139,12 +161,12 @@ export async function createEvent(formData: FormData) {
         await supabase.from("event_sponsors").insert(sponsorInserts);
       }
     } catch (e) {
-      console.error("Error parsing Sponsors JSON", e);
+      console.error("Error parsing sponsors JSON", e);
     }
   }
 
   revalidatePath("/admin/events");
-  revalidatePath("/events");
+  revalidatePath(`/events/${slug}`);
   redirect("/admin/events");
 }
 
