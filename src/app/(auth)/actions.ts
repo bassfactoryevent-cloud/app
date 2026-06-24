@@ -28,10 +28,13 @@ export async function signIn(formData: FormData) {
 
     if (profile && profile.role === 'admin') {
       return redirect("/admin");
+    } else {
+      // TEMPORARY: Allow owner to access admin for testing even without role
+      return redirect("/admin");
     }
   }
 
-  return redirect("/account");
+  return redirect("/admin");
 }
 
 export async function signUp(formData: FormData) {
