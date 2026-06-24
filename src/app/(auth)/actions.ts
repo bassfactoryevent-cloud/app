@@ -17,6 +17,20 @@ export async function signIn(formData: FormData) {
     return redirect("/login?message=No+se+pudo+iniciar+sesión.+Verifica+tus+credenciales.");
   }
 
+  // Get user profile to check role
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profile && profile.role === 'admin') {
+      return redirect("/admin");
+    }
+  }
+
   return redirect("/account");
 }
 
