@@ -25,31 +25,41 @@ export default async function AccountDashboardPage() {
       </h1>
       <p style={{ fontSize: '1.1rem', color: 'var(--color-text-secondary)', marginBottom: '3rem' }}>Este es tu espacio central. Accede a tus próximos raves y contenido exclusivo.</p>
 
+      <style>{`
+        .dashboard-card {
+          display: flex;
+          flex-direction: column;
+          padding: 2rem;
+          text-decoration: none;
+          color: white;
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+        }
+        .dashboard-card:hover {
+          transform: translateY(-5px);
+        }
+        .card-tickets:hover { border-color: var(--color-magenta); }
+        .card-orders:hover { border-color: var(--color-accent); }
+        .card-notifs:hover { border-color: #FFB74D; }
+      `}</style>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-        <Link href="/account/tickets" className="glass-panel" style={{ display: 'flex', flexDirection: 'column', padding: '2rem', textDecoration: 'none', color: 'white', transition: 'all 0.3s ease', position: 'relative', overflow: 'hidden' }}
-          onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.borderColor = 'var(--color-magenta)'; }}
-          onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--glass-border)'; }}
-        >
+        <Link href="/account/tickets" className="glass-panel dashboard-card card-tickets">
           <div style={{ position: 'absolute', top: '-20px', right: '-20px', background: 'radial-gradient(circle, var(--color-magenta-glow) 0%, transparent 70%)', width: '100px', height: '100px', opacity: 0.5, borderRadius: '50%' }} />
           <Ticket size={32} color="var(--color-magenta)" style={{ marginBottom: '1.5rem' }} />
           <span style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1 }}>{ticketsCount || 0}</span>
           <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500, marginTop: '0.5rem' }}>Tickets Comprados</span>
         </Link>
         
-        <Link href="/account/orders" className="glass-panel" style={{ display: 'flex', flexDirection: 'column', padding: '2rem', textDecoration: 'none', color: 'white', transition: 'all 0.3s ease', position: 'relative', overflow: 'hidden' }}
-          onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.borderColor = 'var(--color-accent)'; }}
-          onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--glass-border)'; }}
-        >
+        <Link href="/account/orders" className="glass-panel dashboard-card card-orders">
           <div style={{ position: 'absolute', top: '-20px', right: '-20px', background: 'radial-gradient(circle, rgba(0,240,255,0.2) 0%, transparent 70%)', width: '100px', height: '100px', opacity: 0.5, borderRadius: '50%' }} />
           <ShoppingBag size={32} color="var(--color-accent)" style={{ marginBottom: '1.5rem' }} />
           <span style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1 }}>{ordersCount || 0}</span>
           <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500, marginTop: '0.5rem' }}>Órdenes de Merch</span>
         </Link>
 
-        <Link href="/account/notifications" className="glass-panel" style={{ display: 'flex', flexDirection: 'column', padding: '2rem', textDecoration: 'none', color: 'white', transition: 'all 0.3s ease', position: 'relative', overflow: 'hidden' }}
-          onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.borderColor = '#FFB74D'; }}
-          onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--glass-border)'; }}
-        >
+        <Link href="/account/notifications" className="glass-panel dashboard-card card-notifs">
           <div style={{ position: 'absolute', top: '-20px', right: '-20px', background: 'radial-gradient(circle, rgba(255,183,77,0.2) 0%, transparent 70%)', width: '100px', height: '100px', opacity: 0.5, borderRadius: '50%' }} />
           <Bell size={32} color="#FFB74D" style={{ marginBottom: '1.5rem' }} />
           <span style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1 }}>{notificationsCount || 0}</span>
