@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import logo from "../../../../public/bassfactorylogo1.png";
+import logo from "../../../public/bassfactorylogo1.png";
 
 export default function AuthLayout({
   children,
