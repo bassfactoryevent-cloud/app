@@ -38,7 +38,7 @@ export default async function AdminEvents() {
           </div>
         ) : (
           events.map((event) => (
-            <div key={event.id} style={{ backgroundColor: 'var(--color-white)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid rgba(128,128,128,0.2)', display: 'flex', flexDirection: 'column' }}>
+            <div key={event.id} style={{ backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column' }}>
               <div style={{ height: '160px', backgroundColor: 'rgba(0,0,0,0.1)', position: 'relative' }}>
                 {event.cover_image ? (
                   <img src={event.cover_image} alt={event.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
