@@ -20,36 +20,53 @@ export default async function AccountDashboardPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-        Hola, {profile?.full_name || 'Basshead'}
+      <h1 style={{ fontSize: 'clamp(2.5rem, 4vw, 3.5rem)', fontWeight: 800, marginBottom: '0.5rem', background: 'linear-gradient(to right, #FFF, #A0A0A0)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+        Buenas noches, {profile?.full_name?.split(' ')[0] || 'Basshead'}
       </h1>
-      <p style={{ opacity: 0.7, marginBottom: '2rem' }}>Bienvenido a tu panel de control. Aquí puedes gestionar tus tickets, compras y perfil.</p>
+      <p style={{ fontSize: '1.1rem', color: 'var(--color-text-secondary)', marginBottom: '3rem' }}>Este es tu espacio central. Accede a tus próximos raves y contenido exclusivo.</p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-        <Link href="/account/tickets" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '1rem', textDecoration: 'none', color: 'white', border: '1px solid rgba(255,255,255,0.05)', transition: 'background-color 0.2s' }}>
-          <Ticket size={40} color="var(--color-magenta)" style={{ marginBottom: '1rem' }} />
-          <span style={{ fontSize: '2rem', fontWeight: 800 }}>{ticketsCount || 0}</span>
-          <span style={{ opacity: 0.7 }}>Tickets Comprados</span>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+        <Link href="/account/tickets" className="glass-panel" style={{ display: 'flex', flexDirection: 'column', padding: '2rem', textDecoration: 'none', color: 'white', transition: 'all 0.3s ease', position: 'relative', overflow: 'hidden' }}
+          onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.borderColor = 'var(--color-magenta)'; }}
+          onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--glass-border)'; }}
+        >
+          <div style={{ position: 'absolute', top: '-20px', right: '-20px', background: 'radial-gradient(circle, var(--color-magenta-glow) 0%, transparent 70%)', width: '100px', height: '100px', opacity: 0.5, borderRadius: '50%' }} />
+          <Ticket size={32} color="var(--color-magenta)" style={{ marginBottom: '1.5rem' }} />
+          <span style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1 }}>{ticketsCount || 0}</span>
+          <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500, marginTop: '0.5rem' }}>Tickets Comprados</span>
         </Link>
-        <Link href="/account/orders" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '1rem', textDecoration: 'none', color: 'white', border: '1px solid rgba(255,255,255,0.05)', transition: 'background-color 0.2s' }}>
-          <ShoppingBag size={40} color="var(--color-magenta)" style={{ marginBottom: '1rem' }} />
-          <span style={{ fontSize: '2rem', fontWeight: 800 }}>{ordersCount || 0}</span>
-          <span style={{ opacity: 0.7 }}>Órdenes de Merch</span>
+        
+        <Link href="/account/orders" className="glass-panel" style={{ display: 'flex', flexDirection: 'column', padding: '2rem', textDecoration: 'none', color: 'white', transition: 'all 0.3s ease', position: 'relative', overflow: 'hidden' }}
+          onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.borderColor = 'var(--color-accent)'; }}
+          onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--glass-border)'; }}
+        >
+          <div style={{ position: 'absolute', top: '-20px', right: '-20px', background: 'radial-gradient(circle, rgba(0,240,255,0.2) 0%, transparent 70%)', width: '100px', height: '100px', opacity: 0.5, borderRadius: '50%' }} />
+          <ShoppingBag size={32} color="var(--color-accent)" style={{ marginBottom: '1.5rem' }} />
+          <span style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1 }}>{ordersCount || 0}</span>
+          <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500, marginTop: '0.5rem' }}>Órdenes de Merch</span>
         </Link>
-        <Link href="/account/notifications" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '1rem', textDecoration: 'none', color: 'white', border: '1px solid rgba(255,255,255,0.05)', transition: 'background-color 0.2s', position: 'relative' }}>
-          <Bell size={40} color="var(--color-magenta)" style={{ marginBottom: '1rem' }} />
-          <span style={{ fontSize: '2rem', fontWeight: 800 }}>{notificationsCount || 0}</span>
-          <span style={{ opacity: 0.7 }}>Notificaciones Nuevas</span>
+
+        <Link href="/account/notifications" className="glass-panel" style={{ display: 'flex', flexDirection: 'column', padding: '2rem', textDecoration: 'none', color: 'white', transition: 'all 0.3s ease', position: 'relative', overflow: 'hidden' }}
+          onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.borderColor = '#FFB74D'; }}
+          onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--glass-border)'; }}
+        >
+          <div style={{ position: 'absolute', top: '-20px', right: '-20px', background: 'radial-gradient(circle, rgba(255,183,77,0.2) 0%, transparent 70%)', width: '100px', height: '100px', opacity: 0.5, borderRadius: '50%' }} />
+          <Bell size={32} color="#FFB74D" style={{ marginBottom: '1.5rem' }} />
+          <span style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1 }}>{notificationsCount || 0}</span>
+          <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500, marginTop: '0.5rem' }}>Notificaciones</span>
+          {(notificationsCount ?? 0) > 0 && (
+            <div style={{ position: 'absolute', top: '2rem', right: '2rem', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--color-magenta)', boxShadow: '0 0 10px var(--color-magenta)' }} />
+          )}
         </Link>
       </div>
 
-      <div style={{ backgroundColor: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>Acciones Rápidas</h2>
+      <div className="glass-panel" style={{ padding: '2.5rem' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>Descubre más</h2>
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          <Link href="/events" style={{ padding: '0.75rem 1.5rem', backgroundColor: 'white', color: 'black', borderRadius: '0.5rem', fontWeight: 700, textDecoration: 'none' }}>
+          <Link href="/events" className="btn btn-primary">
             Explorar Eventos
           </Link>
-          <Link href="/merch" style={{ padding: '0.75rem 1.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', borderRadius: '0.5rem', fontWeight: 700, textDecoration: 'none' }}>
+          <Link href="/merch" className="btn btn-secondary">
             Ir a la Tienda de Merch
           </Link>
         </div>

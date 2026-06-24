@@ -2,8 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 import styles from "./Header.module.css";
 import CartIcon from "@/components/CartIcon";
+import { createClient } from "@/utils/supabase/server";
+import UserMenu from "./UserMenu";
 
-export default function Header() {
+export default async function Header() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <header className={styles.headerWrapper}>
       {/* Top Header */}
@@ -23,7 +28,7 @@ export default function Header() {
       </div>
 
       {/* Main Header */}
-      <div className={styles.mainHeader}>
+      <div className={styles.mainHeader} style={{ background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', borderBottom: '1px solid var(--glass-border)', zIndex: 50 }}>
         <div className={styles.logoContainer}>
           <Link href="/">
             <Image
@@ -52,11 +57,19 @@ export default function Header() {
           </Link>
         </nav>
 
-        <div className={styles.actions}>
+        <div className={styles.actions} style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <CartIcon />
-          <Link href="/login" className={`btn btn-primary ${styles.loginBtn}`}>
-            Iniciar Sesión
-          </Link>
+          
+          {user ? (
+            <UserMenu 
+              userEmail={user.email || ''} 
+              userName={user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario'} 
+            />
+          ) : (
+            <Link href="/login" className="btn btn-primary" style={{ height: '40px' }}>
+              Iniciar Sesión
+            </Link>
+          )}
         </div>
       </div>
     </header>
