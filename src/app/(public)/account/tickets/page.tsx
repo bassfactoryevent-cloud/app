@@ -48,7 +48,7 @@ export default async function AccountTicketsPage() {
             const eventDate = new Date(event.start_time).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
             
             return (
-              <div key={ticket.id} style={{ display: 'flex', flexDirection: 'column', md: {flexDirection: 'row'}, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '1rem', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div key={ticket.id} style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '1rem', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
                 {event.image_url && (
                   <div style={{ width: '200px', height: '200px', position: 'relative', flexShrink: 0 }}>
                     <Image src={event.image_url} alt={event.title} fill style={{ objectFit: 'cover' }} />
