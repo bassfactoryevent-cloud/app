@@ -19,7 +19,6 @@ export default async function AccountDashboardPage() {
   const { count: notificationsCount } = await supabase.from("notifications").select("*", { count: 'exact', head: true }).eq("user_id", user.id).eq("is_read", false);
 
   return (
-  return (
     <div style={{ paddingBottom: '4rem' }}>
       <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         Tus Estadísticas
