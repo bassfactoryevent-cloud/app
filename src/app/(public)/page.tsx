@@ -104,8 +104,8 @@ export default async function Home() {
           <HorizontalScroll title="Artistas Destacados" subtitle="Talento de la casa y residentes" viewAllLink="/djs">
             {djs.map(dj => (
               <Link href={`/djs/${dj.slug || dj.id}`} key={dj.id} className={styles.djCard}>
-                <img src={dj.photo_url || "https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=300"} alt={dj.name} className={styles.djImage} />
-                <h3 className={styles.cardTitle}>{dj.name}</h3>
+                <img src={dj.image_url || "https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=300"} alt={dj.stage_name} className={styles.djImage} />
+                <h3 className={styles.cardTitle}>{dj.stage_name}</h3>
                 <span className={styles.cardSubtitle}>DJ / Producer</span>
               </Link>
             ))}
