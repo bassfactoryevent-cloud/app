@@ -1,57 +1,184 @@
-.hero {
+.page {
   min-height: 100vh;
+  padding-bottom: var(--space-6);
+  background-color: var(--color-bg);
+}
+
+.hero {
+  position: relative;
+  height: 70vh;
+  min-height: 500px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  padding: var(--space-4);
-  background: radial-gradient(circle at center, rgba(200, 52, 87, 0.05) 0%, var(--color-bg) 100%);
+  justify-content: flex-end;
+  padding: var(--space-4) var(--space-3);
+  margin-bottom: var(--space-4);
+  overflow: hidden;
+}
+
+.heroBackground {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.heroImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.heroOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 60%, rgba(0,0,0,1) 100%);
+  z-index: 1;
 }
 
 .heroContent {
-  max-width: 800px;
+  position: relative;
+  z-index: 2;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
   animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+.heroDate {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-accent);
+  margin-bottom: 0.5rem;
+}
+
 .title {
-  font-size: 4rem;
-  letter-spacing: -0.02em;
-  margin-bottom: var(--space-3);
-  color: var(--color-black);
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: var(--space-2);
+  color: var(--color-white);
 }
 
 .subtitle {
-  font-size: 1.25rem;
-  line-height: 1.6;
-  margin-bottom: var(--space-4);
-  color: var(--color-black);
-  opacity: 0.7;
+  font-size: 1.125rem;
+  line-height: 1.5;
+  margin-bottom: var(--space-3);
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 600px;
 }
 
 .actions {
   display: flex;
   gap: var(--space-2);
-  justify-content: center;
   flex-wrap: wrap;
 }
 
-.featuresGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: var(--space-3);
+.btnPrimary {
+  background-color: var(--color-magenta);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnPrimary:hover {
+  background-color: var(--color-magenta-hover);
+  transform: scale(1.05);
+}
+
+.btnSecondary {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-white);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-full);
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.btnSecondary:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.card {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  transition: background-color 0.2s ease;
+  min-width: 200px;
+  max-width: 300px;
+  flex: 0 0 auto;
+}
+
+.card:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.cardImage {
   width: 100%;
-  max-width: 1200px;
-  margin-top: var(--space-6);
+  aspect-ratio: 1/1;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  margin-bottom: 1rem;
 }
 
-.featureCard {
-  text-align: left;
+.cardTitle {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+  color: var(--color-white);
 }
 
-.featureIcon {
-  font-size: 2rem;
-  margin-bottom: var(--space-2);
+.cardSubtitle {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+/* DJ specific circular card */
+.djCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 160px;
+  flex: 0 0 auto;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  transition: background-color 0.2s ease;
+}
+
+.djCard:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.djImage {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 1rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 @keyframes fadeUp {

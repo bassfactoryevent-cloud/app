@@ -1,30 +1,30 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Vanguard Theme Variables - Light Mode (Default) */
-  --color-bg: #FFFFFF;
-  --color-surface: #F4F4F5;
-  --color-surface-hover: #E4E4E7;
-  --color-surface-elevated: #FFFFFF;
+  /* Vanguard Theme Variables - Forced Dark Mode (Spotify Style) */
+  --color-bg: #000000;
+  --color-surface: #0A0A0A;
+  --color-surface-hover: #1A1A1A;
+  --color-surface-elevated: #121212;
   
-  --color-text-primary: #09090B;
-  --color-text-secondary: #71717A;
-  --color-text-inverse: #FAFAFA;
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #A1A1AA;
+  --color-text-inverse: #000000;
   
   --color-black: #000000;
   --color-white: #FFFFFF;
   
-  --color-border: #E4E4E7;
+  --color-border: #27272A;
   
   --color-magenta: #E50914; /* Brand primary */
-  --color-magenta-glow: rgba(229, 9, 20, 0.15);
-  --color-magenta-hover: #C10710;
+  --color-magenta-glow: rgba(229, 9, 20, 0.3);
+  --color-magenta-hover: #FF1F2B;
   
   --color-accent: #00F0FF;
-  --color-accent-glow: rgba(0, 240, 255, 0.15);
+  --color-accent-glow: rgba(0, 240, 255, 0.2);
   
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(0, 0, 0, 0.05);
+  --glass-bg: rgba(10, 10, 10, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.08);
   --glass-blur: blur(24px);
 
   /* Shared Tokens */
@@ -40,30 +40,6 @@
   --space-4: 32px;
   --space-5: 40px;
   --space-6: 48px;
-}
-
-/* Dark Mode Overrides */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #000000;
-    --color-surface: #09090B;
-    --color-surface-hover: #18181B;
-    --color-surface-elevated: #121212;
-    
-    --color-text-primary: #FAFAFA;
-    --color-text-secondary: #A1A1AA;
-    --color-text-inverse: #09090B;
-    
-    --color-border: #27272A;
-    
-    --color-magenta-glow: rgba(229, 9, 20, 0.3);
-    --color-magenta-hover: #FF1F2B;
-    
-    --color-accent-glow: rgba(0, 240, 255, 0.2);
-    
-    --glass-bg: rgba(18, 18, 18, 0.65);
-    --glass-border: rgba(255, 255, 255, 0.08);
-  }
 }
 
 * {
