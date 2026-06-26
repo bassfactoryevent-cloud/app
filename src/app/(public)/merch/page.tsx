@@ -39,15 +39,19 @@ export default async function MerchStorefront() {
         </p>
       </div>
 
+      <style dangerouslySetInnerHTML={{ __html: `
+        .merch-card-inner:hover {
+          transform: translateY(-5px);
+          border-color: rgba(255,255,255,0.2) !important;
+        }
+      `}} />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '2rem' }}>
         {products?.map((product: any) => {
           const primaryImage = product.merch_product_images?.find((img: any) => img.is_primary)?.image_url || product.merch_product_images?.[0]?.image_url;
 
           return (
-            <Link key={product.id} href={`/merch/${product.slug}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-              <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', transition: 'all 0.3s ease', cursor: 'pointer' }}
-                   onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}
-                   onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'; }}>
+            <Link key={product.id} href={`/merch/${product.slug}`} className="merch-card" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+              <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', transition: 'all 0.3s ease', cursor: 'pointer' }} className="merch-card-inner">
                 <div style={{ height: '300px', backgroundColor: 'rgba(0,0,0,0.5)', position: 'relative' }}>
                   {primaryImage ? (
                     <Image src={primaryImage} alt={product.title} fill style={{ objectFit: 'cover' }} />
