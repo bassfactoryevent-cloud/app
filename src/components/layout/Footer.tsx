@@ -15,9 +15,9 @@ export default function Footer() {
             <Image
               src="/Bass-Factory-Blanco-Sin-Letras.png"
               alt="Bassfactory Logo"
-              width={160}
-              height={40}
-              style={{ objectFit: "contain" }}
+              width={200}
+              height={70}
+              style={{ objectFit: "contain", height: "auto", maxHeight: "70px" }}
               className={styles.logoImage}
             />
           </Link>

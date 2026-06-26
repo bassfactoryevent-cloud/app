@@ -33,8 +33,9 @@ export default async function Header() {
               <Image
                 src="/Bass-Factory-Blanco-Sin-Letras.png"
                 alt="Bassfactory Logo"
-                width={160}
-                height={40}
+                width={200}
+                height={65}
+                style={{ objectFit: "contain", height: "auto", maxHeight: "65px" }}
                 className={styles.logoImage}
                 priority
               />
