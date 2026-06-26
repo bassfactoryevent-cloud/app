@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   description: "La plataforma definitiva para eventos, ticketing, djs, y mercancía de la cultura de música electrónica.",
 };
 
+import { Toaster } from "sonner";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,6 +29,7 @@ export default function RootLayout({
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <Toaster richColors position="top-right" />
           {children}
         </ThemeProvider>
       </body>

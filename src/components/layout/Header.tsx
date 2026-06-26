@@ -13,7 +13,8 @@ export default async function Header() {
 
   return (
     <header className={styles.headerWrapper}>
-      {/* Top Banner (Optional for promos or B2B switch) */}
+      {/* Top Banner - Hidden for Desktop App aesthetic */}
+      {/* 
       <div className={styles.topHeader}>
         <div className={styles.topHeaderLeft}>
           <span>¿Eres DJ o Promotor? Únete a la red B2B.</span>
@@ -24,6 +25,7 @@ export default async function Header() {
           <Link href="/contact" className={styles.topLink}>Contacto</Link>
         </div>
       </div>
+      */}
 
       {/* Main Glassmorphism Header */}
       <div className={styles.mainHeader}>
@@ -34,8 +36,8 @@ export default async function Header() {
                 src="/Bass-Factory-Blanco-Sin-Letras.png"
                 alt="Bassfactory Logo"
                 width={160}
-                height={53}
-                style={{ objectFit: "contain", height: "auto", maxHeight: "53px" }}
+                height={52}
+                style={{ objectFit: "contain", height: "auto", maxHeight: "52px" }}
                 className={styles.logoImage}
                 priority
               />

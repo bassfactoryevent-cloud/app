@@ -61,9 +61,6 @@ export default function HorizontalScroll({ title, subtitle, children, viewAllLin
           scrollbarWidth: 'none', 
           msOverflowStyle: 'none',
           paddingBottom: '1rem',
-          // Mask to fade out the edges slightly
-          WebkitMaskImage: 'linear-gradient(to right, black 90%, transparent 100%)',
-          maskImage: 'linear-gradient(to right, black 90%, transparent 100%)'
         }}
         className="hide-scrollbar"
       >

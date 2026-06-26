@@ -23,12 +23,15 @@
   width: 100%;
   height: 100%;
   z-index: 0;
+  overflow: hidden;
 }
 
-.heroImage {
+.heroImage,
+.heroVideo {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
 }
 
 .heroOverlay {
@@ -37,15 +40,16 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 60%, rgba(0,0,0,1) 100%);
+  background: rgba(0, 0, 0, 0.4);
   z-index: 1;
 }
 
 .heroContent {
   position: relative;
   z-index: 2;
-  max-width: 1000px;
+  max-width: 1400px;
   margin: 0 auto;
+  padding: 0 var(--space-4);
   width: 100%;
   animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -60,7 +64,7 @@
 }
 
 .title {
-  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-size: clamp(2rem, 5vw, 4rem);
   font-weight: 900;
   letter-spacing: -0.03em;
   line-height: 1;
@@ -121,9 +125,8 @@
   border-radius: var(--radius-md);
   padding: var(--space-2);
   transition: background-color 0.2s ease;
-  min-width: 200px;
-  max-width: 300px;
-  flex: 0 0 auto;
+  flex: 0 0 calc((100% - (3 * var(--space-2))) / 4.1);
+  min-width: 180px;
 }
 
 .card:hover {
@@ -142,7 +145,7 @@
   font-weight: 700;
   font-size: 1rem;
   margin-bottom: 0.25rem;
-  color: var(--color-white);
+  color: var(--color-text-primary);
 }
 
 .cardSubtitle {
@@ -179,7 +182,180 @@
 .container {
   max-width: 1400px;
   margin: 0 auto;
+  padding: 0 var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
 }
+
+.mainLayout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+@media (min-width: 1024px) {
+  .mainLayout {
+    grid-template-columns: 7fr 3fr;
+  }
+}
+
+.contentColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+.sidebarColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Sections */
+.sectionTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: var(--space-4);
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.5rem;
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+/* Sidebar elements */
+.adBannerVertical {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-align: center;
+  padding: 1rem;
+}
+
+.adBannerHorizontal {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  width: 100%;
+  margin-top: var(--space-4);
+}
+
+.raversReviews {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.reviewItem {
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.reviewItem:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.reviewText {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  margin-bottom: 0.25rem;
+}
+
+.reviewAuthor {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* Registration */
+.registrationBanner {
+  background: linear-gradient(135deg, var(--color-surface), var(--color-bg));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  text-align: center;
+  margin-top: var(--space-4);
+}
+
+.registrationBanner h2 {
+  font-size: 2rem;
+  margin-bottom: var(--space-2);
+}
+
+.registrationBanner p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-4);
+}
+
+.registrationForm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.pillInput {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-primary);
+  font-size: 1rem;
+}
+
+.pillInput:focus {
+  outline: none;
+  border-color: var(--color-magenta);
+}
+
+.pillButton {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-full);
+  border: none;
+  background-color: var(--color-magenta);
+  color: var(--color-white);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pillButton:hover {
+  background-color: var(--color-magenta-hover);
+  transform: translateY(-2px);
+}
+
 
 @keyframes fadeUp {
   0% {

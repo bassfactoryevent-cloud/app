@@ -109,6 +109,7 @@ export async function createEvent(formData: FormData) {
     const { data: updatedEvent, error } = await supabase.from("events").update(eventData).eq("id", event_id).select("id").single();
     if (error) {
       console.error("Error updating Event:", error);
+      require('fs').appendFileSync('app.log', `Update Event Error: ${JSON.stringify(error)}\n`);
       throw new Error(error.message);
     }
     event = updatedEvent;

@@ -46,9 +46,9 @@
 /* Dark Mode Variables */
 .dark {
   --color-bg: #000000;
-  --color-surface: #0A0A0A;
-  --color-surface-hover: #1A1A1A;
-  --color-surface-elevated: #121212;
+  --color-surface: #18181B; /* Lighter black/dark gray so cards stand out */
+  --color-surface-hover: #27272A;
+  --color-surface-elevated: #27272A;
   
   --color-text-primary: #FFFFFF;
   --color-text-secondary: #A1A1AA;

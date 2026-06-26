@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { createClient } from "@/utils/supabase/client";
 import { Save, Image as ImageIcon, Loader2 } from "lucide-react";
 import TiptapEditor from "../../components/TiptapEditor";
@@ -38,7 +39,7 @@ export default function BlogEditorClient({
         .upload(filePath, compressedFile);
 
       if (error) {
-        alert("Error subiendo imagen: " + error.message);
+        toast.error("Error subiendo imagen: " + error.message);
         throw error;
       }
 
@@ -54,7 +55,19 @@ export default function BlogEditorClient({
   };
 
   return (
-    <form action={action} style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
+    <form action={async (formData) => {
+      try {
+        await action(formData);
+        toast.success("Operación realizada con éxito");
+      } catch (err: any) {
+        if (err?.message === "NEXT_REDIRECT") {
+          toast.success("Post guardado correctamente");
+          return;
+        }
+        console.error(err);
+        toast.error("Error al procesar la solicitud");
+      }
+    }} style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
       
       {/* Columna Izquierda: Contenido Principal */}
       <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '1.5rem', backgroundColor: 'var(--color-bg)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>

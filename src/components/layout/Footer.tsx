@@ -12,14 +12,14 @@ export default function Footer() {
         {/* Sección de Marca */}
         <div className={styles.brandSection}>
           <Link href="/">
-            <Image
-              src="/Bass-Factory-Blanco-Sin-Letras.png"
-              alt="Bassfactory Logo"
-              width={160}
-              height={53}
-              style={{ objectFit: "contain", height: "auto", maxHeight: "53px" }}
-              className={styles.logoImage}
-            />
+              <Image
+                src="/Bass-Factory-Blanco-Sin-Letras.png"
+                alt="Bassfactory Logo"
+                width={160}
+                height={52}
+                style={{ objectFit: "contain", height: "auto", maxHeight: "52px" }}
+                className={styles.logoImage}
+              />
           </Link>
           <p className={styles.brandDescription}>
             El ecosistema definitivo B2B y B2C para la cultura de la música electrónica.

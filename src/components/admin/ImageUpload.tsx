@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { optimizeImage } from "@/utils/imageOptimizer";
 import { createClient } from "@/utils/supabase/client";
+import { toast } from "sonner";
 
 interface ImageUploadProps {
   bucket: string;
@@ -48,7 +49,7 @@ export default function ImageUpload({ bucket, defaultImage, onUploadSuccess, lab
       if (onUploadSuccess) onUploadSuccess(publicUrl);
     } catch (error) {
       console.error("Error uploading image:", error);
-      alert("Error al subir la imagen. Por favor, inténtalo de nuevo.");
+      toast.error("Error al subir la imagen. Por favor, inténtalo de nuevo.");
     } finally {
       setIsUploading(false);
     }

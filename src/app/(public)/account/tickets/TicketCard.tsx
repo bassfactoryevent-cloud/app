@@ -67,8 +67,8 @@ export default function TicketCard({ ticket, eventDate }: { ticket: any; eventDa
       {/* Right side: QR Code (Tear-off stub) */}
       <div style={{ width: '220px', padding: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderLeft: '2px dashed rgba(255,255,255,0.1)', backgroundColor: 'rgba(0,0,0,0.3)', position: 'relative' }}>
         {/* Semi-circles for the tear-off effect */}
-        <div style={{ position: 'absolute', top: '-10px', left: '-10px', width: '20px', height: '20px', borderRadius: '50%', backgroundColor: 'var(--color-black)' }} />
-        <div style={{ position: 'absolute', bottom: '-10px', left: '-10px', width: '20px', height: '20px', borderRadius: '50%', backgroundColor: 'var(--color-black)' }} />
+        <div style={{ position: 'absolute', top: '-10px', left: '-10px', width: '20px', height: '20px', borderRadius: '50%', backgroundColor: 'var(--color-bg)' }} />
+        <div style={{ position: 'absolute', bottom: '-10px', left: '-10px', width: '20px', height: '20px', borderRadius: '50%', backgroundColor: 'var(--color-bg)' }} />
 
         {ticket.status === 'valid' ? (
           <>

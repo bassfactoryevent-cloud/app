@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { LayoutDashboard, FileText, Calendar, Music, ShoppingCart, Settings, Briefcase, Megaphone, LogOut } from "lucide-react";
+import { LayoutDashboard, FileText, Calendar, Music, ShoppingCart, Settings, Briefcase, Megaphone, LogOut, MonitorPlay } from "lucide-react";
 import styles from "./AdminLayout.module.css";
 import logo from "../../../public/bassfactorylogo1.png";
 import { signOut } from "../(auth)/actions";
@@ -20,6 +20,7 @@ export function AdminSidebar({ profile }: { profile: any }) {
     { name: "Pautas (Ads)", href: "/admin/ads", icon: <Megaphone size={20} /> },
     { name: "Merch", href: "/admin/merch", icon: <ShoppingCart size={20} /> },
     { name: "Blog", href: "/admin/blog", icon: <FileText size={20} /> },
+    { name: "Banner Principal", href: "/admin/hero", icon: <MonitorPlay size={20} /> },
     { name: "Ajustes", href: "/admin/settings", icon: <Settings size={20} /> },
   ];
 

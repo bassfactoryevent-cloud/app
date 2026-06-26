@@ -6,6 +6,7 @@ import { Package, Image as ImageIcon, Tag, Plus, Trash2, Save, ArrowLeft } from 
 import TiptapEditor from "../../components/TiptapEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
 import Link from "next/link";
+import { toast } from "sonner";
 
 type VariantData = { name: string, quantity: number, price_override: string };
 
@@ -55,9 +56,14 @@ export default function MerchFormClient({ categories, initialData }: { categorie
       const { saveMerchProduct } = await import("../actions");
       try {
         await saveMerchProduct(formData);
-      } catch (err) {
+        toast.success("Producto guardado correctamente");
+      } catch (err: any) {
+        if (err?.message === "NEXT_REDIRECT") {
+          toast.success("Producto guardado correctamente");
+          return;
+        }
         console.error(err);
-        alert("Error guardando producto de merch");
+        toast.error("Error guardando producto de merch");
       }
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>

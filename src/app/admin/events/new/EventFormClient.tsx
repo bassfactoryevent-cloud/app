@@ -6,6 +6,7 @@ import { Calendar, MapPin, Music, Ticket, Briefcase, Plus, Trash2, Save, ArrowLe
 import TiptapEditor from "../../components/TiptapEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
 import Link from "next/link";
+import { toast } from "sonner";
 
 type TicketData = { id?: string, name: string, price: number, quantity: number, sales_start: string, sales_end: string };
 
@@ -67,9 +68,14 @@ export default function EventFormClient({ djs, sponsors, initialData }: { djs: a
       const { createEvent } = await import("../actions");
       try {
         await createEvent(formData);
-      } catch (err) {
+        toast.success("Evento guardado correctamente");
+      } catch (err: any) {
+        if (err?.message === "NEXT_REDIRECT") {
+          toast.success("Evento guardado correctamente");
+          return;
+        }
         console.error(err);
-        alert("Error guardando evento");
+        toast.error("Error guardando evento");
       }
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>

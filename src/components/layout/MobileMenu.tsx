@@ -18,18 +18,24 @@ export function MobileMenu() {
       </button>
 
       {isOpen && (
-        <div className={styles.mobileOverlay}>
-          <nav className={styles.mobileNav}>
-            <Link href="/events" onClick={toggleMenu} className={styles.mobileNavLink}>Eventos</Link>
-            <Link href="/djs" onClick={toggleMenu} className={styles.mobileNavLink}>DJs & Booking</Link>
-            <Link href="/merch" onClick={toggleMenu} className={styles.mobileNavLink}>Merch</Link>
-            <Link href="/blog" onClick={toggleMenu} className={styles.mobileNavLink}>Cultura (Blog)</Link>
-            
-            <div className={styles.mobileMenuFooter}>
-              <ThemeToggle />
-            </div>
-          </nav>
-        </div>
+        <>
+          {/* Backdrop */}
+          <div className={styles.mobileBackdrop} onClick={toggleMenu}></div>
+          
+          {/* Slide-out Drawer */}
+          <div className={styles.mobileDrawer}>
+            <nav className={styles.mobileNav}>
+              <Link href="/events" onClick={toggleMenu} className={styles.mobileNavLink}>Eventos</Link>
+              <Link href="/djs" onClick={toggleMenu} className={styles.mobileNavLink}>DJs & Booking</Link>
+              <Link href="/merch" onClick={toggleMenu} className={styles.mobileNavLink}>Merch</Link>
+              <Link href="/blog" onClick={toggleMenu} className={styles.mobileNavLink}>Cultura</Link>
+              
+              <div className={styles.mobileMenuFooter}>
+                <ThemeToggle />
+              </div>
+            </nav>
+          </div>
+        </>
       )}
     </div>
   );

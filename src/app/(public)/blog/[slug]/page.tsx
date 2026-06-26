@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Calendar } from "lucide-react";
 import { Metadata, ResolvingMetadata } from "next";
 import styles from "../../../admin/components/TiptapEditor.module.css"; // Reuse tiptap styles for public render
 
@@ -104,12 +104,13 @@ export default async function BlogPostPage({ params }: Props) {
             </div>
           )}
           
-          <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-0.02em', marginBottom: '1.5rem', color: 'var(--color-black)' }}>
+          <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-0.02em', marginBottom: '1.5rem', color: 'var(--color-text-primary)' }}>
             {post.title}
           </h1>
           
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem', opacity: 0.6, fontSize: '1rem', color: 'var(--color-black)', marginBottom: '1rem' }}>
-            <time>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '1rem', opacity: 0.6, fontSize: '1rem', color: 'var(--color-text-primary)', marginBottom: '1rem' }}>
+            <time style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Calendar size={16} />
               {new Date(post.created_at).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })}
             </time>
           </div>
@@ -118,12 +119,12 @@ export default async function BlogPostPage({ params }: Props) {
           {(genres.length > 0 || tags.length > 0) && (
             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
               {genres.map((g: string) => (
-                <span key={g} style={{ backgroundColor: 'rgba(0,0,0,0.05)', color: 'black', padding: '0.25rem 0.75rem', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 600 }}>
+                <span key={g} style={{ backgroundColor: 'var(--color-surface)', color: 'var(--color-text-primary)', padding: '0.25rem 0.75rem', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 600 }}>
                   🎵 {g}
                 </span>
               ))}
               {tags.map((t: string) => (
-                <span key={t} style={{ backgroundColor: 'rgba(0,0,0,0.05)', color: 'black', padding: '0.25rem 0.75rem', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 600 }}>
+                <span key={t} style={{ backgroundColor: 'var(--color-surface)', color: 'var(--color-text-primary)', padding: '0.25rem 0.75rem', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 600 }}>
                   # {t}
                 </span>
               ))}
@@ -134,7 +135,7 @@ export default async function BlogPostPage({ params }: Props) {
         {/* Rich Text HTML Renderizado */}
         <div 
           className={styles.prose} 
-          style={{ padding: 0, minHeight: 'auto', color: 'black' }}
+          style={{ padding: 0, minHeight: 'auto', color: 'var(--color-text-primary)' }}
           dangerouslySetInnerHTML={{ __html: post.content }} 
         />
 
