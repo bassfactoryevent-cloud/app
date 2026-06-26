@@ -2,6 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { createDj, deleteDj } from "../events/actions";
 import { Music, PlusCircle, Trash2, Edit } from "lucide-react";
 import Link from "next/link";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 export default async function AdminDjs() {
   const supabase = await createClient();
@@ -33,12 +34,7 @@ export default async function AdminDjs() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label htmlFor="photo_url" style={{ fontWeight: 600, fontSize: '0.875rem' }}>URL de Foto (Opcional)</label>
-              <input 
-                type="url" id="photo_url" name="photo_url"
-                placeholder="https://..."
-                style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }}
-              />
+              <ImageUpload name="photo_url" bucket="djs" label="URL de Foto (Opcional)" />
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Calendar, MapPin, Music, Ticket, Briefcase, Plus, Trash2, Save, ArrowLeft } from "lucide-react";
 import TiptapEditor from "../../components/TiptapEditor";
+import ImageUpload from "@/components/admin/ImageUpload";
 import Link from "next/link";
 
 type TicketData = { id?: string, name: string, price: number, quantity: number, sales_start: string, sales_end: string };
@@ -12,6 +13,7 @@ export default function EventFormClient({ djs, sponsors, initialData }: { djs: a
   const router = useRouter();
   
   const [description, setDescription] = useState(initialData?.description || "");
+  const [coverImage, setCoverImage] = useState(initialData?.cover_image || "");
   const [isFree, setIsFree] = useState(initialData?.is_free || false);
   
   const defaultTickets = initialData?.ticket_tiers?.map((t: any) => ({
@@ -127,10 +129,13 @@ export default function EventFormClient({ djs, sponsors, initialData }: { djs: a
                 </div>
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>URL de Portada (Flyer)</label>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <input type="url" name="cover_image" defaultValue={initialData?.cover_image} placeholder="https://..." style={{ flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }} />
-                </div>
+                <input type="hidden" name="cover_image" value={coverImage} />
+                <ImageUpload 
+                  bucket="events" 
+                  defaultImage={coverImage}
+                  onUploadSuccess={(url) => setCoverImage(url)}
+                  label="Imagen de Portada (Flyer) *"
+                />
               </div>
             </div>
           </div>

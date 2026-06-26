@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Package, Image as ImageIcon, Tag, Plus, Trash2, Save, ArrowLeft } from "lucide-react";
 import TiptapEditor from "../../components/TiptapEditor";
+import ImageUpload from "@/components/admin/ImageUpload";
 import Link from "next/link";
 
 type VariantData = { name: string, quantity: number, price_override: string };
@@ -173,11 +174,18 @@ export default function MerchFormClient({ categories, initialData }: { categorie
           <div style={{ backgroundColor: 'var(--color-surface)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', borderBottom: '1px solid rgba(128,128,128,0.1)', paddingBottom: '0.5rem' }}><ImageIcon size={20} /> Galería de Imágenes</h3>
             <p style={{ fontSize: '0.875rem', opacity: 0.7, marginBottom: '1rem' }}>La primera imagen será la principal del producto.</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1rem' }}>
               {images.map((img, idx) => (
-                <div key={idx} style={{ display: 'flex', gap: '0.5rem' }}>
-                  <input type="url" value={img} onChange={e => updateImage(idx, e.target.value)} placeholder="https://..." style={{ flex: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }} />
-                  <button type="button" onClick={() => removeImage(idx)} style={{ padding: '0.5rem', backgroundColor: 'transparent', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}>
+                <div key={idx} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start', backgroundColor: 'rgba(128,128,128,0.05)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+                  <div style={{ flex: 1 }}>
+                    <ImageUpload 
+                      bucket="merch" 
+                      defaultImage={img} 
+                      label={`Imagen ${idx + 1}`} 
+                      onUploadSuccess={(url) => updateImage(idx, url)} 
+                    />
+                  </div>
+                  <button type="button" onClick={() => removeImage(idx)} style={{ padding: '0.5rem', backgroundColor: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer' }}>
                     <Trash2 size={16} />
                   </button>
                 </div>

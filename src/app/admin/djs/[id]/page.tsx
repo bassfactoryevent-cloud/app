@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save } from "lucide-react";
 import { createDj } from "../../events/actions";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 export default async function EditDjPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
@@ -48,11 +49,7 @@ export default async function EditDjPage({ params }: { params: Promise<{ id: str
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <label htmlFor="photo_url" style={{ fontWeight: 600 }}>URL de Foto</label>
-          <input 
-            type="url" id="photo_url" name="photo_url" defaultValue={dj.photo_url || ""}
-            style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }}
-          />
+          <ImageUpload name="photo_url" bucket="djs" defaultImage={dj.photo_url} label="URL de Foto (Opcional)" />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

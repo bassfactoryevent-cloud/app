@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Save, Image as ImageIcon, Loader2 } from "lucide-react";
 import TiptapEditor from "../../components/TiptapEditor";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 export default function BlogEditorClient({ 
   categories, 
@@ -24,36 +25,31 @@ export default function BlogEditorClient({
   const [isUploadingCover, setIsUploadingCover] = useState(false);
 
   const handleFileUpload = async (file: File) => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-    const filePath = `blog_images/${fileName}`;
-
-    const { data, error } = await supabase.storage
-      .from("blog-media")
-      .upload(filePath, file);
-
-    if (error) {
-      alert("Error subiendo imagen: " + error.message);
-      throw error;
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from("blog-media")
-      .getPublicUrl(filePath);
-
-    return publicUrl;
-  };
-
-  const onCoverImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    setIsUploadingCover(true);
     try {
-      const url = await handleFileUpload(e.target.files[0]);
-      setCoverImageUrl(url);
+      const { optimizeImage } = await import("@/utils/imageOptimizer");
+      const compressedFile = await optimizeImage(file);
+
+      const fileExt = compressedFile.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const filePath = `blog_images/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from("blog-media")
+        .upload(filePath, compressedFile);
+
+      if (error) {
+        alert("Error subiendo imagen: " + error.message);
+        throw error;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("blog-media")
+        .getPublicUrl(filePath);
+
+      return publicUrl;
     } catch (err) {
       console.error(err);
-    } finally {
-      setIsUploadingCover(false);
+      throw err;
     }
   };
 
@@ -153,18 +149,13 @@ export default function BlogEditorClient({
           <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', borderBottom: '1px solid rgba(128,128,128,0.2)', paddingBottom: '0.5rem' }}>Imagen Destacada</h3>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {coverImageUrl ? (
-              <div style={{ width: '100%', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid rgba(128,128,128,0.2)' }}>
-                <img src={coverImageUrl} alt="Portada" style={{ width: '100%', height: 'auto', display: 'block' }} />
-              </div>
-            ) : null}
-            
-            <label style={{ cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', backgroundColor: 'rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: 'var(--radius-md)', width: '100%', textAlign: 'center' }}>
-              {isUploadingCover ? <Loader2 className="animate-spin" size={18} /> : <ImageIcon size={18} />}
-              {isUploadingCover ? "Subiendo..." : coverImageUrl ? "Cambiar Imagen" : "Subir Portada"}
-              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={onCoverImageChange} disabled={isUploadingCover} />
-            </label>
-            <input type="hidden" name="cover_image" value={coverImageUrl} />
+            <ImageUpload 
+              name="cover_image"
+              bucket="blog-media" 
+              defaultImage={coverImageUrl} 
+              label="Sube la imagen principal" 
+              onUploadSuccess={(url) => setCoverImageUrl(url)} 
+            />
           </div>
         </div>
 

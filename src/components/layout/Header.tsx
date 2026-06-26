@@ -30,17 +30,15 @@ export default async function Header() {
         <div className={styles.headerInner}>
           <div className={styles.logoContainer}>
             <Link href="/" className={styles.logoLink}>
-              <div style={{ width: 180, height: 50, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                <Image
-                  src="/Bass-Factory-Blanco-Sin-Letras.png"
-                  alt="Bassfactory Logo"
-                  width={350}
-                  height={350}
-                  style={{ objectFit: "contain", flexShrink: 0 }}
-                  className={styles.logoImage}
-                  priority
-                />
-              </div>
+              <Image
+                src="/Bass-Factory-Blanco-Sin-Letras.png"
+                alt="Bassfactory Logo"
+                width={160}
+                height={53}
+                style={{ objectFit: "contain", height: "auto", maxHeight: "53px" }}
+                className={styles.logoImage}
+                priority
+              />
             </Link>
           </div>
 
