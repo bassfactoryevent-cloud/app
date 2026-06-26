@@ -2,7 +2,7 @@
   border: 1px solid rgba(128, 128, 128, 0.2);
   border-radius: var(--radius-md);
   overflow: hidden;
-  background-color: var(--color-white);
+  background-color: var(--color-surface);
   color: black;
   display: flex;
   flex-direction: column;

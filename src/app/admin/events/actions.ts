@@ -27,6 +27,24 @@ export async function deleteDj(id: string) {
   revalidatePath("/admin/djs");
 }
 
+export async function updateDj(formData: FormData) {
+  const supabase = await createClient();
+  const dj_id = formData.get("dj_id") as string;
+  const name = formData.get("name") as string;
+  const soundcloud_url = formData.get("soundcloud_url") as string;
+  const photo_url = formData.get("photo_url") as string;
+
+  const { error } = await supabase.from("djs").update({ name, soundcloud_url, photo_url }).eq("id", dj_id);
+
+  if (error) {
+    console.error("Error updating DJ:", error);
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/admin/djs");
+  redirect("/admin/djs");
+}
+
 export async function createSponsor(formData: FormData) {
   const supabase = await createClient();
   const name = formData.get("name") as string;

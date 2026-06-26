@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { createDj, deleteDj } from "../events/actions";
-import { Music, PlusCircle, Trash2 } from "lucide-react";
+import { Music, PlusCircle, Trash2, Edit } from "lucide-react";
+import Link from "next/link";
 
 export default async function AdminDjs() {
   const supabase = await createClient();
@@ -59,7 +60,7 @@ export default async function AdminDjs() {
         </form>
 
         {/* Lista */}
-        <div style={{ flex: '2 1 400px', backgroundColor: 'var(--color-white)', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)', overflow: 'hidden' }}>
+        <div style={{ flex: '2 1 400px', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead style={{ backgroundColor: 'rgba(128,128,128,0.05)', borderBottom: '1px solid rgba(128,128,128,0.2)' }}>
               <tr>
@@ -82,8 +83,11 @@ export default async function AdminDjs() {
                       </div>
                       <span style={{ fontWeight: 500 }}>{dj.name}</span>
                     </td>
-                    <td style={{ padding: '1rem' }}>
+                    <td style={{ padding: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                       {dj.soundcloud_url ? <a href={dj.soundcloud_url} target="_blank" rel="noreferrer" style={{ color: 'var(--color-magenta)' }}>Soundcloud</a> : '-'}
+                      <Link href={`/admin/djs/${dj.id}`} style={{ color: 'inherit', opacity: 0.7, marginLeft: '1rem' }}>
+                        <Edit size={18} />
+                      </Link>
                     </td>
                   </tr>
                 ))

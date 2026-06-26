@@ -9,16 +9,18 @@ export default function BlogEditorClient({
   categories, 
   genres,
   tags,
+  initialData,
   action 
 }: { 
   categories: any[], 
   genres: any[],
   tags: any[],
+  initialData?: any,
   action: (formData: FormData) => void 
 }) {
   const supabase = createClient();
-  const [content, setContent] = useState("");
-  const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [content, setContent] = useState(initialData?.content || "");
+  const [coverImageUrl, setCoverImageUrl] = useState(initialData?.cover_image || "");
   const [isUploadingCover, setIsUploadingCover] = useState(false);
 
   const handleFileUpload = async (file: File) => {
@@ -64,7 +66,7 @@ export default function BlogEditorClient({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <label htmlFor="title" style={{ fontWeight: 600 }}>Título del Artículo</label>
           <input 
-            type="text" id="title" name="title" required 
+            type="text" id="title" name="title" required defaultValue={initialData?.title}
             placeholder="Ej. El resurgir del Techno en Bogotá"
             style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(255,255,255,0.05)', color: 'inherit', fontSize: '1.25rem', fontWeight: 600 }}
           />
@@ -73,7 +75,7 @@ export default function BlogEditorClient({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <label htmlFor="slug" style={{ fontWeight: 600 }}>URL Slug</label>
           <input 
-            type="text" id="slug" name="slug" required 
+            type="text" id="slug" name="slug" required defaultValue={initialData?.slug}
             placeholder="ej-el-resurgir-del-techno"
             style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(255,255,255,0.05)', color: 'inherit', fontSize: '1rem' }}
           />
@@ -92,7 +94,7 @@ export default function BlogEditorClient({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <label htmlFor="excerpt" style={{ fontWeight: 600 }}>Resumen Corto (Excerpt)</label>
           <textarea 
-            id="excerpt" name="excerpt" rows={3}
+            id="excerpt" name="excerpt" rows={3} defaultValue={initialData?.excerpt}
             placeholder="Un resumen atractivo para la tarjeta del blog..."
             style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(255,255,255,0.05)', color: 'inherit', fontSize: '1rem', resize: 'vertical' }}
           />
@@ -106,7 +108,7 @@ export default function BlogEditorClient({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <label htmlFor="meta_title" style={{ fontWeight: 500, fontSize: '0.875rem' }}>Meta Título</label>
               <input 
-                type="text" id="meta_title" name="meta_title"
+                type="text" id="meta_title" name="meta_title" defaultValue={initialData?.meta_title}
                 placeholder="Título para Google (Max 60 caracteres)"
                 style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }}
               />
@@ -115,7 +117,7 @@ export default function BlogEditorClient({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <label htmlFor="meta_description" style={{ fontWeight: 500, fontSize: '0.875rem' }}>Meta Descripción</label>
               <textarea 
-                id="meta_description" name="meta_description" rows={2}
+                id="meta_description" name="meta_description" rows={2} defaultValue={initialData?.meta_description}
                 placeholder="Descripción para Google (Max 160 caracteres)"
                 style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit', resize: 'vertical' }}
               />
@@ -133,7 +135,7 @@ export default function BlogEditorClient({
           <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', borderBottom: '1px solid rgba(128,128,128,0.2)', paddingBottom: '0.5rem' }}>Publicación</h3>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-            <input type="checkbox" id="is_published" name="is_published" style={{ width: '1.2rem', height: '1.2rem' }} defaultChecked />
+            <input type="checkbox" id="is_published" name="is_published" style={{ width: '1.2rem', height: '1.2rem' }} defaultChecked={initialData ? initialData.is_published : true} />
             <label htmlFor="is_published" style={{ fontWeight: 500 }}>Publicar Inmediatamente</label>
           </div>
 
@@ -171,10 +173,10 @@ export default function BlogEditorClient({
           <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', borderBottom: '1px solid rgba(128,128,128,0.2)', paddingBottom: '0.5rem' }}>Categoría Principal</h3>
           
           <select 
-            id="category_id" name="category_id" required
+            id="category_id" name="category_id" required defaultValue={initialData?.category_id || ""}
             style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }}
           >
-            <option value="" disabled selected>Selecciona una categoría</option>
+            <option value="" disabled>Selecciona una categoría</option>
             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
@@ -186,7 +188,7 @@ export default function BlogEditorClient({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '150px', overflowY: 'auto' }}>
             {genres.map(g => (
               <label key={g.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                <input type="checkbox" name="genres[]" value={g.id} />
+                <input type="checkbox" name="genres[]" value={g.id} defaultChecked={initialData?.genres?.includes(g.id)} />
                 {g.name}
               </label>
             ))}
@@ -201,7 +203,7 @@ export default function BlogEditorClient({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '150px', overflowY: 'auto' }}>
             {tags.map(t => (
               <label key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                <input type="checkbox" name="tags[]" value={t.id} />
+                <input type="checkbox" name="tags[]" value={t.id} defaultChecked={initialData?.tags?.includes(t.id)} />
                 {t.name}
               </label>
             ))}

@@ -48,24 +48,38 @@ export async function createBlogPost(formData: FormData) {
   const genre_ids = formData.getAll("genres[]") as string[];
   const tag_ids = formData.getAll("tags[]") as string[];
 
-  // Insert post and get its ID back
-  const { data: post, error } = await supabase.from("posts").insert([
-    {
-      title,
-      slug,
-      content,
-      cover_image: cover_image || null,
-      category_id: category_id || null,
-      is_published,
-      excerpt: excerpt || null,
-      meta_title: meta_title || null,
-      meta_description: meta_description || null,
-    },
-  ]).select("id").single();
+  const post_id = formData.get("post_id") as string | null;
 
-  if (error) {
-    console.error("Error creating post:", error);
-    throw new Error(error.message);
+  const postData = {
+    title,
+    slug,
+    content,
+    cover_image: cover_image || null,
+    category_id: category_id || null,
+    is_published,
+    excerpt: excerpt || null,
+    meta_title: meta_title || null,
+    meta_description: meta_description || null,
+  };
+
+  let post: any;
+
+  if (post_id) {
+    const { data: updatedPost, error } = await supabase.from("posts").update(postData).eq("id", post_id).select("id").single();
+    if (error) {
+      console.error("Error updating post:", error);
+      throw new Error(error.message);
+    }
+    post = updatedPost;
+    await supabase.from("post_genres").delete().eq("post_id", post.id);
+    await supabase.from("post_tags").delete().eq("post_id", post.id);
+  } else {
+    const { data: newPost, error } = await supabase.from("posts").insert([postData]).select("id").single();
+    if (error) {
+      console.error("Error creating post:", error);
+      throw new Error(error.message);
+    }
+    post = newPost;
   }
 
   // Insert relations if any

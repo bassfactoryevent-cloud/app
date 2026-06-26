@@ -94,7 +94,7 @@ export default function EventFormClient({ djs, sponsors, initialData }: { djs: a
         <div style={{ flex: '2', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           
           {/* Info Básica */}
-          <div style={{ backgroundColor: 'var(--color-white)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
+          <div style={{ backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
             <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(128,128,128,0.1)', paddingBottom: '0.5rem' }}>Información Básica</h2>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -136,13 +136,13 @@ export default function EventFormClient({ djs, sponsors, initialData }: { djs: a
           </div>
 
           {/* Descripción */}
-          <div style={{ backgroundColor: 'var(--color-white)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
+          <div style={{ backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
             <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(128,128,128,0.1)', paddingBottom: '0.5rem' }}>Descripción del Evento</h2>
             <TiptapEditor content={description} onChange={setDescription} />
           </div>
 
           {/* Ticketing */}
-          <div style={{ backgroundColor: 'var(--color-white)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
+          <div style={{ backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(128,128,128,0.1)', paddingBottom: '0.5rem' }}>
               <h2 style={{ fontSize: '1.25rem' }}>Boletería (Ticketing) y Etapas</h2>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
@@ -201,7 +201,7 @@ export default function EventFormClient({ djs, sponsors, initialData }: { djs: a
         {/* Columna Lateral */}
         <div style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           
-          <div style={{ backgroundColor: 'var(--color-white)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
+          <div style={{ backgroundColor: 'var(--color-surface)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', borderBottom: '1px solid rgba(128,128,128,0.1)', paddingBottom: '0.5rem' }}><Music size={20} /> Line Up (DJs)</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '250px', overflowY: 'auto' }}>
               {djs.length === 0 ? <p style={{ opacity: 0.5, fontSize: '0.875rem' }}>No hay DJs. Créalos en la pestaña DJs.</p> : djs.map(dj => (
@@ -213,7 +213,7 @@ export default function EventFormClient({ djs, sponsors, initialData }: { djs: a
             </div>
           </div>
 
-          <div style={{ backgroundColor: 'var(--color-white)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
+          <div style={{ backgroundColor: 'var(--color-surface)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', borderBottom: '1px solid rgba(128,128,128,0.1)', paddingBottom: '0.5rem' }}><Briefcase size={20} /> Patrocinadores</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto' }}>
               {sponsors.length === 0 ? <p style={{ opacity: 0.5, fontSize: '0.875rem' }}>No hay marcas. Créalas en Patrocinadores.</p> : sponsors.map(s => (
@@ -225,7 +225,7 @@ export default function EventFormClient({ djs, sponsors, initialData }: { djs: a
             </div>
           </div>
 
-          <div style={{ backgroundColor: 'var(--color-white)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
+          <div style={{ backgroundColor: 'var(--color-surface)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Estado de Publicación</label>
             <select name="status" defaultValue={initialData?.status || "draft"} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }}>
               <option value="draft">Borrador (Oculto)</option>

@@ -21,7 +21,7 @@ export default async function MerchCategoriesPage() {
 
       <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
         {/* Formulario de Creación */}
-        <form action={createMerchCategory} style={{ flex: 1, backgroundColor: 'var(--color-white)', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(128,128,128,0.2)' }}>
+        <form action={createMerchCategory} style={{ flex: 1, backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(128,128,128,0.2)' }}>
           <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(128,128,128,0.1)', paddingBottom: '0.5rem' }}>Nueva Categoría</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
