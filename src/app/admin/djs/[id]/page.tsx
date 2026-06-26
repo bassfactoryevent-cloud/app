@@ -4,13 +4,13 @@ import Link from "next/link";
 import { ArrowLeft, Save } from "lucide-react";
 import { createDj } from "../../events/actions";
 
-export default async function EditDjPage({ params }: { params: { id: string } }) {
+export default async function EditDjPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
 
   const { data: dj } = await supabase
     .from("djs")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", (await params).id)
     .single();
 
   if (!dj) {
@@ -35,7 +35,7 @@ export default async function EditDjPage({ params }: { params: { id: string } })
       <form action={async (formData) => {
           "use server";
           const { updateDj } = await import("../../events/actions");
-          formData.append("dj_id", params.id);
+          formData.append("dj_id", (await params).id);
           await updateDj(formData);
       }} style={{ backgroundColor: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         

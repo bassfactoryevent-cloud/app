@@ -4,7 +4,7 @@ import BlogEditorClient from "../../new/BlogEditorClient";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-export default async function EditBlogPostPage({ params }: { params: { id: string } }) {
+export default async function EditBlogPostPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
 
   const { data: post } = await supabase
@@ -14,7 +14,7 @@ export default async function EditBlogPostPage({ params }: { params: { id: strin
       post_genres(genre_id),
       post_tags(tag_id)
     `)
-    .eq("id", params.id)
+    .eq("id", (await params).id)
     .single();
 
   if (!post) {
@@ -55,7 +55,7 @@ export default async function EditBlogPostPage({ params }: { params: { id: strin
         action={async (formData) => {
           "use server";
           const { createBlogPost } = await import("../../actions");
-          formData.append("post_id", params.id);
+          formData.append("post_id", (await params).id);
           await createBlogPost(formData);
         }} 
       />

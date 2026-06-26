@@ -4,15 +4,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ChevronRight, Download, Music } from "lucide-react";
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const supabase = await createClient();
-  const { data: dj } = await supabase.from("djs").select("stage_name").eq("slug", params.slug).single();
+  const { data: dj } = await supabase.from("djs").select("stage_name").eq("slug", (await params).slug).single();
   
   if (!dj) return { title: "DJ no encontrado - Bassfactory" };
   return { title: `${dj.stage_name} - Bassfactory Artists` };
 }
 
-export default async function PublicDjPage({ params }: { params: { slug: string } }) {
+export default async function PublicDjPage({ params }: { params: Promise<{ slug: string }> }) {
   const supabase = await createClient();
 
   const { data: dj } = await supabase
@@ -25,7 +25,7 @@ export default async function PublicDjPage({ params }: { params: { slug: string 
         events (id, name, slug, location, date, status)
       )
     `)
-    .eq("slug", params.slug)
+    .eq("slug", (await params).slug)
     .single();
 
   if (!dj) notFound();

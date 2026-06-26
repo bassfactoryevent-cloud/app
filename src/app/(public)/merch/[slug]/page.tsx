@@ -5,15 +5,15 @@ import Link from "next/link";
 import { ChevronRight, Package, ArrowLeft } from "lucide-react";
 import AddToCartClient from "./AddToCartClient";
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const supabase = await createClient();
-  const { data: product } = await supabase.from("merch_products").select("title, description").eq("slug", params.slug).single();
+  const { data: product } = await supabase.from("merch_products").select("title, description").eq("slug", (await params).slug).single();
   
   if (!product) return { title: "Producto no encontrado - Bassfactory" };
   return { title: `${product.title} - Bassfactory Merch` };
 }
 
-export default async function MerchProductPage({ params }: { params: { slug: string } }) {
+export default async function MerchProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const supabase = await createClient();
 
   const { data: product } = await supabase
@@ -24,7 +24,7 @@ export default async function MerchProductPage({ params }: { params: { slug: str
       merch_product_images(image_url, sort_order, is_primary),
       merch_product_variants(id, name, stock_quantity, price_override)
     `)
-    .eq("slug", params.slug)
+    .eq("slug", (await params).slug)
     .single();
 
   if (!product) {

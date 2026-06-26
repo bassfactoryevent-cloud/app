@@ -2,7 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import MerchFormClient from "../new/MerchFormClient";
 
-export default async function EditMerchPage({ params }: { params: { id: string } }) {
+export default async function EditMerchPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
 
   const { data: product } = await supabase
@@ -12,7 +12,7 @@ export default async function EditMerchPage({ params }: { params: { id: string }
       merch_product_variants(*),
       merch_product_images(*)
     `)
-    .eq("id", params.id)
+    .eq("id", (await params).id)
     .single();
 
   if (!product) {

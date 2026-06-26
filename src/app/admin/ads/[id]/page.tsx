@@ -5,13 +5,13 @@ import Link from "next/link";
 import { addAdToCampaign, deleteAd, updateCampaign } from "../actions";
 import Image from "next/image";
 
-export default async function CampaignDetailsPage({ params }: { params: { id: string } }) {
+export default async function CampaignDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
 
   const { data: campaign } = await supabase
     .from("ad_campaigns")
     .select(`*, ads(*, ad_placements(name))`)
-    .eq("id", params.id)
+    .eq("id", (await params).id)
     .single();
 
   if (!campaign) notFound();

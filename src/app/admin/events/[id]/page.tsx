@@ -2,7 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import EventFormClient from "../new/EventFormClient";
 
-export default async function EditEventPage({ params }: { params: { id: string } }) {
+export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
   
   // Fetch event details
@@ -14,7 +14,7 @@ export default async function EditEventPage({ params }: { params: { id: string }
       event_djs(dj_id),
       event_sponsors(sponsor_id)
     `)
-    .eq("id", params.id)
+    .eq("id", (await params).id)
     .single();
 
   if (!event) {

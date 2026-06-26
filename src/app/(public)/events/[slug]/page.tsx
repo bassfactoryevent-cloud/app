@@ -4,16 +4,16 @@ import { Calendar, MapPin, Music, Briefcase } from "lucide-react";
 import EventCheckout from "./EventCheckout";
 import styles from "../../../admin/components/TiptapEditor.module.css"; // Reuse tiptap styles for rendering
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const supabase = await createClient();
-  const { data: event } = await supabase.from("events").select("title, cover_image").eq("slug", params.slug).single();
+  const { data: event } = await supabase.from("events").select("title, cover_image").eq("slug", (await params).slug).single();
   return {
     title: event ? `${event.title} | Bassfactory` : "Evento | Bassfactory",
     openGraph: { images: event?.cover_image ? [event.cover_image] : [] }
   };
 }
 
-export default async function EventPage({ params }: { params: { slug: string } }) {
+export default async function EventPage({ params }: { params: Promise<{ slug: string }> }) {
   const supabase = await createClient();
   
   // Obtener evento con sus relaciones
@@ -25,7 +25,7 @@ export default async function EventPage({ params }: { params: { slug: string } }
       event_djs(djs(*)),
       event_sponsors(sponsors(*))
     `)
-    .eq("slug", params.slug)
+    .eq("slug", (await params).slug)
     .single();
 
   if (!event || event.status !== "published") {
