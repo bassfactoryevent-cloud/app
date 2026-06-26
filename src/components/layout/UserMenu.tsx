@@ -38,34 +38,38 @@ export default function UserMenu({ userEmail, userName }: { userEmail: string; u
         }}>
           {userName.charAt(0).toUpperCase()}
         </div>
-        <span style={{ fontSize: "14px", fontWeight: "500" }}>
+        <span className="hide-on-mobile" style={{ fontSize: "14px", fontWeight: "500" }}>
           {userName.split(' ')[0]}
         </span>
       </button>
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
-            className="glass-panel"
-            style={{
-              position: "absolute",
-              top: "calc(100% + 10px)",
-              right: 0,
-              width: "220px",
-              padding: "8px",
-              zIndex: 100,
-              display: "flex",
-              flexDirection: "column",
-              gap: "4px"
-            }}
-          >
-            <div style={{ padding: "8px 12px", borderBottom: "1px solid var(--glass-border)", marginBottom: "4px" }}>
-              <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--color-text-primary)", margin: 0 }}>{userName}</p>
-              <p style={{ fontSize: "12px", color: "var(--color-text-secondary)", margin: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{userEmail}</p>
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="user-menu-dropdown"
+              style={{
+                position: "absolute",
+                top: "calc(100% + 10px)",
+                right: 0,
+                width: "220px",
+                padding: "8px",
+                zIndex: 100,
+                display: "flex",
+                flexDirection: "column",
+                gap: "4px",
+                backgroundColor: "var(--color-bg)",
+                border: "1px solid var(--color-border)",
+                borderRadius: "12px",
+                boxShadow: "0 10px 40px rgba(0,0,0,0.8)"
+              }}
+            >
+              <div style={{ padding: "8px 12px", borderBottom: "1px solid var(--color-border)", marginBottom: "4px" }}>
+                <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--color-text-primary)", margin: 0 }}>{userName}</p>
+                <p style={{ fontSize: "12px", color: "var(--color-text-secondary)", margin: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{userEmail}</p>
             </div>
             
             <Link href="/account" className="menu-item" onClick={() => setIsOpen(false)}>
@@ -100,6 +104,11 @@ export default function UserMenu({ userEmail, userName }: { userEmail: string; u
         }
         .menu-item:hover {
           background: rgba(128,128,128,0.1);
+        }
+        @media (max-width: 600px) {
+          .hide-on-mobile {
+            display: none;
+          }
         }
       `}</style>
     </div>
