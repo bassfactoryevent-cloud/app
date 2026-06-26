@@ -1,30 +1,31 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* Light Mode Variables */
 :root {
-  /* Vanguard Theme Variables - Forced Dark Mode (Spotify Style) */
-  --color-bg: #000000;
-  --color-surface: #0A0A0A;
-  --color-surface-hover: #1A1A1A;
-  --color-surface-elevated: #121212;
+  --color-bg: #FFFFFF;
+  --color-surface: #F9FAFB;
+  --color-surface-hover: #F3F4F6;
+  --color-surface-elevated: #FFFFFF;
   
-  --color-text-primary: #FFFFFF;
-  --color-text-secondary: #A1A1AA;
-  --color-text-inverse: #000000;
+  --color-text-primary: #111827;
+  --color-text-secondary: #4B5563;
+  --color-text-inverse: #FFFFFF;
   
   --color-black: #000000;
   --color-white: #FFFFFF;
   
-  --color-border: #27272A;
+  --color-border: #E5E7EB;
   
-  --color-magenta: #E50914; /* Brand primary */
-  --color-magenta-glow: rgba(229, 9, 20, 0.3);
-  --color-magenta-hover: #FF1F2B;
+  /* Brand primary - Using a slightly darker magenta for better contrast on white */
+  --color-magenta: #D90416; 
+  --color-magenta-glow: rgba(217, 4, 22, 0.15);
+  --color-magenta-hover: #B90010;
   
-  --color-accent: #00F0FF;
-  --color-accent-glow: rgba(0, 240, 255, 0.2);
+  --color-accent: #008D99; /* Darker cyan for light mode readability */
+  --color-accent-glow: rgba(0, 141, 153, 0.1);
   
-  --glass-bg: rgba(10, 10, 10, 0.65);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.05);
   --glass-blur: blur(24px);
 
   /* Shared Tokens */
@@ -40,6 +41,30 @@
   --space-4: 32px;
   --space-5: 40px;
   --space-6: 48px;
+}
+
+/* Dark Mode Variables */
+.dark {
+  --color-bg: #000000;
+  --color-surface: #0A0A0A;
+  --color-surface-hover: #1A1A1A;
+  --color-surface-elevated: #121212;
+  
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #A1A1AA;
+  --color-text-inverse: #000000;
+  
+  --color-border: #27272A;
+  
+  --color-magenta: #E50914; /* Original vibrant brand primary */
+  --color-magenta-glow: rgba(229, 9, 20, 0.3);
+  --color-magenta-hover: #FF1F2B;
+  
+  --color-accent: #00F0FF;
+  --color-accent-glow: rgba(0, 240, 255, 0.2);
+  
+  --glass-bg: rgba(10, 10, 10, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.08);
 }
 
 * {
@@ -123,7 +148,7 @@ input, textarea, select {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s, color 0.2s;
 }
 
 input:focus, textarea:focus, select:focus {

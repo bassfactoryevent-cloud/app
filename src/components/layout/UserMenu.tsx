@@ -64,7 +64,7 @@ export default function UserMenu({ userEmail, userName }: { userEmail: string; u
             }}
           >
             <div style={{ padding: "8px 12px", borderBottom: "1px solid var(--glass-border)", marginBottom: "4px" }}>
-              <p style={{ fontSize: "14px", fontWeight: "600", color: "white", margin: 0 }}>{userName}</p>
+              <p style={{ fontSize: "14px", fontWeight: "600", color: "var(--color-text-primary)", margin: 0 }}>{userName}</p>
               <p style={{ fontSize: "12px", color: "var(--color-text-secondary)", margin: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{userEmail}</p>
             </div>
             
@@ -95,11 +95,11 @@ export default function UserMenu({ userEmail, userName }: { userEmail: string; u
           padding: 10px 12px;
           border-radius: 6px;
           font-size: 14px;
-          color: white;
+          color: var(--color-text-primary);
           transition: background 0.2s;
         }
         .menu-item:hover {
-          background: rgba(255,255,255,0.1);
+          background: rgba(128,128,128,0.1);
         }
       `}</style>
     </div>

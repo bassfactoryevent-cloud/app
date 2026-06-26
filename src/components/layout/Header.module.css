@@ -1,154 +1,203 @@
+/* Top Banner */
 .headerWrapper {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+  position: relative;
   width: 100%;
-  display: flex;
-  flex-direction: column;
+  z-index: 50;
 }
 
-/* --- Top Header --- */
 .topHeader {
-  background-color: var(--color-black);
-  color: var(--color-white);
-  padding: 6px var(--space-3);
-  font-size: 0.75rem;
-  font-weight: 500;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.35rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  letter-spacing: 0.03em;
-}
-
-.topHeaderLeft {
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
-  opacity: 0.8;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
 }
 
 .topHeaderRight {
   display: flex;
-  gap: var(--space-3);
   align-items: center;
+  gap: 0.75rem;
 }
 
 .topLink {
-  color: inherit;
-  text-decoration: none;
-  transition: opacity 0.2s ease;
+  transition: color 0.2s;
 }
 
 .topLink:hover {
-  opacity: 1;
-  color: var(--color-magenta);
+  color: var(--color-text-primary);
 }
 
-/* --- Main Header --- */
+.topDivider {
+  opacity: 0.3;
+}
+
+/* Main Header - Desktop App Style */
 .mainHeader {
-  background-color: var(--color-white);
-  border-bottom: 1px solid rgba(17, 17, 17, 0.08);
-  height: 72px;
-  display: flex;
-  align-items: center;
-  padding: 0 var(--space-3);
-  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--glass-border);
   transition: all 0.3s ease;
 }
 
-@media (prefers-color-scheme: dark) {
-  .mainHeader {
-    background-color: var(--color-bg);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  }
+.headerInner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0.75rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
+/* Logo */
 .logoContainer {
   display: flex;
   align-items: center;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
 }
 
-.logoContainer:hover {
-  opacity: 0.8;
-}
-
-/* Opcional: Si el logo es negro, se puede invertir en dark mode */
-@media (prefers-color-scheme: dark) {
-  .logoContainer img {
-    filter: brightness(0) invert(1);
-  }
-}
-
-/* Navigation */
-.nav {
+.logoLink {
   display: flex;
-  gap: var(--space-4);
   align-items: center;
+}
+
+.logoImage {
+  object-fit: contain;
+  /* Next-themes specific filter to invert logo if necessary in light mode,
+     Assuming the logo is white text. If logo is black, we'd invert in dark mode. 
+     We can use CSS variables for logo inversion if needed. */
+}
+
+:global(.light) .logoImage {
+  filter: invert(1); /* Inverts a white logo to black for light mode */
+}
+
+/* Desktop Nav */
+.desktopNav {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
 }
 
 .navLink {
-  color: var(--color-black);
+  font-size: 0.875rem;
   font-weight: 600;
-  font-size: 0.9375rem;
-  text-decoration: none;
-  transition: color 0.2s ease;
-  position: relative;
-}
-
-.navLink::after {
-  content: '';
-  position: absolute;
-  bottom: -4px;
-  left: 0;
-  width: 0%;
-  height: 2px;
-  background-color: var(--color-magenta);
-  transition: width 0.2s ease;
+  color: var(--color-text-secondary);
+  transition: color 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .navLink:hover {
-  color: var(--color-magenta);
-}
-
-.navLink:hover::after {
-  width: 100%;
+  color: var(--color-text-primary);
 }
 
 /* Actions */
-.actions {
+.actionsGroup {
   display: flex;
-  gap: var(--space-2);
   align-items: center;
+  gap: 1.25rem;
 }
 
-.cartBtn {
+.loginBtn {
+  background-color: var(--color-text-primary);
+  color: var(--color-bg);
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-full);
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.loginBtn:hover {
+  transform: scale(1.02);
+  opacity: 0.9;
+}
+
+/* Mobile Menu Overlays */
+.mobileMenuContainer {
+  display: none; /* Hidden on desktop */
+}
+
+.hamburgerBtn {
   background: transparent;
   border: none;
-  color: var(--color-black);
+  color: var(--color-text-primary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  transition: background-color 0.2s ease;
+  padding: 0.5rem;
+  z-index: 100;
 }
 
-.cartBtn:hover {
-  background-color: rgba(17, 17, 17, 0.05);
+.mobileOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-bg);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  padding: 6rem 2rem 2rem;
+  animation: slideIn 0.3s forwards;
 }
 
-@media (prefers-color-scheme: dark) {
-  .cartBtn:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mobileNav {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.mobileNavLink {
+  font-size: 2rem;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+.mobileMenuFooter {
+  margin-top: auto;
+  border-top: 1px solid var(--color-border);
+  padding-top: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 900px) {
+  .topHeader {
+    display: none; /* Hide top banner on mobile */
   }
-}
 
-.loginBtn {
-  height: 40px;
-  padding: 0 var(--space-3);
-  font-size: 0.875rem;
+  .headerInner {
+    padding: 1rem 1.5rem;
+  }
+
+  .desktopNav {
+    display: none; /* Hide standard nav */
+  }
+
+  .desktopOnly {
+    display: none;
+  }
+
+  .mobileMenuContainer {
+    display: block; /* Show hamburger */
+  }
 }
