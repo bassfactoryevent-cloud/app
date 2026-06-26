@@ -31,7 +31,7 @@ export default async function Header() {
           <div className={styles.logoContainer}>
             <Link href="/" className={styles.logoLink}>
               <Image
-                src="/bassfactorylogo1.png"
+                src="/Bass-Factory-Blanco-Sin-Letras.png"
                 alt="Bassfactory Logo"
                 width={160}
                 height={40}

@@ -13,11 +13,12 @@ export default function Footer() {
         <div className={styles.brandSection}>
           <Link href="/">
             <Image
-              src={logo}
+              src="/Bass-Factory-Blanco-Sin-Letras.png"
               alt="Bassfactory Logo"
               width={160}
               height={40}
               style={{ objectFit: "contain" }}
+              className={styles.logoImage}
             />
           </Link>
           <p className={styles.brandDescription}>
