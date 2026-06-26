@@ -22,7 +22,7 @@ export default function HorizontalScroll({ title, subtitle, children, viewAllLin
   };
 
   return (
-    <section style={{ margin: 'var(--space-4) 0', padding: '0 var(--space-3)' }}>
+    <section style={{ margin: '0', padding: '0 var(--space-3)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 'var(--space-2)' }}>
         <div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, letterSpacing: '-0.03em' }}>{title}</h2>
