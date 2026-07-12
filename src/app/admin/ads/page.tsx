@@ -28,7 +28,7 @@ export default async function AdminAdsPage() {
   // Filter out expired campaigns for the overview
   const validActiveAds: any[] = (activeAds || []).filter((ad: any) => {
     // Handle both object and array responses from Supabase joins
-    const campaign = Array.isArray(ad.ad_campaigns) ? ad.ad_campaigns[0] : ad.ad_campaigns;
+    const campaign = Array.isArray(ad?.ad_campaigns) ? ad.ad_campaigns[0] : ad?.ad_campaigns;
     if (campaign && campaign.end_date) {
       if (new Date() > new Date(campaign.end_date)) {
         return false;
@@ -67,7 +67,10 @@ export default async function AdminAdsPage() {
         <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Mapa de Ubicaciones</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
           {ALL_PLACEMENTS.map(placement => {
-            const occupant = validActiveAds.find((ad: any) => ad.ad_placements.name === placement.id);
+            const occupant = validActiveAds.find((ad: any) => {
+              const pName = Array.isArray(ad?.ad_placements) ? ad.ad_placements[0]?.name : ad?.ad_placements?.name;
+              return pName === placement.id;
+            });
             const isOccupied = !!occupant;
             return (
               <div key={placement.id} style={{ 
@@ -93,7 +96,7 @@ export default async function AdminAdsPage() {
                   <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
                     Ocupado por: <br/>
                     <strong style={{ color: 'white' }}>
-                      {Array.isArray(occupant.ad_campaigns) ? occupant.ad_campaigns[0]?.name : occupant.ad_campaigns?.name}
+                      {Array.isArray(occupant?.ad_campaigns) ? occupant.ad_campaigns[0]?.name : occupant?.ad_campaigns?.name}
                     </strong>
                   </div>
                 ) : (
@@ -118,13 +121,15 @@ export default async function AdminAdsPage() {
               </div>
               <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Building2 size={14} /> {camp.client_name || 'Agencia Interna'}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><CalendarIcon size={14} /> {new Date(camp.start_date).toLocaleDateString()} {camp.end_date && `- ${new Date(camp.end_date).toLocaleDateString()}`}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><CalendarIcon size={14} /> {camp.start_date ? new Date(camp.start_date).toLocaleDateString() : 'N/A'} {camp.end_date && `- ${new Date(camp.end_date).toLocaleDateString()}`}</span>
               </div>
             </div>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
               <div style={{ textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.02)', padding: '0.5rem 1rem', borderRadius: '0.5rem' }}>
-                <span style={{ display: 'block', fontSize: '1.25rem', fontWeight: 800 }}>{camp.ads[0]?.count || 0}</span>
+                <span style={{ display: 'block', fontSize: '1.25rem', fontWeight: 800 }}>
+                  {Array.isArray(camp?.ads) ? (camp.ads[0]?.count || 0) : (camp?.ads?.count || 0)}
+                </span>
                 <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>Banners</span>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
