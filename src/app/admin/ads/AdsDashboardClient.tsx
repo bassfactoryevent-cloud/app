@@ -19,6 +19,7 @@ export default function AdsDashboardClient({ campaigns, validActiveAds }: { camp
   const [draggedCampaign, setDraggedCampaign] = useState<any | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalCampaign, setModalCampaign] = useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -53,6 +54,7 @@ export default function AdsDashboardClient({ campaigns, validActiveAds }: { camp
     e.preventDefault();
     e.currentTarget.classList.remove("drag-over");
     if (draggedCampaign) {
+      setModalCampaign(draggedCampaign);
       setDropTarget(placementId);
       setModalOpen(true);
     }
@@ -60,15 +62,16 @@ export default function AdsDashboardClient({ campaigns, validActiveAds }: { camp
 
   const handleModalSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!draggedCampaign || !dropTarget) return;
+    if (!modalCampaign || !dropTarget) return;
 
     setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
     formData.append("placement_name", dropTarget);
 
     try {
-      await addAdToCampaign(draggedCampaign.id, formData);
+      await addAdToCampaign(modalCampaign.id, formData);
       setModalOpen(false);
+      setModalCampaign(null);
       // Wait a bit to let server action revalidate
     } catch (error) {
       console.error(error);
@@ -236,15 +239,15 @@ export default function AdsDashboardClient({ campaigns, validActiveAds }: { camp
       </div>
 
       {/* MODAL ASIGNAR BANNER */}
-      {modalOpen && draggedCampaign && dropTarget && (
+      {modalOpen && modalCampaign && dropTarget && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1rem', padding: '2rem', width: '100%', maxWidth: '500px', position: 'relative' }}>
-            <button onClick={() => setModalOpen(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}>
+            <button onClick={() => { setModalOpen(false); setModalCampaign(null); }} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}>
               <X size={24} />
             </button>
             <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Asignar Banner</h2>
             <p style={{ fontSize: '0.875rem', opacity: 0.7, marginBottom: '1.5rem' }}>
-              Campaña: <strong>{draggedCampaign.name}</strong> <br/>
+              Campaña: <strong>{modalCampaign.name}</strong> <br/>
               Ubicación: <strong>{ALL_PLACEMENTS.find(p => p.id === dropTarget)?.label}</strong>
             </p>
 
