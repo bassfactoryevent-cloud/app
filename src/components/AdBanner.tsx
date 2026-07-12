@@ -9,8 +9,13 @@ interface AdBannerProps {
 export default async function AdBanner({ placementName, className = "" }: AdBannerProps) {
   const supabase = await createClient();
 
-  // Check if placement is VIP
-  const { data: placement } = await supabase.from("ad_placements").select("is_vip").eq("name", placementName).single();
+  // Check if placement is VIP and active
+  const { data: placement } = await supabase.from("ad_placements").select("is_vip, is_active").eq("name", placementName).single();
+  
+  if (placement && placement.is_active === false) {
+    return null; // The placement has been globally turned off
+  }
+
   const isVip = placement?.is_vip;
 
   // Buscar banners activos para este placement

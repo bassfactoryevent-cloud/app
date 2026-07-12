@@ -145,6 +145,23 @@ export async function togglePlacementVip(placementName: string, isVip: boolean) 
   revalidatePath("/admin/ads");
 }
 
+export async function togglePlacementActive(placementName: string, isActive: boolean) {
+  const supabase = await createClient();
+  
+  let placement_id;
+  const { data: existingPlacement } = await supabase.from("ad_placements").select("id").eq("name", placementName).single();
+  
+  if (existingPlacement) {
+    const { error } = await supabase.from("ad_placements").update({ is_active: isActive }).eq("id", existingPlacement.id);
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase.from("ad_placements").insert([{ name: placementName, is_active: isActive }]);
+    if (error) throw new Error(error.message);
+  }
+
+  revalidatePath("/admin/ads");
+}
+
 export async function updateAdsOrder(orderedAds: { id: string, order_index: number }[]) {
   const supabase = await createClient();
   

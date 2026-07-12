@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Megaphone, PlusCircle, Building2, Calendar as CalendarIcon, GripVertical, X } from "lucide-react";
 import Link from "next/link";
-import { deleteCampaign, addAdToCampaign, togglePlacementVip, updateAdsOrder, removeAdFromPlacement } from "./actions";
+import { deleteCampaign, addAdToCampaign, togglePlacementVip, updateAdsOrder, removeAdFromPlacement, togglePlacementActive } from "./actions";
 
 const ALL_PLACEMENTS = [
   { id: 'home_horizontal', label: 'Home - Horizontal' },
@@ -118,6 +118,7 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
           {ALL_PLACEMENTS.map(placement => {
             const dbPlacement = dbPlacements?.find(p => p.name === placement.id);
             const isVip = dbPlacement?.is_vip;
+            const isActive = dbPlacement ? dbPlacement.is_active : true;
 
             const occupants = validActiveAds.filter((ad: any) => {
               const pName = Array.isArray(ad?.ad_placements) ? ad.ad_placements[0]?.name : ad?.ad_placements?.name;
@@ -133,6 +134,15 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
                 alert("Error cambiando estado VIP");
               }
             };
+            
+            const handleToggleActive = async () => {
+              try {
+                await togglePlacementActive(placement.id, !isActive);
+              } catch (error) {
+                console.error(error);
+                alert("Error cambiando estado de la ubicación");
+              }
+            };
 
             return (
               <div 
@@ -142,20 +152,31 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
                 onDrop={(e) => handleDrop(e, placement.id)}
                 className="dropzone"
                 style={{ 
-                  backgroundColor: isVip ? 'rgba(255, 215, 0, 0.05)' : 'rgba(255,255,255,0.02)', 
-                  border: isVip ? '2px dashed rgba(255, 215, 0, 0.3)' : '2px dashed rgba(255,255,255,0.1)', 
+                  backgroundColor: !isActive ? 'rgba(255,0,0,0.05)' : (isVip ? 'rgba(255, 215, 0, 0.05)' : 'rgba(255,255,255,0.02)'), 
+                  border: !isActive ? '2px dashed rgba(255,0,0,0.2)' : (isVip ? '2px dashed rgba(255, 215, 0, 0.3)' : '2px dashed rgba(255,255,255,0.1)'), 
                   borderRadius: '0.75rem', 
                   padding: '1rem',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.5rem',
                   transition: 'all 0.2s',
-                  position: 'relative'
+                  position: 'relative',
+                  opacity: !isActive ? 0.6 : 1
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '0.875rem', fontWeight: 600, pointerEvents: 'none' }}>{placement.label}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginRight: '0.25rem' }}>
+                      <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: isActive ? '#4ade80' : '#ef4444', fontWeight: 800 }}>{isActive ? 'ON' : 'OFF'}</span>
+                      <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={!!isActive} onChange={handleToggleActive} style={{ display: 'none' }} />
+                        <div style={{ width: '24px', height: '14px', backgroundColor: isActive ? '#4ade80' : 'rgba(255,0,0,0.3)', borderRadius: '10px', position: 'relative', transition: '0.2s' }}>
+                          <div style={{ width: '10px', height: '10px', backgroundColor: isActive ? '#000' : '#fff', borderRadius: '50%', position: 'absolute', top: '2px', left: isActive ? '12px' : '2px', transition: '0.2s' }} />
+                        </div>
+                      </label>
+                    </div>
+
                     <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: isVip ? '#ffd700' : 'rgba(255,255,255,0.3)', fontWeight: 800 }}>VIP</span>
                     <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                       <input type="checkbox" checked={!!isVip} onChange={handleToggleVip} style={{ display: 'none' }} />
@@ -187,10 +208,27 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
                       </>
                     ) : (
                       <>
-                        Ocupado por: <br/>
-                        <strong style={{ color: 'white' }}>
-                          {Array.isArray(occupants[0]?.ad_campaigns) ? occupants[0].ad_campaigns[0]?.name : occupants[0]?.ad_campaigns?.name}
-                        </strong>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            Ocupado por: <br/>
+                            <strong style={{ color: 'white' }}>
+                              {Array.isArray(occupants[0]?.ad_campaigns) ? occupants[0].ad_campaigns[0]?.name : occupants[0]?.ad_campaigns?.name}
+                            </strong>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              if (!confirm("¿Seguro que deseas eliminar este banner? Podrás soltar uno nuevo en su lugar.")) return;
+                              try {
+                                await removeAdFromPlacement(occupants[0].id);
+                              } catch (e) {
+                                alert("Error eliminando");
+                              }
+                            }}
+                            style={{ pointerEvents: 'auto', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', cursor: 'pointer', fontSize: '0.75rem' }}
+                          >
+                            Eliminar
+                          </button>
+                        </div>
                       </>
                     )}
                   </div>

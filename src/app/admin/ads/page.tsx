@@ -42,7 +42,7 @@ export default async function AdminAdsPage() {
       return true;
     });
 
-    const { data: dbPlacements } = await supabase.from("ad_placements").select("id, name, is_vip");
+    const { data: dbPlacements } = await supabase.from("ad_placements").select("id, name, is_vip, is_active");
 
     return <AdsDashboardClient campaigns={campaigns || []} validActiveAds={validActiveAds} dbPlacements={dbPlacements || []} />;
   } catch (error: any) {
