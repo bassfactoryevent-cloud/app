@@ -180,3 +180,23 @@ export async function removeAdFromPlacement(adId: string) {
   if (error) throw new Error(error.message);
   revalidatePath("/admin/ads");
 }
+
+export async function updateAdPlacement(adId: string, placementName: string) {
+  const supabase = await createClient();
+  
+  // Find or create placement
+  let placement_id;
+  const { data: existingPlacement } = await supabase.from("ad_placements").select("id").eq("name", placementName).single();
+  
+  if (existingPlacement) {
+    placement_id = existingPlacement.id;
+  } else {
+    const { data: newPlacement, error: pError } = await supabase.from("ad_placements").insert([{ name: placementName }]).select("id").single();
+    if (pError) throw new Error(pError.message);
+    placement_id = newPlacement.id;
+  }
+
+  const { error } = await supabase.from("ads").update({ placement_id }).eq("id", adId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/ads");
+}

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Megaphone, PlusCircle, Building2, Calendar as CalendarIcon, GripVertical, X } from "lucide-react";
 import Link from "next/link";
-import { deleteCampaign, addAdToCampaign, togglePlacementVip, updateAdsOrder, removeAdFromPlacement, togglePlacementActive } from "./actions";
+import { deleteCampaign, addAdToCampaign, togglePlacementVip, updateAdsOrder, removeAdFromPlacement, togglePlacementActive, updateAdPlacement } from "./actions";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 
 const ALL_PLACEMENTS = [
@@ -24,6 +24,7 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
   const [modalCampaign, setModalCampaign] = useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [bannerAssignMode, setBannerAssignMode] = useState<"new" | "existing">("new");
 
   // VIP Management State
   const [vipModalPlacement, setVipModalPlacement] = useState<string | null>(null);
@@ -84,6 +85,11 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
     if (draggedCampaign) {
       setModalCampaign(draggedCampaign);
       setDropTarget(placementId);
+      if (draggedCampaign.ads && draggedCampaign.ads.length > 0) {
+        setBannerAssignMode("existing");
+      } else {
+        setBannerAssignMode("new");
+      }
       setModalOpen(true);
     }
   };
@@ -432,7 +438,7 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
       {/* MODAL ASIGNAR BANNER */}
       {modalOpen && modalCampaign && dropTarget && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1rem', padding: '2rem', width: '100%', maxWidth: '500px', position: 'relative' }}>
+          <div style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1rem', padding: '2rem', width: '100%', maxWidth: '500px', position: 'relative', maxHeight: '90vh', overflowY: 'auto' }}>
             <button onClick={() => { setModalOpen(false); setModalCampaign(null); }} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}>
               <X size={24} />
             </button>
@@ -442,19 +448,80 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
               Ubicación: <strong>{ALL_PLACEMENTS.find(p => p.id === dropTarget)?.label}</strong>
             </p>
 
-            <form onSubmit={handleModalSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>URL del Recurso (Imagen o Video MP4/WEBM) *</label>
-                <input type="url" name="image_url" required placeholder="https://..." style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+            {modalCampaign.ads && modalCampaign.ads.length > 0 && (
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', backgroundColor: 'rgba(255,255,255,0.05)', padding: '0.25rem', borderRadius: '0.5rem' }}>
+                <button 
+                  onClick={() => setBannerAssignMode("existing")}
+                  style={{ flex: 1, padding: '0.5rem', borderRadius: '0.25rem', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem', backgroundColor: bannerAssignMode === "existing" ? 'var(--color-magenta)' : 'transparent', color: 'white', transition: '0.2s' }}
+                >
+                  Usar Existente
+                </button>
+                <button 
+                  onClick={() => setBannerAssignMode("new")}
+                  style={{ flex: 1, padding: '0.5rem', borderRadius: '0.25rem', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem', backgroundColor: bannerAssignMode === "new" ? 'var(--color-magenta)' : 'transparent', color: 'white', transition: '0.2s' }}
+                >
+                  Subir Nuevo
+                </button>
               </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>URL de Destino (Link al hacer clic)</label>
-                <input type="url" name="target_url" placeholder="https://..." style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+            )}
+
+            {bannerAssignMode === "existing" && modalCampaign.ads && modalCampaign.ads.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <p style={{ fontSize: '0.875rem', opacity: 0.8, marginBottom: '0.5rem' }}>Selecciona el banner que deseas mover a esta ubicación:</p>
+                {modalCampaign.ads.map((ad: any) => {
+                  const isVideo = ad.image_url?.toLowerCase().endsWith('.mp4') || ad.image_url?.toLowerCase().endsWith('.webm');
+                  const pName = Array.isArray(ad.ad_placements) ? ad.ad_placements[0]?.name : ad.ad_placements?.name;
+                  return (
+                    <div key={ad.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', backgroundColor: 'rgba(255,255,255,0.05)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      <div style={{ width: '80px', height: '50px', backgroundColor: 'black', borderRadius: '0.25rem', overflow: 'hidden', flexShrink: 0 }}>
+                        {isVideo ? (
+                          <video src={ad.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
+                        ) : (
+                          <img src={ad.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        )}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '0.75rem', opacity: 0.5 }}>Ubicación actual:</div>
+                        <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{ALL_PLACEMENTS.find(p => p.id === pName)?.label || pName || 'Sin asignar'}</div>
+                      </div>
+                      <button 
+                        onClick={async () => {
+                          setIsSubmitting(true);
+                          try {
+                            await updateAdPlacement(ad.id, dropTarget);
+                            setModalOpen(false);
+                            setModalCampaign(null);
+                          } catch(err) {
+                            alert("Error moviendo banner");
+                          } finally {
+                            setIsSubmitting(false);
+                          }
+                        }}
+                        disabled={isSubmitting}
+                        className="btn btn-primary"
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}
+                      >
+                        {isSubmitting ? '...' : 'Mover Aquí'}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
-              <button type="submit" className="btn btn-primary" disabled={isSubmitting} style={{ marginTop: '1rem', opacity: isSubmitting ? 0.5 : 1 }}>
-                {isSubmitting ? 'Guardando...' : 'Asignar Banner'}
-              </button>
-            </form>
+            ) : (
+              <form onSubmit={handleModalSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>URL del Recurso (Imagen o Video MP4/WEBM) *</label>
+                  <input type="url" name="image_url" required placeholder="https://..." style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>URL de Destino (Link al hacer clic)</label>
+                  <input type="url" name="target_url" placeholder="https://..." style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+                </div>
+                <button type="submit" className="btn btn-primary" disabled={isSubmitting} style={{ marginTop: '1rem', opacity: isSubmitting ? 0.5 : 1 }}>
+                  {isSubmitting ? 'Guardando...' : 'Asignar Nuevo Banner'}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       )}
