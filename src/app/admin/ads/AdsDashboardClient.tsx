@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Megaphone, PlusCircle, Building2, Calendar as CalendarIcon, GripVertical, X } from "lucide-react";
 import Link from "next/link";
 import { deleteCampaign, addAdToCampaign } from "./actions";
@@ -20,6 +20,11 @@ export default function AdsDashboardClient({ campaigns, validActiveAds }: { camp
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Drag Handlers
   const handleDragStart = (e: React.DragEvent, campaign: any) => {
@@ -148,7 +153,7 @@ export default function AdsDashboardClient({ campaigns, validActiveAds }: { camp
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {campaigns?.map((camp: any) => {
           let isExpired = false;
-          if (camp.end_date) {
+          if (camp.end_date && mounted) {
             isExpired = new Date() > new Date(camp.end_date);
           }
           const isDragging = draggedCampaign?.id === camp.id;
@@ -187,7 +192,11 @@ export default function AdsDashboardClient({ campaigns, validActiveAds }: { camp
                   </div>
                   <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Building2 size={14} /> {camp.client_name || 'Agencia Interna'}</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><CalendarIcon size={14} /> {camp.start_date ? new Date(camp.start_date).toLocaleDateString() : 'N/A'} {camp.end_date && `- ${new Date(camp.end_date).toLocaleDateString()}`}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <CalendarIcon size={14} /> 
+                      {camp.start_date ? (mounted ? new Date(camp.start_date).toLocaleDateString() : camp.start_date.split('T')[0]) : 'N/A'} 
+                      {camp.end_date && ` - ${mounted ? new Date(camp.end_date).toLocaleDateString() : camp.end_date.split('T')[0]}`}
+                    </span>
                   </div>
                 </div>
               </div>
