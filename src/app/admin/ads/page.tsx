@@ -26,9 +26,11 @@ export default async function AdminAdsPage() {
     .eq("ad_campaigns.is_active", true);
 
   // Filter out expired campaigns for the overview
-  const validActiveAds = (activeAds || []).filter((ad: any) => {
-    if (ad.ad_campaigns.end_date) {
-      if (new Date() > new Date(ad.ad_campaigns.end_date)) {
+  const validActiveAds: any[] = (activeAds || []).filter((ad: any) => {
+    // Handle both object and array responses from Supabase joins
+    const campaign = Array.isArray(ad.ad_campaigns) ? ad.ad_campaigns[0] : ad.ad_campaigns;
+    if (campaign && campaign.end_date) {
+      if (new Date() > new Date(campaign.end_date)) {
         return false;
       }
     }
@@ -90,7 +92,9 @@ export default async function AdminAdsPage() {
                 {isOccupied ? (
                   <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
                     Ocupado por: <br/>
-                    <strong style={{ color: 'white' }}>{occupant.ad_campaigns.name}</strong>
+                    <strong style={{ color: 'white' }}>
+                      {Array.isArray(occupant.ad_campaigns) ? occupant.ad_campaigns[0]?.name : occupant.ad_campaigns?.name}
+                    </strong>
                   </div>
                 ) : (
                   <div style={{ fontSize: '0.75rem', color: '#4ade80' }}>Disponible</div>
