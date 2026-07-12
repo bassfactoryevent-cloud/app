@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Megaphone, PlusCircle, Building2, Calendar as CalendarIcon, GripVertical, X } from "lucide-react";
 import Link from "next/link";
 import { deleteCampaign, addAdToCampaign, togglePlacementVip, updateAdsOrder, removeAdFromPlacement, togglePlacementActive } from "./actions";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 const ALL_PLACEMENTS = [
   { id: 'home_horizontal', label: 'Home - Horizontal' },
@@ -27,6 +28,14 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
   const [vipModalPlacement, setVipModalPlacement] = useState<string | null>(null);
   const [vipAds, setVipAds] = useState<any[]>([]);
   const [draggedVipIndex, setDraggedVipIndex] = useState<number | null>(null);
+
+  // Global Confirm State
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
 
   const handleOpenVipModal = (placementId: string) => {
     const occupants = validActiveAds.filter((ad: any) => {
@@ -216,13 +225,25 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
                             </strong>
                           </div>
                           <button
-                            onClick={async () => {
-                              if (!confirm("¿Seguro que deseas eliminar este banner? Podrás soltar uno nuevo en su lugar.")) return;
-                              try {
-                                await removeAdFromPlacement(occupants[0].id);
-                              } catch (e) {
-                                alert("Error eliminando");
-                              }
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setConfirmConfig({
+                                isOpen: true,
+                                title: "Eliminar Banner",
+                                message: "¿Seguro que deseas eliminar este banner? Podrás soltar uno nuevo en su lugar.",
+                                onConfirm: async () => {
+                                  try {
+                                    setIsSubmitting(true);
+                                    await removeAdFromPlacement(occupants[0].id);
+                                    setConfirmConfig(null);
+                                  } catch (error) {
+                                    alert("Error eliminando");
+                                  } finally {
+                                    setIsSubmitting(false);
+                                  }
+                                }
+                              });
                             }}
                             style={{ pointerEvents: 'auto', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', cursor: 'pointer', fontSize: '0.75rem' }}
                           >
@@ -305,11 +326,31 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
                   <Link href={`/admin/ads/${camp.id}`} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', backgroundColor: 'rgba(255,255,255,0.05)', color: 'white', borderRadius: '0.5rem', textDecoration: 'none', fontWeight: 600, border: '1px solid rgba(255,255,255,0.1)' }}>
                     Gestionar
                   </Link>
-                  <form action={deleteCampaign.bind(null, camp.id)}>
-                    <button type="submit" style={{ padding: '0.5rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '0.5rem', cursor: 'pointer' }}>
-                      Eliminar
-                    </button>
-                  </form>
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setConfirmConfig({
+                        isOpen: true,
+                        title: "Eliminar Campaña",
+                        message: "¿Seguro que deseas eliminar esta campaña por completo? Todos sus banners serán removidos.",
+                        onConfirm: async () => {
+                          try {
+                            setIsSubmitting(true);
+                            await deleteCampaign(camp.id);
+                            setConfirmConfig(null);
+                          } catch (error) {
+                            alert("Error eliminando campaña");
+                          } finally {
+                            setIsSubmitting(false);
+                          }
+                        }
+                      });
+                    }}
+                    style={{ padding: '0.5rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '0.5rem', cursor: 'pointer' }}
+                  >
+                    Eliminar
+                  </button>
                 </div>
               </div>
             </div>
@@ -418,17 +459,26 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
                       <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>{campName}</span>
                     </div>
                     <button
-                      onClick={async () => {
-                        if (!confirm("¿Seguro que deseas eliminar este banner de la zona VIP?")) return;
-                        setIsSubmitting(true);
-                        try {
-                          await removeAdFromPlacement(ad.id);
-                          setVipAds(vipAds.filter(a => a.id !== ad.id));
-                        } catch (e) {
-                          alert("Error eliminando");
-                        } finally {
-                          setIsSubmitting(false);
-                        }
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setConfirmConfig({
+                          isOpen: true,
+                          title: "Eliminar Banner VIP",
+                          message: "¿Seguro que deseas eliminar este banner de la zona VIP?",
+                          onConfirm: async () => {
+                            try {
+                              setIsSubmitting(true);
+                              await removeAdFromPlacement(ad.id);
+                              setVipAds(prev => prev.filter(a => a.id !== ad.id));
+                              setConfirmConfig(null);
+                            } catch (error) {
+                              alert("Error eliminando");
+                            } finally {
+                              setIsSubmitting(false);
+                            }
+                          }
+                        });
                       }}
                       style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', padding: '0.5rem', borderRadius: '0.25rem', cursor: 'pointer', fontSize: '0.75rem' }}
                     >
@@ -479,6 +529,17 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
           background-color: rgba(255, 0, 255, 0.05) !important;
         }
       `}} />
+
+      {confirmConfig && (
+        <ConfirmModal 
+          isOpen={confirmConfig.isOpen}
+          title={confirmConfig.title}
+          message={confirmConfig.message}
+          onConfirm={confirmConfig.onConfirm}
+          onCancel={() => setConfirmConfig(null)}
+          isLoading={isSubmitting}
+        />
+      )}
     </div>
   );
 }
