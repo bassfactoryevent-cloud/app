@@ -37,6 +37,10 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
     onConfirm: () => void;
   } | null>(null);
 
+  // Filtering State
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
   const handleOpenVipModal = (placementId: string) => {
     const occupants = validActiveAds.filter((ad: any) => {
       const pName = Array.isArray(ad?.ad_placements) ? ad.ad_placements[0]?.name : ad?.ad_placements?.name;
@@ -263,9 +267,75 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
       </div>
 
       {/* LISTA DE CAMPAÑAS (Draggables) */}
-      <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Lista de Campañas (Fichas)</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Lista de Campañas (Fichas)</h2>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <input 
+            type="text" 
+            placeholder="Buscar campaña o cliente..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ padding: '0.5rem', borderRadius: '0.5rem', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', minWidth: '250px' }}
+          />
+          <select 
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            style={{ padding: '0.5rem', borderRadius: '0.5rem', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+          >
+            <option value="all">Todos los estados</option>
+            <option value="active">Activas</option>
+            <option value="inactive">Inactivas</option>
+            <option value="expired">Vencidas</option>
+          </select>
+        </div>
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {campaigns?.map((camp: any) => {
+        {(() => {
+          const filteredCampaigns = campaigns?.filter((camp: any) => {
+            let isExpired = false;
+            if (camp.end_date && mounted) {
+              isExpired = new Date() > new Date(camp.end_date);
+            }
+            
+            // Apply Status Filter
+            if (statusFilter === 'active' && (!camp.is_active || isExpired)) return false;
+            if (statusFilter === 'inactive' && (camp.is_active || isExpired)) return false; // wait, if it's inactive but expired, where does it go? "Expired" overrides active/inactive.
+            if (statusFilter === 'expired' && !isExpired) return false;
+
+            // Apply Search Filter
+            if (searchTerm) {
+              const searchLower = searchTerm.toLowerCase();
+              const nameMatch = camp.name?.toLowerCase().includes(searchLower);
+              const clientMatch = camp.client_name?.toLowerCase().includes(searchLower);
+              if (!nameMatch && !clientMatch) return false;
+            }
+
+            return true;
+          });
+
+          if (!filteredCampaigns || filteredCampaigns.length === 0) {
+            if (campaigns && campaigns.length > 0) {
+              return (
+                <div style={{ padding: '4rem', textAlign: 'center', backgroundColor: 'var(--color-surface)', borderRadius: '1rem', border: '1px dashed var(--color-border)' }}>
+                  <Megaphone size={48} style={{ opacity: 0.3, marginBottom: '1rem' }} />
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>No hay resultados</h3>
+                  <p style={{ opacity: 0.7 }}>Ninguna campaña coincide con los filtros aplicados.</p>
+                </div>
+              );
+            }
+            return (
+              <div style={{ padding: '4rem', textAlign: 'center', backgroundColor: 'var(--color-surface)', borderRadius: '1rem', border: '1px dashed var(--color-border)' }}>
+                <Megaphone size={48} style={{ opacity: 0.3, marginBottom: '1rem' }} />
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>No hay campañas</h3>
+                <p style={{ opacity: 0.7, marginBottom: '1.5rem' }}>Comienza creando tu primera campaña publicitaria.</p>
+                <Link href="/admin/ads/new" className="btn btn-primary">
+                  Crear Campaña
+                </Link>
+              </div>
+            );
+          }
+
+          return filteredCampaigns.map((camp: any) => {
           let isExpired = false;
           if (camp.end_date && mounted) {
             isExpired = new Date() > new Date(camp.end_date);
@@ -355,18 +425,7 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
               </div>
             </div>
           );
-        })}
-
-        {(!campaigns || campaigns.length === 0) && (
-          <div style={{ padding: '4rem', textAlign: 'center', backgroundColor: 'var(--color-surface)', borderRadius: '1rem', border: '1px dashed var(--color-border)' }}>
-            <Megaphone size={48} style={{ opacity: 0.3, marginBottom: '1rem' }} />
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>No hay campañas</h3>
-            <p style={{ opacity: 0.7, marginBottom: '1.5rem' }}>Comienza creando tu primera campaña publicitaria.</p>
-            <Link href="/admin/ads/new" className="btn btn-primary">
-              Crear Campaña
-            </Link>
-          </div>
-        )}
+        })})()}
       </div>
 
       {/* MODAL ASIGNAR BANNER */}
