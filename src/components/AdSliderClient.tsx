@@ -31,26 +31,26 @@ export default function AdSliderClient({ ads, className = "", intervalSecs = 7, 
   if (!ads || ads.length === 0) return null;
 
   const isThin = placementName.includes("thin");
-  const containerHeight = isThin ? '120px' : '250px';
+  const containerHeight = isThin ? 'auto' : '250px';
 
   return (
-    <div className={className} style={{ position: 'relative', width: '100%', height: containerHeight, backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '0.5rem', overflow: 'hidden' }}>
+    <div className={className} style={{ position: 'relative', width: '100%', height: containerHeight, backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '0.5rem', overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr', gridTemplateRows: '1fr' }}>
       {ads.map((ad, index) => {
         const isActive = index === currentIndex;
         const isVideo = ad.image_url.toLowerCase().endsWith('.mp4') || ad.image_url.toLowerCase().endsWith('.webm');
 
         const InnerContent = isVideo ? (
-          <video src={ad.image_url} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          <video src={ad.image_url} autoPlay loop muted playsInline style={{ width: '100%', height: isThin ? 'auto' : '100%', objectFit: 'contain', display: 'block' }} />
         ) : (
-          <img src={ad.image_url} alt="Ad Banner" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          <img src={ad.image_url} alt="Ad Banner" style={{ width: '100%', height: isThin ? 'auto' : '100%', objectFit: 'contain', display: 'block' }} />
         );
 
         return (
           <div 
             key={ad.id} 
             style={{ 
-              position: 'absolute', 
-              inset: 0, 
+              gridRow: 1,
+              gridColumn: 1,
               display: 'flex', 
               justifyContent: 'center', 
               opacity: isActive ? 1 : 0, 
