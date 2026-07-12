@@ -175,7 +175,7 @@ export default async function Home() {
                     <MapPin size={14} />
                     <span>{event.location_name}</span>
                   </div>
-                  <span className={styles.cardButton}>Comprar Boletas</span>
+                  <span className={styles.cardButton}>Comprar Tickets</span>
                 </Link>
               ))}
             </HorizontalScroll>
