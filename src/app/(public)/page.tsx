@@ -217,6 +217,11 @@ export default async function Home() {
               })}
             </HorizontalScroll>
 
+            {/* Banner Publicidad Horizontal */}
+            <div style={{ marginTop: '2rem', marginBottom: '1rem' }}>
+              <AdBanner placementName="home_horizontal" />
+            </div>
+
           </div>
 
           {/* COLUMNA DERECHA (Sidebar) */}
@@ -245,9 +250,6 @@ export default async function Home() {
 
         {/* SECCIONES INFERIORES */}
         
-        {/* Banner Publicidad Horizontal */}
-        <AdBanner placementName="home_horizontal" />
-
         {/* Registro */}
         <div className={styles.registrationBanner}>
           <h2>Únete al Movimiento</h2>
