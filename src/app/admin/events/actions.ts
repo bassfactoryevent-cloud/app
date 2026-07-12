@@ -73,7 +73,8 @@ export async function createEvent(formData: FormData) {
   
   const event_id = formData.get("event_id") as string | null;
   const title = formData.get("title") as string;
-  const slug = formData.get("slug") as string;
+  let rawSlug = formData.get("slug") as string;
+  const slug = rawSlug.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   const description = formData.get("description") as string;
   const cover_image = formData.get("cover_image") as string;
   
