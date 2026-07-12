@@ -31,8 +31,8 @@ export function AdminSidebar({ profile }: { profile: any }) {
           <Image
             src={logo}
             alt="Bassfactory Logo"
-            width={140}
-            height={35}
+            width={110}
+            height={28}
             style={{ objectFit: "contain", filter: "brightness(0) invert(1)" }}
           />
         </Link>
