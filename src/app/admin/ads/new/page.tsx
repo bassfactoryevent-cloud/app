@@ -15,7 +15,7 @@ export default function NewCampaignPage() {
         </h1>
       </div>
 
-      <form action={createCampaign} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', backgroundColor: 'rgba(255,255,255,0.02)', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+      <form action={createCampaign} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: '1rem', border: '1px solid var(--color-border)', backdropFilter: 'blur(10px)' }}>
         
         <div>
           <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Nombre de la Campaña *</label>
@@ -24,7 +24,7 @@ export default function NewCampaignPage() {
             name="name" 
             required 
             placeholder="Ej. Lanzamiento Festival 2026"
-            style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'rgba(0,0,0,0.2)', color: 'white' }} 
+            style={{ width: '100%' }} 
           />
         </div>
 
@@ -34,31 +34,31 @@ export default function NewCampaignPage() {
             type="text" 
             name="client_name" 
             placeholder="Dejar en blanco si es pauta interna"
-            style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'rgba(0,0,0,0.2)', color: 'white' }} 
+            style={{ width: '100%' }} 
           />
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <div style={{ flex: 1 }}>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 200px' }}>
             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Fecha de Inicio *</label>
             <input 
               type="date" 
               name="start_date" 
               required 
-              style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'rgba(0,0,0,0.2)', color: 'white' }} 
+              style={{ width: '100%', colorScheme: 'dark' }} 
             />
           </div>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: '1 1 200px' }}>
             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Fecha de Fin (Opcional)</label>
             <input 
               type="date" 
               name="end_date" 
-              style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'rgba(0,0,0,0.2)', color: 'white' }} 
+              style={{ width: '100%', colorScheme: 'dark' }} 
             />
           </div>
         </div>
 
-        <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem' }}>
+        <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem', alignSelf: 'flex-start' }}>
           Crear Campaña
         </button>
 

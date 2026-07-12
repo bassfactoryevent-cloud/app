@@ -31,42 +31,42 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem', alignItems: 'start' }}>
         
         {/* Detalles de Campaña */}
-        <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: '1rem', border: '1px solid var(--color-border)', backdropFilter: 'blur(10px)' }}>
           <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Ajustes</h2>
           <form action={updateCampaign.bind(null, campaign.id)} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Nombre</label>
-              <input type="text" name="name" defaultValue={campaign.name} required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
+              <input type="text" name="name" defaultValue={campaign.name} required style={{ width: '100%' }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Cliente</label>
-              <input type="text" name="client_name" defaultValue={campaign.client_name || ''} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
+              <input type="text" name="client_name" defaultValue={campaign.client_name || ''} style={{ width: '100%' }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Fecha Inicio</label>
-              <input type="date" name="start_date" defaultValue={campaign.start_date.split('T')[0]} required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
+              <input type="date" name="start_date" defaultValue={campaign.start_date.split('T')[0]} required style={{ width: '100%', colorScheme: 'dark' }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Fecha Fin</label>
-              <input type="date" name="end_date" defaultValue={campaign.end_date ? campaign.end_date.split('T')[0] : ''} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
+              <input type="date" name="end_date" defaultValue={campaign.end_date ? campaign.end_date.split('T')[0] : ''} style={{ width: '100%', colorScheme: 'dark' }} />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
               <input type="checkbox" name="is_active" defaultChecked={campaign.is_active} id="active-check" />
               <label htmlFor="active-check" style={{ fontSize: '0.875rem' }}>Campaña Activa</label>
             </div>
-            <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem' }}>Guardar Cambios</button>
+            <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem', alignSelf: 'flex-start' }}>Guardar Cambios</button>
           </form>
         </div>
 
         {/* Banners */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           
-          <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: '1rem', border: '1px solid var(--color-border)', backdropFilter: 'blur(10px)' }}>
             <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Añadir Banner</h2>
             <form action={addAdToCampaign.bind(null, campaign.id)} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Ubicación (Placement) *</label>
-                <select name="placement_name" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'black', color: 'white' }}>
+                <select name="placement_name" required style={{ width: '100%' }}>
                   <option value="home_horizontal">Home - Banner Inferior (Horizontal)</option>
                   <option value="home_sidebar">Home - Sidebar Derecho (Vertical)</option>
                   <option value="blog_horizontal">Blog - Banner en Artículo (Horizontal)</option>
@@ -78,19 +78,19 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>URL de la Imagen *</label>
-                <input type="url" name="image_url" required placeholder="https://..." style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
+                <input type="url" name="image_url" required placeholder="https://..." style={{ width: '100%' }} />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>URL de Destino (Link al hacer clic)</label>
-                <input type="url" name="target_url" placeholder="https://..." style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
+                <input type="url" name="target_url" placeholder="https://..." style={{ width: '100%' }} />
               </div>
-              <button type="submit" className="btn btn-primary" style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button type="submit" className="btn btn-primary" style={{ alignSelf: 'flex-start', marginTop: '0.5rem' }}>
                 <Plus size={16} /> Añadir Banner
               </button>
             </form>
           </div>
 
-          <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: '1rem', border: '1px solid var(--color-border)', backdropFilter: 'blur(10px)' }}>
             <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Banners Activos</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
               {campaign.ads.map((ad: any) => (

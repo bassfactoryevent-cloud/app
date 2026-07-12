@@ -166,3 +166,29 @@ input::placeholder, textarea::placeholder {
   color: var(--color-text-secondary);
   opacity: 0.7;
 }
+
+/* Global Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-family: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background-color: var(--color-magenta);
+  color: var(--color-white);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-magenta-hover);
+  box-shadow: 0 0 12px var(--color-magenta-glow);
+}
