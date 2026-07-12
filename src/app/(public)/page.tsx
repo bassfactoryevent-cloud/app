@@ -27,7 +27,7 @@ export default async function Home() {
   // Fetch Merch
   const { data: merch } = await supabase
     .from('merch_products')
-    .select('*')
+    .select('*, merch_product_images(image_url, is_primary, sort_order)')
     .eq('status', 'published')
     .limit(8);
 
@@ -195,13 +195,16 @@ export default async function Home() {
 
             {/* 3. Merch */}
             <HorizontalScroll title="Merch">
-              {merch && merch.slice(0, 8).map(product => (
-                <Link href={`/merch/${product.slug}`} key={product.id} className={styles.card}>
-                  <img src={"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=400"} alt={product.title} className={styles.cardImage} />
-                  <h3 className={styles.cardTitle}>{product.title}</h3>
-                  <p className={styles.cardSubtitle}>$ {Number(product.base_price).toLocaleString('es-CO')}</p>
-                </Link>
-              ))}
+              {merch && merch.slice(0, 8).map(product => {
+                const primaryImage = product.merch_product_images?.find((img: any) => img.is_primary)?.image_url || product.merch_product_images?.[0]?.image_url || "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=400";
+                return (
+                  <Link href={`/merch/${product.slug}`} key={product.id} className={styles.card}>
+                    <img src={primaryImage} alt={product.title} className={styles.cardImage} />
+                    <h3 className={styles.cardTitle}>{product.title}</h3>
+                    <p className={styles.cardSubtitle}>$ {Number(product.base_price).toLocaleString('es-CO')}</p>
+                  </Link>
+                );
+              })}
             </HorizontalScroll>
 
           </div>
