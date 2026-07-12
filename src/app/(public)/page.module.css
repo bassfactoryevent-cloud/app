@@ -90,7 +90,7 @@
   background-color: var(--color-magenta);
   color: var(--color-white);
   border: none;
-  border-radius: var(--radius-full);
+  border-radius: 10px;
   padding: 1rem 2rem;
   font-size: 1rem;
   font-weight: 700;
@@ -107,7 +107,7 @@
   background-color: rgba(255, 255, 255, 0.1);
   color: var(--color-white);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--radius-full);
+  border-radius: 10px;
   padding: 1rem 2rem;
   font-size: 1rem;
   font-weight: 700;
@@ -137,7 +137,7 @@
   padding: 0.25rem 0.6rem;
   background-color: var(--color-magenta);
   color: white;
-  border-radius: 100px;
+  border-radius: 10px;
   font-size: 0.65rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -151,7 +151,7 @@
   background-color: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.2);
   color: white;
-  border-radius: 100px;
+  border-radius: 10px;
   font-size: 0.65rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -355,7 +355,7 @@
 .pillInput {
   width: 100%;
   padding: 1rem 1.5rem;
-  border-radius: var(--radius-full);
+  border-radius: 10px;
   border: 1px solid var(--color-border);
   background-color: rgba(255, 255, 255, 0.05);
   color: var(--color-text-primary);
@@ -370,7 +370,7 @@
 .pillButton {
   width: 100%;
   padding: 1rem 1.5rem;
-  border-radius: var(--radius-full);
+  border-radius: 10px;
   border: none;
   background-color: var(--color-magenta);
   color: var(--color-white);

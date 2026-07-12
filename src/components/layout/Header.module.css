@@ -90,7 +90,7 @@
   color: var(--color-text-secondary);
   transition: all 0.2s ease;
   padding: 0.5rem 1rem;
-  border-radius: var(--radius-full);
+  border-radius: 10px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -113,7 +113,7 @@
   font-weight: 600;
   font-size: 0.875rem;
   padding: 0.5rem 1.25rem;
-  border-radius: var(--radius-full);
+  border-radius: 10px;
   transition: transform 0.2s, opacity 0.2s;
 }
 

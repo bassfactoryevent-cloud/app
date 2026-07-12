@@ -116,11 +116,11 @@ export default async function Home() {
           {tags.length > 0 && (
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
               {tags.map((tag: any, i: number) => tag.url ? (
-                <Link key={i} href={tag.url} style={{ padding: '0.25rem 1rem', backgroundColor: 'var(--color-magenta)', color: 'white', borderRadius: '100px', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'none' }}>
+                <Link key={i} href={tag.url} style={{ padding: '0.25rem 1rem', backgroundColor: 'var(--color-magenta)', color: 'white', borderRadius: '10px', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'none' }}>
                   {tag.text}
                 </Link>
               ) : (
-                <span key={i} style={{ padding: '0.25rem 1rem', backgroundColor: 'var(--color-magenta)', color: 'white', borderRadius: '100px', fontSize: '0.875rem', fontWeight: 600 }}>
+                <span key={i} style={{ padding: '0.25rem 1rem', backgroundColor: 'var(--color-magenta)', color: 'white', borderRadius: '10px', fontSize: '0.875rem', fontWeight: 600 }}>
                   {tag.text}
                 </span>
               ))}
@@ -140,7 +140,7 @@ export default async function Home() {
             ) : null}
             
             {(heroSettings?.secondary_button_text && heroSettings?.secondary_button_url) ? (
-              <Link href={heroSettings.secondary_button_url} className={styles.btnSecondary} style={{ padding: '0.875rem 2rem', backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', borderRadius: '100px', fontWeight: 600, textDecoration: 'none', backdropFilter: 'blur(10px)' }}>
+              <Link href={heroSettings.secondary_button_url} className={styles.btnSecondary} style={{ padding: '0.875rem 2rem', backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', borderRadius: '10px', fontWeight: 600, textDecoration: 'none', backdropFilter: 'blur(10px)' }}>
                 {heroSettings.secondary_button_text}
               </Link>
             ) : null}

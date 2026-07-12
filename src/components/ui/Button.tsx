@@ -16,7 +16,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       display: "inline-flex",
       alignItems: "center",
       justifyContent: "center",
-      borderRadius: "var(--radius-full)",
+      borderRadius: "10px",
       fontWeight: 600,
       fontFamily: "'Outfit', sans-serif",
       letterSpacing: "0.02em",
