@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import BlogEditorClient from "../../new/BlogEditorClient";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { createBlogPost } from "../../actions";
 
 export default async function EditBlogPostPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
@@ -52,12 +53,7 @@ export default async function EditBlogPostPage({ params }: { params: Promise<{ i
         genres={genres || []}
         tags={tags || []}
         initialData={initialData}
-        action={async (formData) => {
-          "use server";
-          const { createBlogPost } = await import("../../actions");
-          formData.append("post_id", (await params).id);
-          await createBlogPost(formData);
-        }} 
+        action={createBlogPost} 
       />
     </div>
   );

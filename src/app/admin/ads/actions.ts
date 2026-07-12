@@ -94,3 +94,35 @@ export async function deleteAd(adId: string, campaignId: string) {
   if (error) throw new Error(error.message);
   revalidatePath(`/admin/ads/${campaignId}`);
 }
+
+export async function updateAd(adId: string, campaignId: string, formData: FormData) {
+  const supabase = await createClient();
+  
+  const placement_name = formData.get("placement_name") as string;
+  const image_url = formData.get("image_url") as string;
+  const target_url = formData.get("target_url") as string || null;
+
+  // Find or create placement
+  let placement_id;
+  const { data: existingPlacement } = await supabase.from("ad_placements").select("id").eq("name", placement_name).single();
+  
+  if (existingPlacement) {
+    placement_id = existingPlacement.id;
+  } else {
+    const { data: newPlacement, error: pError } = await supabase.from("ad_placements").insert([{ name: placement_name }]).select("id").single();
+    if (pError) throw new Error(pError.message);
+    placement_id = newPlacement.id;
+  }
+
+  const { error } = await supabase.from("ads").update({
+    placement_id,
+    image_url,
+    target_url
+  }).eq("id", adId);
+
+  if (error) throw new Error(error.message);
+  
+  // Revalidate and redirect back to normal view
+  revalidatePath(`/admin/ads/${campaignId}`);
+  redirect(`/admin/ads/${campaignId}`);
+}

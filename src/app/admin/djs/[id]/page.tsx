@@ -2,7 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save } from "lucide-react";
-import { createDj } from "../../events/actions";
+import { createDj, updateDj } from "../../events/actions";
 import ImageUpload from "@/components/admin/ImageUpload";
 
 export default async function EditDjPage({ params }: { params: Promise<{ id: string }> }) {
@@ -33,12 +33,8 @@ export default async function EditDjPage({ params }: { params: Promise<{ id: str
         </div>
       </div>
 
-      <form action={async (formData) => {
-          "use server";
-          const { updateDj } = await import("../../events/actions");
-          formData.append("dj_id", (await params).id);
-          await updateDj(formData);
-      }} style={{ backgroundColor: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <form action={updateDj} style={{ backgroundColor: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <input type="hidden" name="dj_id" value={dj.id} />
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <label htmlFor="name" style={{ fontWeight: 600 }}>Nombre del DJ</label>

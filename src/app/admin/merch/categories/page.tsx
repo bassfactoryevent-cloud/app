@@ -51,10 +51,7 @@ export default async function MerchCategoriesPage() {
                 <p style={{ opacity: 0.5, fontSize: '0.875rem' }}>/{cat.slug}</p>
                 {cat.description && <p style={{ opacity: 0.7, fontSize: '0.875rem', marginTop: '0.5rem' }}>{cat.description}</p>}
               </div>
-              <form action={async () => {
-                "use server";
-                await deleteMerchCategory(cat.id);
-              }}>
+              <form action={deleteMerchCategory.bind(null, cat.id)}>
                 <button type="submit" style={{ padding: '0.5rem', backgroundColor: 'transparent', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}>
                   <Trash2 size={16} />
                 </button>

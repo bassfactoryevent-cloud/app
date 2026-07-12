@@ -68,6 +68,7 @@ export default function BlogEditorClient({
         toast.error("Error al procesar la solicitud");
       }
     }} style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
+      {initialData?.id && <input type="hidden" name="post_id" value={initialData.id} />}
       
       {/* Columna Izquierda: Contenido Principal */}
       <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '1.5rem', backgroundColor: 'var(--color-bg)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
