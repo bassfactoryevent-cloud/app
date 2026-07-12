@@ -20,7 +20,6 @@ export default function AdsDashboardClient({ campaigns, validActiveAds }: { camp
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [dragOverId, setDragOverId] = useState<string | null>(null);
 
   // Drag Handlers
   const handleDragStart = (e: React.DragEvent, campaign: any) => {
@@ -32,27 +31,22 @@ export default function AdsDashboardClient({ campaigns, validActiveAds }: { camp
 
   const handleDragEnd = (e: React.DragEvent) => {
     setDraggedCampaign(null);
-    setDragOverId(null);
   };
 
   const handleDragOver = (e: React.DragEvent, placementId: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "copy";
-    if (dragOverId !== placementId) {
-      setDragOverId(placementId);
-    }
+    e.currentTarget.classList.add("drag-over");
   };
 
   const handleDragLeave = (e: React.DragEvent, placementId: string) => {
     e.preventDefault();
-    if (dragOverId === placementId) {
-      setDragOverId(null);
-    }
+    e.currentTarget.classList.remove("drag-over");
   };
 
   const handleDrop = (e: React.DragEvent, placementId: string) => {
     e.preventDefault();
-    setDragOverId(null);
+    e.currentTarget.classList.remove("drag-over");
     if (draggedCampaign) {
       setDropTarget(placementId);
       setModalOpen(true);
@@ -113,9 +107,10 @@ export default function AdsDashboardClient({ campaigns, validActiveAds }: { camp
                 onDragOver={(e) => handleDragOver(e, placement.id)}
                 onDragLeave={(e) => handleDragLeave(e, placement.id)}
                 onDrop={(e) => handleDrop(e, placement.id)}
+                className="dropzone"
                 style={{ 
-                  backgroundColor: isDragOver ? 'rgba(255, 0, 255, 0.05)' : 'rgba(255,255,255,0.02)', 
-                  border: isDragOver ? '2px dashed var(--color-magenta)' : '2px dashed rgba(255,255,255,0.1)', 
+                  backgroundColor: 'rgba(255,255,255,0.02)', 
+                  border: '2px dashed rgba(255,255,255,0.1)', 
                   borderRadius: '0.75rem', 
                   padding: '1rem',
                   display: 'flex',
@@ -124,7 +119,7 @@ export default function AdsDashboardClient({ campaigns, validActiveAds }: { camp
                   transition: 'all 0.2s',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pointerEvents: 'none' }}>
                   <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{placement.label}</span>
                   <div style={{ 
                     width: '10px', 
@@ -135,14 +130,14 @@ export default function AdsDashboardClient({ campaigns, validActiveAds }: { camp
                   }} />
                 </div>
                 {isOccupied ? (
-                  <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', pointerEvents: 'none' }}>
                     Ocupado por: <br/>
                     <strong style={{ color: 'white' }}>
                       {Array.isArray(occupant?.ad_campaigns) ? occupant.ad_campaigns[0]?.name : occupant?.ad_campaigns?.name}
                     </strong>
                   </div>
                 ) : (
-                  <div style={{ fontSize: '0.75rem', color: '#4ade80' }}>Disponible (Arrastra aquí)</div>
+                  <div style={{ fontSize: '0.75rem', color: '#4ade80', pointerEvents: 'none' }}>Disponible (Arrastra aquí)</div>
                 )}
               </div>
             )
@@ -262,6 +257,20 @@ export default function AdsDashboardClient({ campaigns, validActiveAds }: { camp
           </div>
         </div>
       )}
+
+      <style dangerouslySetInnerHTML={{__html: `
+        .draggable-card:active {
+          cursor: grabbing !important;
+        }
+        .draggable-card.dragging {
+          opacity: 0.5;
+          transform: scale(0.98);
+        }
+        .dropzone.drag-over {
+          border-color: var(--color-magenta) !important;
+          background-color: rgba(255, 0, 255, 0.05) !important;
+        }
+      `}} />
     </div>
   );
 }
