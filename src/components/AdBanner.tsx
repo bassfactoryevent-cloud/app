@@ -50,7 +50,7 @@ export default async function AdBanner({ placementName, className = "" }: AdBann
 
   // Si es VIP, delegamos en el componente cliente (Slider)
   if (isVip && validAds.length > 1) {
-    return <AdSliderClient ads={validAds} className={className} intervalSecs={15} />;
+    return <AdSliderClient ads={validAds} className={className} intervalSecs={7} />;
   }
 
   // Si no es VIP o solo hay 1 banner activo, renderizamos estático como antes
