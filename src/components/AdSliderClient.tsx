@@ -12,9 +12,10 @@ interface AdSliderClientProps {
   ads: Ad[];
   className?: string;
   intervalSecs?: number;
+  placementName?: string;
 }
 
-export default function AdSliderClient({ ads, className = "", intervalSecs = 7 }: AdSliderClientProps) {
+export default function AdSliderClient({ ads, className = "", intervalSecs = 7, placementName = "" }: AdSliderClientProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -29,8 +30,11 @@ export default function AdSliderClient({ ads, className = "", intervalSecs = 7 }
 
   if (!ads || ads.length === 0) return null;
 
+  const isThin = placementName.includes("thin");
+  const containerHeight = isThin ? '120px' : '250px';
+
   return (
-    <div className={className} style={{ position: 'relative', width: '100%', height: '250px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '0.5rem', overflow: 'hidden' }}>
+    <div className={className} style={{ position: 'relative', width: '100%', height: containerHeight, backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '0.5rem', overflow: 'hidden' }}>
       {ads.map((ad, index) => {
         const isActive = index === currentIndex;
         const isVideo = ad.image_url.toLowerCase().endsWith('.mp4') || ad.image_url.toLowerCase().endsWith('.webm');

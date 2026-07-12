@@ -181,6 +181,11 @@ export default async function Home() {
               ))}
             </HorizontalScroll>
 
+            {/* Banner Publicidad Delgado (Bajo Eventos) */}
+            <div style={{ marginTop: '1rem', marginBottom: '1rem' }}>
+              <AdBanner placementName="home_horizontal_thin" />
+            </div>
+
             {/* 2. Noticias, Cultura (Blog) */}
             <HorizontalScroll title="Noticias, Cultura">
               {posts && posts.length > 0 ? posts.map(post => (

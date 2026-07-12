@@ -79,6 +79,7 @@ export default async function CampaignDetailsPage({ params, searchParams }: { pa
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Ubicación (Placement) *</label>
                     <select name="placement_name" defaultValue={editingAd?.ad_placements?.name || "home_horizontal"} required style={{ width: '100%' }}>
                       <option value="home_horizontal">Home - Banner Inferior (Horizontal)</option>
+                      <option value="home_horizontal_thin">Home - Banner Inferior Delgado (Bajo Eventos)</option>
                       <option value="home_sidebar">Home - Sidebar Derecho (Vertical)</option>
                       <option value="blog_horizontal">Blog - Banner en Artículo (Abajo)</option>
                       <option value="blog_in_content">Blog - Banner Medio (En el texto)</option>

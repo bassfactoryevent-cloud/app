@@ -8,6 +8,7 @@ import ConfirmModal from "@/components/ui/ConfirmModal";
 
 const ALL_PLACEMENTS = [
   { id: 'home_horizontal', label: 'Home - Horizontal' },
+  { id: 'home_horizontal_thin', label: 'Home - Horizontal (Bajo Eventos) [120px]' },
   { id: 'home_sidebar', label: 'Home - Sidebar' },
   { id: 'blog_horizontal', label: 'Blog - Artículo (Abajo)' },
   { id: 'blog_in_content', label: 'Blog - Banner Medio (En el texto)' },
