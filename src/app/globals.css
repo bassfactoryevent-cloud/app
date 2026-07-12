@@ -115,6 +115,11 @@ p { color: var(--color-text-secondary); margin-bottom: var(--space-2); font-size
   padding: 0 var(--space-3);
   width: 100%;
 }
+@media (max-width: 768px) {
+  .container {
+    padding: 0 var(--space-2);
+  }
+}
 
 .text-primary { color: var(--color-text-primary); }
 .text-secondary { color: var(--color-text-secondary); }

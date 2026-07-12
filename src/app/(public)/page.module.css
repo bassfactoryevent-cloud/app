@@ -396,3 +396,16 @@
     transform: translateY(0);
   }
 }
+
+@media (max-width: 768px) {
+  .heroContent {
+    padding: 0 var(--space-2);
+  }
+  .container {
+    padding: 0 var(--space-2);
+  }
+  .card {
+    min-width: 42vw;
+    flex: 0 0 42vw;
+  }
+}
