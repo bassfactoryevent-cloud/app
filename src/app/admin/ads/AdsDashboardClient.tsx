@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Megaphone, PlusCircle, Building2, Calendar as CalendarIcon, GripVertical, X } from "lucide-react";
 import Link from "next/link";
-import { deleteCampaign, addAdToCampaign } from "./actions";
+import { deleteCampaign, addAdToCampaign, togglePlacementVip } from "./actions";
 
 const ALL_PLACEMENTS = [
   { id: 'home_horizontal', label: 'Home - Horizontal' },
@@ -15,7 +15,7 @@ const ALL_PLACEMENTS = [
   { id: 'djs_banner', label: 'DJs - Banner' },
 ];
 
-export default function AdsDashboardClient({ campaigns, validActiveAds }: { campaigns: any[], validActiveAds: any[] }) {
+export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacements }: { campaigns: any[], validActiveAds: any[], dbPlacements?: any[] }) {
   const [draggedCampaign, setDraggedCampaign] = useState<any | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -102,11 +102,24 @@ export default function AdsDashboardClient({ campaigns, validActiveAds }: { camp
         <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Mapa de Ubicaciones (Zonas de Aterrizaje)</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
           {ALL_PLACEMENTS.map(placement => {
-            const occupant = validActiveAds.find((ad: any) => {
+            const dbPlacement = dbPlacements?.find(p => p.name === placement.id);
+            const isVip = dbPlacement?.is_vip;
+
+            const occupants = validActiveAds.filter((ad: any) => {
               const pName = Array.isArray(ad?.ad_placements) ? ad.ad_placements[0]?.name : ad?.ad_placements?.name;
               return pName === placement.id;
             });
-            const isOccupied = !!occupant;
+            const isOccupied = !isVip && occupants.length > 0;
+
+            const handleToggleVip = async () => {
+              try {
+                await togglePlacementVip(placement.id, !isVip);
+              } catch (error) {
+                console.error(error);
+                alert("Error cambiando estado VIP");
+              }
+            };
+
             return (
               <div 
                 key={placement.id} 
@@ -115,32 +128,52 @@ export default function AdsDashboardClient({ campaigns, validActiveAds }: { camp
                 onDrop={(e) => handleDrop(e, placement.id)}
                 className="dropzone"
                 style={{ 
-                  backgroundColor: 'rgba(255,255,255,0.02)', 
-                  border: '2px dashed rgba(255,255,255,0.1)', 
+                  backgroundColor: isVip ? 'rgba(255, 215, 0, 0.05)' : 'rgba(255,255,255,0.02)', 
+                  border: isVip ? '2px dashed rgba(255, 215, 0, 0.3)' : '2px dashed rgba(255,255,255,0.1)', 
                   borderRadius: '0.75rem', 
                   padding: '1rem',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.5rem',
                   transition: 'all 0.2s',
+                  position: 'relative'
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pointerEvents: 'none' }}>
-                  <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{placement.label}</span>
-                  <div style={{ 
-                    width: '10px', 
-                    height: '10px', 
-                    borderRadius: '50%', 
-                    backgroundColor: isOccupied ? 'var(--color-magenta)' : '#4ade80',
-                    boxShadow: isOccupied ? '0 0 8px var(--color-magenta)' : '0 0 8px #4ade80'
-                  }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600, pointerEvents: 'none' }}>{placement.label}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: isVip ? '#ffd700' : 'rgba(255,255,255,0.3)', fontWeight: 800 }}>VIP</span>
+                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={!!isVip} onChange={handleToggleVip} style={{ display: 'none' }} />
+                      <div style={{ width: '28px', height: '16px', backgroundColor: isVip ? '#ffd700' : 'rgba(255,255,255,0.1)', borderRadius: '10px', position: 'relative', transition: '0.2s' }}>
+                        <div style={{ width: '12px', height: '12px', backgroundColor: isVip ? '#000' : '#fff', borderRadius: '50%', position: 'absolute', top: '2px', left: isVip ? '14px' : '2px', transition: '0.2s' }} />
+                      </div>
+                    </label>
+                    <div style={{ 
+                      width: '10px', 
+                      height: '10px', 
+                      borderRadius: '50%', 
+                      backgroundColor: isOccupied ? 'var(--color-magenta)' : (occupants.length > 0 && isVip ? '#ffd700' : '#4ade80'),
+                      boxShadow: isOccupied ? '0 0 8px var(--color-magenta)' : (occupants.length > 0 && isVip ? '0 0 8px #ffd700' : '0 0 8px #4ade80'),
+                      marginLeft: '0.5rem',
+                      pointerEvents: 'none'
+                    }} />
+                  </div>
                 </div>
-                {isOccupied ? (
+                {occupants.length > 0 ? (
                   <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', pointerEvents: 'none' }}>
-                    Ocupado por: <br/>
-                    <strong style={{ color: 'white' }}>
-                      {Array.isArray(occupant?.ad_campaigns) ? occupant.ad_campaigns[0]?.name : occupant?.ad_campaigns?.name}
-                    </strong>
+                    {isVip ? (
+                      <>
+                        <strong style={{ color: '#ffd700' }}>{occupants.length}</strong> Banners en Rotación
+                      </>
+                    ) : (
+                      <>
+                        Ocupado por: <br/>
+                        <strong style={{ color: 'white' }}>
+                          {Array.isArray(occupants[0]?.ad_campaigns) ? occupants[0].ad_campaigns[0]?.name : occupants[0]?.ad_campaigns?.name}
+                        </strong>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <div style={{ fontSize: '0.75rem', color: '#4ade80', pointerEvents: 'none' }}>Disponible (Arrastra aquí)</div>

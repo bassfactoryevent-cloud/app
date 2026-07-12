@@ -126,3 +126,21 @@ export async function updateAd(adId: string, campaignId: string, formData: FormD
   revalidatePath(`/admin/ads/${campaignId}`);
   redirect(`/admin/ads/${campaignId}`);
 }
+
+export async function togglePlacementVip(placementName: string, isVip: boolean) {
+  const supabase = await createClient();
+  
+  // Find or create placement (in case it doesn't exist yet but was hardcoded)
+  let placement_id;
+  const { data: existingPlacement } = await supabase.from("ad_placements").select("id").eq("name", placementName).single();
+  
+  if (existingPlacement) {
+    const { error } = await supabase.from("ad_placements").update({ is_vip: isVip }).eq("id", existingPlacement.id);
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase.from("ad_placements").insert([{ name: placementName, is_vip: isVip }]);
+    if (error) throw new Error(error.message);
+  }
+
+  revalidatePath("/admin/ads");
+}

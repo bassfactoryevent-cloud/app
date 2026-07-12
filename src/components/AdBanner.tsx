@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
-import Image from "next/image";
+import AdSliderClient from "./AdSliderClient";
 
 interface AdBannerProps {
   placementName: string;
@@ -9,8 +9,12 @@ interface AdBannerProps {
 export default async function AdBanner({ placementName, className = "" }: AdBannerProps) {
   const supabase = await createClient();
 
-  // Buscar un banner activo para este placement
-  const { data: ads } = await supabase
+  // Check if placement is VIP
+  const { data: placement } = await supabase.from("ad_placements").select("is_vip").eq("name", placementName).single();
+  const isVip = placement?.is_vip;
+
+  // Buscar banners activos para este placement
+  let query = supabase
     .from("ads")
     .select(`
       id,
@@ -21,19 +25,36 @@ export default async function AdBanner({ placementName, className = "" }: AdBann
     `)
     .eq("is_active", true)
     .eq("ad_campaigns.is_active", true)
-    .eq("ad_placements.name", placementName)
-    .limit(1);
-
-  if (!ads || ads.length === 0) return null;
-  const ad = ads[0] as any;
-
-  // If there's an end date, make sure campaign is still active date-wise
-  if (ad.ad_campaigns.end_date) {
-    if (new Date() > new Date(ad.ad_campaigns.end_date)) {
-      return null;
-    }
+    .eq("ad_placements.name", placementName);
+    
+  // Si no es VIP, limitamos a 1
+  if (!isVip) {
+    query = query.limit(1);
   }
 
+  const { data: adsRaw } = await query;
+
+  if (!adsRaw || adsRaw.length === 0) return null;
+
+  // Filter out any where the campaign end_date is in the past
+  const validAds = adsRaw.filter((ad: any) => {
+    if (ad.ad_campaigns.end_date) {
+      if (new Date() > new Date(ad.ad_campaigns.end_date)) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  if (validAds.length === 0) return null;
+
+  // Si es VIP, delegamos en el componente cliente (Slider)
+  if (isVip && validAds.length > 1) {
+    return <AdSliderClient ads={validAds} className={className} intervalSecs={15} />;
+  }
+
+  // Si no es VIP o solo hay 1 banner activo, renderizamos estático como antes
+  const ad = validAds[0];
   const isVideo = ad.image_url.toLowerCase().endsWith('.mp4') || ad.image_url.toLowerCase().endsWith('.webm');
 
   const content = (

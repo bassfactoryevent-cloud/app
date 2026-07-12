@@ -39,7 +39,9 @@ export default async function AdminAdsPage() {
       return true;
     });
 
-    return <AdsDashboardClient campaigns={campaigns || []} validActiveAds={validActiveAds} />;
+    const { data: dbPlacements } = await supabase.from("ad_placements").select("id, name, is_vip");
+
+    return <AdsDashboardClient campaigns={campaigns || []} validActiveAds={validActiveAds} dbPlacements={dbPlacements || []} />;
   } catch (error: any) {
     return (
       <div style={{ padding: '2rem', backgroundColor: 'rgba(255,0,0,0.1)', color: 'red', borderRadius: '1rem', border: '1px solid red' }}>
