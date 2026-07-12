@@ -405,7 +405,18 @@
     padding: 0 var(--space-2);
   }
   .card {
-    min-width: 42vw;
-    flex: 0 0 42vw;
+    min-width: 45vw;
+    flex: 0 0 45vw;
+  }
+  .cardTitle {
+    font-size: 0.85rem;
+    line-height: 1.2;
+  }
+  .cardSubtitle {
+    font-size: 0.75rem;
+  }
+  .cardButton, .cardButtonOutline {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.7rem;
   }
 }
