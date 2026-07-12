@@ -99,8 +99,6 @@ export default function AdsDashboardClient({ campaigns, validActiveAds }: { camp
               return pName === placement.id;
             });
             const isOccupied = !!occupant;
-            const isDragOver = dragOverId === placement.id;
-            
             return (
               <div 
                 key={placement.id} 
