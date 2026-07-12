@@ -21,11 +21,14 @@ export default async function AdminAdsPage() {
       .from("ads")
       .select(`
         id,
+        image_url,
+        order_index,
         ad_placements!inner(name),
         ad_campaigns!inner(name, is_active, end_date)
       `)
       .eq("is_active", true)
-      .eq("ad_campaigns.is_active", true);
+      .eq("ad_campaigns.is_active", true)
+      .order("order_index", { ascending: true });
 
     // Filter out expired campaigns for the overview
     const validActiveAds: any[] = (activeAds || []).filter((ad: any) => {

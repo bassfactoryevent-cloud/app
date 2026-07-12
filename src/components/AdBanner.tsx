@@ -25,7 +25,8 @@ export default async function AdBanner({ placementName, className = "" }: AdBann
     `)
     .eq("is_active", true)
     .eq("ad_campaigns.is_active", true)
-    .eq("ad_placements.name", placementName);
+    .eq("ad_placements.name", placementName)
+    .order("order_index", { ascending: true });
     
   // Si no es VIP, limitamos a 1
   if (!isVip) {

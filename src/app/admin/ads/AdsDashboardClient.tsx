@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Megaphone, PlusCircle, Building2, Calendar as CalendarIcon, GripVertical, X } from "lucide-react";
 import Link from "next/link";
-import { deleteCampaign, addAdToCampaign, togglePlacementVip } from "./actions";
+import { deleteCampaign, addAdToCampaign, togglePlacementVip, updateAdsOrder, removeAdFromPlacement } from "./actions";
 
 const ALL_PLACEMENTS = [
   { id: 'home_horizontal', label: 'Home - Horizontal' },
@@ -22,6 +22,20 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
   const [modalCampaign, setModalCampaign] = useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // VIP Management State
+  const [vipModalPlacement, setVipModalPlacement] = useState<string | null>(null);
+  const [vipAds, setVipAds] = useState<any[]>([]);
+  const [draggedVipIndex, setDraggedVipIndex] = useState<number | null>(null);
+
+  const handleOpenVipModal = (placementId: string) => {
+    const occupants = validActiveAds.filter((ad: any) => {
+      const pName = Array.isArray(ad?.ad_placements) ? ad.ad_placements[0]?.name : ad?.ad_placements?.name;
+      return pName === placementId;
+    });
+    setVipAds(occupants);
+    setVipModalPlacement(placementId);
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -165,6 +179,11 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
                     {isVip ? (
                       <>
                         <strong style={{ color: '#ffd700' }}>{occupants.length}</strong> Banners en Rotación
+                        <div style={{ marginTop: '0.5rem', pointerEvents: 'auto' }}>
+                          <button onClick={() => handleOpenVipModal(placement.id)} style={{ backgroundColor: 'rgba(255, 215, 0, 0.1)', color: '#ffd700', border: '1px solid rgba(255, 215, 0, 0.3)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem', cursor: 'pointer' }}>
+                            Ver / Ordenar
+                          </button>
+                        </div>
                       </>
                     ) : (
                       <>
@@ -297,6 +316,114 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
                 {isSubmitting ? 'Guardando...' : 'Asignar Banner'}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL GESTIÓN VIP */}
+      {vipModalPlacement && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1rem', padding: '2rem', width: '100%', maxWidth: '600px', position: 'relative', maxHeight: '90vh', overflowY: 'auto' }}>
+            <button onClick={() => setVipModalPlacement(null)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}>
+              <X size={24} />
+            </button>
+            <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Gestión de Banners VIP</h2>
+            <p style={{ fontSize: '0.875rem', opacity: 0.7, marginBottom: '1.5rem' }}>
+              Ubicación: <strong>{ALL_PLACEMENTS.find(p => p.id === vipModalPlacement)?.label}</strong> <br/>
+              Arrastra las filas para ordenar la aparición de los banners.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '2rem' }}>
+              {vipAds.map((ad, index) => {
+                const isVideo = ad.image_url?.toLowerCase().endsWith('.mp4') || ad.image_url?.toLowerCase().endsWith('.webm');
+                const campName = Array.isArray(ad.ad_campaigns) ? ad.ad_campaigns[0]?.name : ad.ad_campaigns?.name;
+
+                return (
+                  <div
+                    key={ad.id}
+                    draggable
+                    onDragStart={(e) => {
+                      setDraggedVipIndex(index);
+                      e.dataTransfer.effectAllowed = "move";
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      if (draggedVipIndex === null || draggedVipIndex === index) return;
+                      const updated = [...vipAds];
+                      const [removed] = updated.splice(draggedVipIndex, 1);
+                      updated.splice(index, 0, removed);
+                      setDraggedVipIndex(index);
+                      setVipAds(updated);
+                    }}
+                    onDragEnd={() => setDraggedVipIndex(null)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      backgroundColor: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '0.5rem',
+                      padding: '0.75rem',
+                      cursor: 'grab',
+                      opacity: draggedVipIndex === index ? 0.5 : 1
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <GripVertical size={20} style={{ color: 'rgba(255,255,255,0.3)' }} />
+                      <div style={{ width: '40px', height: '40px', backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: '0.25rem', overflow: 'hidden' }}>
+                        {isVideo ? (
+                          <video src={ad.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
+                        ) : (
+                          <img src={ad.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        )}
+                      </div>
+                      <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>{campName}</span>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        if (!confirm("¿Seguro que deseas eliminar este banner de la zona VIP?")) return;
+                        setIsSubmitting(true);
+                        try {
+                          await removeAdFromPlacement(ad.id);
+                          setVipAds(vipAds.filter(a => a.id !== ad.id));
+                        } catch (e) {
+                          alert("Error eliminando");
+                        } finally {
+                          setIsSubmitting(false);
+                        }
+                      }}
+                      style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', padding: '0.5rem', borderRadius: '0.25rem', cursor: 'pointer', fontSize: '0.75rem' }}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                )
+              })}
+              {vipAds.length === 0 && (
+                <div style={{ padding: '2rem', textAlign: 'center', opacity: 0.5 }}>No hay banners en esta ubicación.</div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+              <button onClick={() => setVipModalPlacement(null)} className="btn btn-secondary">Cancelar</button>
+              <button 
+                onClick={async () => {
+                  setIsSubmitting(true);
+                  try {
+                    await updateAdsOrder(vipAds.map((a, i) => ({ id: a.id, order_index: i })));
+                    setVipModalPlacement(null);
+                  } catch (e) {
+                    alert("Error guardando orden");
+                  } finally {
+                    setIsSubmitting(false);
+                  }
+                }} 
+                className="btn btn-primary"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Guardando...' : 'Guardar Orden'}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -144,3 +144,22 @@ export async function togglePlacementVip(placementName: string, isVip: boolean) 
 
   revalidatePath("/admin/ads");
 }
+
+export async function updateAdsOrder(orderedAds: { id: string, order_index: number }[]) {
+  const supabase = await createClient();
+  
+  // Update each ad's order_index
+  for (const ad of orderedAds) {
+    const { error } = await supabase.from("ads").update({ order_index: ad.order_index }).eq("id", ad.id);
+    if (error) throw new Error(error.message);
+  }
+
+  revalidatePath("/admin/ads");
+}
+
+export async function removeAdFromPlacement(adId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("ads").delete().eq("id", adId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/ads");
+}
