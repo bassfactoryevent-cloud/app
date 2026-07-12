@@ -137,11 +137,8 @@ export default async function AdminAdsPage() {
                   <Link href={`/admin/ads/${camp.id}`} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', backgroundColor: 'rgba(255,255,255,0.05)', color: 'white', borderRadius: '0.5rem', textDecoration: 'none', fontWeight: 600, border: '1px solid rgba(255,255,255,0.1)' }}>
                     Gestionar
                   </Link>
-                  <form action={async () => {
-                    "use server";
-                    await deleteCampaign(camp.id);
-                  }}>
-                    <button type="submit" style={{ padding: '0.5rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '0.5rem', cursor: 'pointer', transition: 'background-color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor='rgba(239,68,68,0.2)'} onMouseOut={(e) => e.currentTarget.style.backgroundColor='rgba(239,68,68,0.1)'}>
+                  <form action={deleteCampaign.bind(null, camp.id)}>
+                    <button type="submit" style={{ padding: '0.5rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '0.5rem', cursor: 'pointer' }}>
                       Eliminar
                     </button>
                   </form>
