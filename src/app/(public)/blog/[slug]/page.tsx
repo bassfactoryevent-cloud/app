@@ -71,6 +71,19 @@ export default async function BlogPostPage({ params }: Props) {
   const genres = post.post_genres?.map((pg: any) => pg.genres?.name).filter(Boolean) || [];
   const tags = post.post_tags?.map((pt: any) => pt.tags?.name).filter(Boolean) || [];
 
+  let contentPart1 = post.content || '';
+  let contentPart2 = '';
+
+  if (post.content) {
+    // Split by paragraph to safely inject ad in the middle
+    const paragraphs = post.content.split('</p>');
+    if (paragraphs.length > 2) {
+      const middleIndex = Math.floor(paragraphs.length / 2);
+      contentPart1 = paragraphs.slice(0, middleIndex).join('</p>') + '</p>';
+      contentPart2 = paragraphs.slice(middleIndex).join('</p>');
+    }
+  }
+
   return (
     <article style={{ minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
       
@@ -133,12 +146,28 @@ export default async function BlogPostPage({ params }: Props) {
           )}
         </header>
 
-        {/* Rich Text HTML Renderizado */}
+        {/* Rich Text HTML Renderizado - Parte 1 */}
         <div 
           className={styles.prose} 
           style={{ padding: 0, minHeight: 'auto', color: 'var(--color-text-primary)' }}
-          dangerouslySetInnerHTML={{ __html: post.content }} 
+          dangerouslySetInnerHTML={{ __html: contentPart1 }} 
         />
+
+        {/* Banner Mid-Content */}
+        {contentPart2 && (
+          <div style={{ margin: '3rem 0' }}>
+            <AdBanner placementName="blog_in_content" />
+          </div>
+        )}
+
+        {/* Rich Text HTML Renderizado - Parte 2 */}
+        {contentPart2 && (
+          <div 
+            className={styles.prose} 
+            style={{ padding: 0, minHeight: 'auto', color: 'var(--color-text-primary)' }}
+            dangerouslySetInnerHTML={{ __html: contentPart2 }} 
+          />
+        )}
 
         <div style={{ marginTop: '4rem' }}>
           <AdBanner placementName="blog_horizontal" />

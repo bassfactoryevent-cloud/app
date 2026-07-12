@@ -41,7 +41,8 @@ export default async function AdminAdsPage() {
     const ALL_PLACEMENTS = [
       { id: 'home_horizontal', label: 'Home - Horizontal' },
       { id: 'home_sidebar', label: 'Home - Sidebar' },
-      { id: 'blog_horizontal', label: 'Blog - Artículo' },
+      { id: 'blog_horizontal', label: 'Blog - Artículo (Abajo)' },
+      { id: 'blog_in_content', label: 'Blog - Banner Medio (En el texto)' },
       { id: 'event_horizontal', label: 'Eventos - Horizontal' },
       { id: 'events_sidebar', label: 'Eventos - Sidebar' },
       { id: 'djs_banner', label: 'DJs - Banner' },

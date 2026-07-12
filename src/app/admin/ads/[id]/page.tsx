@@ -80,7 +80,8 @@ export default async function CampaignDetailsPage({ params, searchParams }: { pa
                     <select name="placement_name" defaultValue={editingAd?.ad_placements?.name || "home_horizontal"} required style={{ width: '100%' }}>
                       <option value="home_horizontal">Home - Banner Inferior (Horizontal)</option>
                       <option value="home_sidebar">Home - Sidebar Derecho (Vertical)</option>
-                      <option value="blog_horizontal">Blog - Banner en Artículo (Horizontal)</option>
+                      <option value="blog_horizontal">Blog - Banner en Artículo (Abajo)</option>
+                      <option value="blog_in_content">Blog - Banner Medio (En el texto)</option>
                       <option value="event_horizontal">Eventos - Banner en Evento (Horizontal)</option>
                       <option value="events_sidebar">Eventos - Sidebar (Vertical)</option>
                       <option value="djs_banner">DJs - Banner Principal (Horizontal)</option>
