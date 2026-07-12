@@ -171,10 +171,11 @@ export default async function Home() {
                     <Calendar size={14} />
                     <span>{new Date(event.start_date).toLocaleDateString('es-CO', { month: 'short', day: 'numeric' })}</span>
                   </div>
-                  <div className={styles.cardSubtitle} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.25rem' }}>
+                  <div className={styles.cardSubtitle} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.25rem', flex: 1 }}>
                     <MapPin size={14} />
                     <span>{event.location_name}</span>
                   </div>
+                  <span className={styles.cardButton}>Comprar Boletas</span>
                 </Link>
               ))}
             </HorizontalScroll>
@@ -185,9 +186,10 @@ export default async function Home() {
                 <Link href={`/blog/${post.slug}`} key={post.id} className={styles.card}>
                   <img src={post.cover_image || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=400"} alt={post.title} className={styles.cardImage} />
                   <h3 className={styles.cardTitle}>{post.title}</h3>
-                  <p className={styles.cardSubtitle} style={{ marginTop: '0.5rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  <p className={styles.cardSubtitle} style={{ marginTop: '0.5rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', flex: 1 }}>
                     {post.excerpt}
                   </p>
+                  <span className={styles.cardButtonOutline}>Ver Más</span>
                 </Link>
               )) : (
                 <p style={{ color: 'var(--color-text-secondary)', padding: '1rem' }}>No hay noticias publicadas aún.</p>
@@ -202,7 +204,8 @@ export default async function Home() {
                   <Link href={`/merch/${product.slug}`} key={product.id} className={styles.card}>
                     <img src={primaryImage} alt={product.title} className={styles.cardImage} />
                     <h3 className={styles.cardTitle}>{product.title}</h3>
-                    <p className={styles.cardSubtitle}>$ {Number(product.base_price).toLocaleString('es-CO')}</p>
+                    <p className={styles.cardSubtitle} style={{ flex: 1 }}>$ {Number(product.base_price).toLocaleString('es-CO')}</p>
+                    <span className={styles.cardButton}>Comprar</span>
                   </Link>
                 );
               })}
