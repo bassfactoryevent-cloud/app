@@ -29,6 +29,7 @@ export default async function Home() {
     .from('merch_products')
     .select('*, merch_product_images(image_url, is_primary, sort_order)')
     .eq('status', 'published')
+    .order('created_at', { ascending: false })
     .limit(8);
 
   // Fetch Blog Posts
