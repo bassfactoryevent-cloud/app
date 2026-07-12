@@ -32,7 +32,8 @@ export async function saveMerchProduct(formData: FormData) {
   
   const product_id = formData.get("product_id") as string | null;
   const title = formData.get("title") as string;
-  const slug = formData.get("slug") as string;
+  let rawSlug = formData.get("slug") as string;
+  const slug = rawSlug.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   const description = formData.get("description") as string;
   const category_id = formData.get("category_id") as string || null;
   const base_price = parseFloat(formData.get("base_price") as string);

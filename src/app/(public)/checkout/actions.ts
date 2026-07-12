@@ -2,19 +2,32 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
+import crypto from "crypto";
 
-export async function processMerchCheckout(formData: FormData) {
+export async function processCheckout(formData: FormData) {
   const supabase = await createClient();
 
   const customer_name = formData.get("customer_name") as string;
   const customer_email = formData.get("customer_email") as string;
   const customer_phone = formData.get("customer_phone") as string;
-  const shipping_address = formData.get("shipping_address") as string;
-  const shipping_city = formData.get("shipping_city") as string;
-  const shipping_country = formData.get("shipping_country") as string;
-  const shipping_zip = formData.get("shipping_zip") as string;
-  const itemsJson = formData.get("items") as string;
   
+  const hasMerchStr = formData.get("hasMerch") as string;
+  const hasMerch = hasMerchStr === 'true';
+
+  let shipping_address = null;
+  let shipping_city = null;
+  let shipping_country = null;
+  let shipping_zip = null;
+  const shipping_cost = hasMerch ? 15000 : 0;
+
+  if (hasMerch) {
+    shipping_address = formData.get("shipping_address") as string;
+    shipping_city = formData.get("shipping_city") as string;
+    shipping_country = formData.get("shipping_country") as string;
+    shipping_zip = formData.get("shipping_zip") as string;
+  }
+
+  const itemsJson = formData.get("items") as string;
   if (!itemsJson) throw new Error("El carrito está vacío");
   const items = JSON.parse(itemsJson);
 
@@ -23,11 +36,9 @@ export async function processMerchCheckout(formData: FormData) {
     subtotal_amount += item.unit_price * item.quantity;
   }
   
-  // Costo de envío fijo por ahora para simular
-  const shipping_cost = 15000;
   const total_amount = subtotal_amount + shipping_cost;
 
-  // Insertar la orden (simulando que se pagó para efectos de prueba, status 'paid' o 'pending' según gateway final)
+  // Insertar la orden global (Usamos merch_orders como tabla general de órdenes por ahora)
   const { data: order, error: orderError } = await supabase.from("merch_orders").insert([{
     customer_name,
     customer_email,
@@ -48,34 +59,72 @@ export async function processMerchCheckout(formData: FormData) {
     throw new Error(orderError.message);
   }
 
-  // Insertar los items
-  const orderItems = items.map((item: any) => ({
-    order_id: order.id,
-    product_id: item.product_id,
-    variant_id: item.variant_id,
-    product_name: item.product_name,
-    variant_name: item.variant_name,
-    quantity: item.quantity,
-    unit_price: item.unit_price,
-    total_price: item.unit_price * item.quantity
-  }));
+  const merchItems = items.filter((item: any) => item.itemType === 'merch');
+  const ticketItems = items.filter((item: any) => item.itemType === 'ticket');
 
-  const { error: itemsError } = await supabase.from("merch_order_items").insert(orderItems);
+  // Procesar Merch
+  if (merchItems.length > 0) {
+    const orderItemsToInsert = merchItems.map((item: any) => ({
+      order_id: order.id,
+      product_id: item.product_id,
+      variant_id: item.variant_id,
+      product_name: item.product_name,
+      variant_name: item.variant_name,
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      total_price: item.unit_price * item.quantity
+    }));
 
-  if (itemsError) {
-    console.error("Order items error", itemsError);
-    throw new Error(itemsError.message);
+    const { error: itemsError } = await supabase.from("merch_order_items").insert(orderItemsToInsert);
+    if (itemsError) throw new Error(itemsError.message);
+
+    // Restar stock de merch
+    for (const item of merchItems) {
+      if (item.variant_id) {
+        const { data: variant } = await supabase.from("merch_product_variants").select("stock_quantity").eq("id", item.variant_id).single();
+        if (variant) {
+          await supabase.from("merch_product_variants").update({
+            stock_quantity: Math.max(0, variant.stock_quantity - item.quantity)
+          }).eq("id", item.variant_id);
+        }
+      }
+    }
   }
 
-  // Restar stock de las variantes
-  for (const item of items) {
-    if (item.variant_id) {
-      // Fetch current stock
-      const { data: variant } = await supabase.from("merch_product_variants").select("stock_quantity").eq("id", item.variant_id).single();
-      if (variant) {
-        await supabase.from("merch_product_variants").update({
-          stock_quantity: Math.max(0, variant.stock_quantity - item.quantity)
-        }).eq("id", item.variant_id);
+  // Procesar Tickets
+  if (ticketItems.length > 0) {
+    const ticketsToInsert: any[] = [];
+    
+    for (const item of ticketItems) {
+      for (let i = 0; i < item.quantity; i++) {
+        // Generar un hash único para el código QR de cada boleta
+        const rawString = `${order.id}-${item.ticket_tier_id}-${i}-${Date.now()}`;
+        const qrHash = crypto.createHash('sha256').update(rawString).digest('hex');
+
+        ticketsToInsert.push({
+          order_id: order.id,
+          tier_id: item.ticket_tier_id,
+          qr_hash: qrHash,
+          status: 'valid'
+        });
+      }
+    }
+
+    const { error: ticketsError } = await supabase.from("tickets").insert(ticketsToInsert);
+    if (ticketsError) {
+      console.error("Tickets error", ticketsError);
+      throw new Error("Error generando las entradas: " + ticketsError.message);
+    }
+
+    // Restar stock de tickets
+    for (const item of ticketItems) {
+      if (item.ticket_tier_id) {
+        const { data: tier } = await supabase.from("ticket_tiers").select("quantity_available").eq("id", item.ticket_tier_id).single();
+        if (tier) {
+          await supabase.from("ticket_tiers").update({
+            quantity_available: Math.max(0, tier.quantity_available - item.quantity)
+          }).eq("id", item.ticket_tier_id);
+        }
       }
     }
   }

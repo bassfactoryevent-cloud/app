@@ -4,8 +4,8 @@ import { useCartStore } from "@/store/cartStore";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Package, Lock, Truck } from "lucide-react";
-import { processMerchCheckout } from "./actions";
+import { Package, Lock, Truck, Ticket } from "lucide-react";
+import { processCheckout } from "./actions";
 
 export default function CheckoutClient() {
   const { items, getTotalPrice, clearCart } = useCartStore();
@@ -16,14 +16,15 @@ export default function CheckoutClient() {
   useEffect(() => {
     setMounted(true);
     if (items.length === 0) {
-      router.push("/merch");
+      router.push("/");
     }
   }, [items, router]);
 
   if (!mounted || items.length === 0) return null;
 
+  const hasMerch = items.some(item => item.itemType === 'merch');
   const subtotal = getTotalPrice();
-  const shippingCost = 15000;
+  const shippingCost = hasMerch ? 15000 : 0;
   const total = subtotal + shippingCost;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -31,9 +32,10 @@ export default function CheckoutClient() {
     setLoading(true);
     const formData = new FormData(e.currentTarget);
     formData.set("items", JSON.stringify(items));
+    formData.set("hasMerch", hasMerch.toString());
     
     try {
-      await processMerchCheckout(formData);
+      await processCheckout(formData);
       clearCart(); // Limpiar el carrito después de compra exitosa
     } catch (err: any) {
       console.error(err);
@@ -52,7 +54,7 @@ export default function CheckoutClient() {
           
           {/* Info Contacto */}
           <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Información de Contacto</h2>
+            <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Información del Comprador</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Nombre Completo *</label>
@@ -60,7 +62,7 @@ export default function CheckoutClient() {
               </div>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Correo Electrónico *</label>
+                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Correo Electrónico (Aquí enviaremos la confirmación o boletas) *</label>
                   <input type="email" name="customer_email" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
                 </div>
                 <div style={{ flex: 1 }}>
@@ -71,32 +73,34 @@ export default function CheckoutClient() {
             </div>
           </div>
 
-          {/* Envío */}
-          <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Truck size={20} /> Dirección de Envío
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Dirección Completa *</label>
-                <input type="text" name="shipping_address" required placeholder="Calle, Carrera, Número, Apto/Casa" style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
-              </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Ciudad *</label>
-                  <input type="text" name="shipping_city" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
+          {/* Envío (SOLO SI HAY MERCH) */}
+          {hasMerch && (
+            <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Truck size={20} /> Dirección de Envío
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Dirección Completa *</label>
+                  <input type="text" name="shipping_address" required placeholder="Calle, Carrera, Número, Apto/Casa" style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
                 </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>País *</label>
-                  <input type="text" name="shipping_country" defaultValue="Colombia" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Código Postal</label>
-                  <input type="text" name="shipping_zip" style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Ciudad *</label>
+                    <input type="text" name="shipping_city" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>País *</label>
+                    <input type="text" name="shipping_country" defaultValue="Colombia" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Código Postal</label>
+                    <input type="text" name="shipping_zip" style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </form>
 
         {/* Resumen */}
@@ -108,15 +112,20 @@ export default function CheckoutClient() {
               <div key={item.cart_item_id} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                 <div style={{ position: 'relative', width: '60px', height: '60px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '0.5rem', overflow: 'hidden', flexShrink: 0 }}>
                   {item.image_url ? (
-                    <Image src={item.image_url} alt={item.product_name} fill style={{ objectFit: 'cover' }} />
+                    <Image src={item.image_url} alt={item.itemType === 'merch' ? item.product_name! : item.event_name!} fill style={{ objectFit: 'cover' }} />
                   ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.3 }}><Package size={20}/></div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.3 }}>
+                      {item.itemType === 'merch' ? <Package size={20}/> : <Ticket size={20}/>}
+                    </div>
                   )}
                   <span style={{ position: 'absolute', top: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.8)', padding: '2px 6px', fontSize: '0.75rem', fontWeight: 700 }}>x{item.quantity}</span>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <h4 style={{ fontSize: '0.875rem', fontWeight: 600, lineHeight: 1.2 }}>{item.product_name}</h4>
-                  {item.variant_name && <p style={{ fontSize: '0.75rem', opacity: 0.7 }}>{item.variant_name}</p>}
+                  <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: 'var(--color-magenta)', fontWeight: 800 }}>
+                    {item.itemType === 'merch' ? 'Merch' : 'Boleta'}
+                  </div>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: 600, lineHeight: 1.2 }}>{item.itemType === 'merch' ? item.product_name : item.event_name}</h4>
+                  {(item.variant_name || item.ticket_tier_name) && <p style={{ fontSize: '0.75rem', opacity: 0.7 }}>{item.itemType === 'merch' ? item.variant_name : item.ticket_tier_name}</p>}
                 </div>
                 <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>
                   ${(item.unit_price * item.quantity).toLocaleString('es-CO')}
@@ -130,10 +139,12 @@ export default function CheckoutClient() {
               <span>Subtotal</span>
               <span>${subtotal.toLocaleString('es-CO')}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', opacity: 0.7, fontSize: '0.875rem' }}>
-              <span>Envío</span>
-              <span>${shippingCost.toLocaleString('es-CO')}</span>
-            </div>
+            {hasMerch && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', opacity: 0.7, fontSize: '0.875rem' }}>
+                <span>Envío (Merch)</span>
+                <span>${shippingCost.toLocaleString('es-CO')}</span>
+              </div>
+            )}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '1.5rem', marginTop: '0.5rem' }}>
               <span>Total</span>
               <span style={{ color: 'var(--color-magenta)' }}>${total.toLocaleString('es-CO')}</span>

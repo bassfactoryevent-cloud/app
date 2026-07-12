@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Ticket, Minus, Plus, CreditCard } from "lucide-react";
+import { Ticket, Minus, Plus, ShoppingCart } from "lucide-react";
+import { useCartStore } from "@/store/cartStore";
 
 type TicketTier = {
   id: string;
@@ -12,8 +13,9 @@ type TicketTier = {
   sales_end?: string;
 };
 
-export default function EventCheckout({ eventId, isFree, ticketTiers }: { eventId: string, isFree: boolean, ticketTiers: TicketTier[] }) {
+export default function EventCheckout({ eventId, eventName, eventImage, isFree, ticketTiers }: { eventId: string, eventName?: string, eventImage?: string, isFree: boolean, ticketTiers: TicketTier[] }) {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const { addItem, openDrawer } = useCartStore();
 
   const updateQuantity = (tierId: string, change: number, max: number) => {
     const current = quantities[tierId] || 0;
@@ -24,15 +26,35 @@ export default function EventCheckout({ eventId, isFree, ticketTiers }: { eventI
   const totalTickets = Object.values(quantities).reduce((a, b) => a + b, 0);
   const totalPrice = ticketTiers.reduce((acc, tier) => acc + (tier.price * (quantities[tier.id] || 0)), 0);
 
-  const handleCheckout = async (e: React.FormEvent) => {
+  const handleAddToCart = () => {
+    if (totalTickets === 0) return;
+
+    Object.entries(quantities).forEach(([tierId, qty]) => {
+      if (qty > 0) {
+        const tier = ticketTiers.find(t => t.id === tierId);
+        if (tier) {
+          addItem({
+            itemType: 'ticket',
+            event_id: eventId,
+            ticket_tier_id: tierId,
+            event_name: eventName || 'Evento Bassfactory',
+            ticket_tier_name: tier.name,
+            image_url: eventImage || null,
+            unit_price: tier.price,
+            quantity: qty
+          });
+        }
+      }
+    });
+
+    // Reset local quantities and open drawer
+    setQuantities({});
+    openDrawer();
+  };
+
+  const handleFreeRegistration = (e: React.FormEvent) => {
     e.preventDefault();
-    if (totalTickets === 0 && !isFree) {
-      alert("Selecciona al menos una boleta.");
-      return;
-    }
-    // Aquí iría la integración con la pasarela de pagos.
-    // Por ahora redirigimos o mostramos mensaje de éxito.
-    alert(`Redirigiendo a pasarela de pagos... Total: $${totalPrice.toLocaleString('es-CO')}`);
+    alert("Registro gratuito completado. Revisa tu correo.");
   };
 
   const now = new Date();
@@ -43,8 +65,8 @@ export default function EventCheckout({ eventId, isFree, ticketTiers }: { eventI
         <Ticket /> {isFree ? 'Registro Gratuito' : 'Comprar Boletas'}
       </h2>
 
-      <form onSubmit={handleCheckout}>
-        {!isFree ? (
+      {!isFree ? (
+        <>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
             {ticketTiers.map(tier => {
               const start = tier.sales_start ? new Date(tier.sales_start) : null;
@@ -85,33 +107,33 @@ export default function EventCheckout({ eventId, isFree, ticketTiers }: { eventI
               );
             })}
           </div>
-        ) : (
+          <button 
+            type="button" 
+            onClick={handleAddToCart}
+            disabled={totalTickets === 0} 
+            style={{ width: '100%', padding: '1rem', borderRadius: '0.5rem', backgroundColor: totalTickets === 0 ? 'rgba(255,255,255,0.1)' : 'var(--color-magenta)', color: 'white', border: 'none', fontWeight: 800, fontSize: '1.1rem', cursor: totalTickets === 0 ? 'not-allowed' : 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', transition: 'all 0.2s' }}
+          >
+            <ShoppingCart size={20} /> Añadir al Carrito - ${totalPrice.toLocaleString('es-CO')}
+          </button>
+        </>
+      ) : (
+        <form onSubmit={handleFreeRegistration}>
           <p style={{ opacity: 0.7, marginBottom: '2rem' }}>Este evento es de entrada libre. Completa tus datos para recibir tu código QR de acceso.</p>
-        )}
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', opacity: 0.8 }}>Nombre Completo</label>
-            <input type="text" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', opacity: 0.8 }}>Nombre Completo</label>
+              <input type="text" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', opacity: 0.8 }}>Correo Electrónico (Donde enviaremos tus boletas)</label>
+              <input type="email" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+            </div>
           </div>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', opacity: 0.8 }}>Correo Electrónico (Donde enviaremos tus boletas)</label>
-            <input type="email" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
-          </div>
-        </div>
-
-        <button type="submit" disabled={!isFree && totalTickets === 0} style={{ width: '100%', padding: '1rem', borderRadius: '0.5rem', backgroundColor: (!isFree && totalTickets === 0) ? 'rgba(255,255,255,0.1)' : 'var(--color-magenta)', color: 'white', border: 'none', fontWeight: 800, fontSize: '1.1rem', cursor: (!isFree && totalTickets === 0) ? 'not-allowed' : 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', transition: 'all 0.2s' }}>
-          {!isFree ? (
-            <>
-              <CreditCard size={20} /> Pagar ${totalPrice.toLocaleString('es-CO')}
-            </>
-          ) : (
-            <>
-              <Ticket size={20} /> Generar Entradas
-            </>
-          )}
-        </button>
-      </form>
+          <button type="submit" style={{ width: '100%', padding: '1rem', borderRadius: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', border: 'none', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', transition: 'all 0.2s' }}>
+            <Ticket size={20} /> Generar Entradas
+          </button>
+        </form>
+      )}
     </div>
   );
 }

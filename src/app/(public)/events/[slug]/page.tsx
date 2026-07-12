@@ -124,7 +124,9 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
         {/* Right Column: Checkout Widget */}
         <div style={{ flex: '1 1 350px', position: 'sticky', top: '2rem' }}>
           <EventCheckout 
-            eventId={event.id} 
+            eventId={event.id}
+            eventName={event.title}
+            eventImage={event.cover_image}
             isFree={event.is_free} 
             ticketTiers={event.ticket_tiers || []} 
           />

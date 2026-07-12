@@ -18,6 +18,7 @@ export default function AddToCartClient({ product, variants, primaryImage }: { p
     if (isOutOfStock) return;
     
     addItem({
+      itemType: 'merch',
       product_id: product.id,
       variant_id: selectedVariant,
       product_name: product.title,

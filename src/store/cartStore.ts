@@ -3,10 +3,21 @@ import { persist } from 'zustand/middleware';
 
 export interface CartItem {
   cart_item_id: string; // Unique ID for cart entry
-  product_id: string;
-  variant_id: string | null;
-  product_name: string;
-  variant_name: string | null;
+  itemType: 'merch' | 'ticket';
+
+  // Specific to Merch
+  product_id?: string;
+  variant_id?: string | null;
+  product_name?: string;
+  variant_name?: string | null;
+
+  // Specific to Tickets
+  event_id?: string;
+  ticket_tier_id?: string;
+  event_name?: string;
+  ticket_tier_name?: string;
+
+  // Common Fields
   image_url: string | null;
   unit_price: number;
   quantity: number;
@@ -23,6 +34,7 @@ interface CartState {
   closeDrawer: () => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
+  hasMerch: () => boolean;
 }
 
 export const useCartStore = create<CartState>()(
@@ -33,19 +45,25 @@ export const useCartStore = create<CartState>()(
 
       addItem: (newItem) => {
         set((state) => {
-          // Check if same product + variant exists
-          const existingItemIndex = state.items.findIndex(
-            (item) => item.product_id === newItem.product_id && item.variant_id === newItem.variant_id
-          );
+          let existingItemIndex = -1;
+
+          if (newItem.itemType === 'merch') {
+            existingItemIndex = state.items.findIndex(
+              (item) => item.itemType === 'merch' && item.product_id === newItem.product_id && item.variant_id === newItem.variant_id
+            );
+          } else if (newItem.itemType === 'ticket') {
+            existingItemIndex = state.items.findIndex(
+              (item) => item.itemType === 'ticket' && item.event_id === newItem.event_id && item.ticket_tier_id === newItem.ticket_tier_id
+            );
+          }
 
           if (existingItemIndex !== -1) {
-            // Increase quantity
             const updatedItems = [...state.items];
             updatedItems[existingItemIndex].quantity += newItem.quantity;
             return { items: updatedItems, isDrawerOpen: true };
           } else {
-            // Add new item
-            const cart_item_id = `${newItem.product_id}-${newItem.variant_id || 'base'}-${Date.now()}`;
+            const idPart = newItem.itemType === 'merch' ? `${newItem.product_id}-${newItem.variant_id || 'base'}` : `${newItem.event_id}-${newItem.ticket_tier_id}`;
+            const cart_item_id = `${newItem.itemType}-${idPart}-${Date.now()}`;
             return { items: [...state.items, { ...newItem, cart_item_id }], isDrawerOpen: true };
           }
         });
@@ -76,11 +94,15 @@ export const useCartStore = create<CartState>()(
 
       getTotalPrice: () => {
         return get().items.reduce((total, item) => total + (item.unit_price * item.quantity), 0);
+      },
+
+      hasMerch: () => {
+        return get().items.some(item => item.itemType === 'merch');
       }
     }),
     {
-      name: 'bassfactory-cart', // local storage key
-      partialize: (state) => ({ items: state.items }), // Solo persistir los items, no si el drawer está abierto
+      name: 'bassfactory-cart',
+      partialize: (state) => ({ items: state.items }),
     }
   )
 );

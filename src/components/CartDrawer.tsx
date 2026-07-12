@@ -49,7 +49,7 @@ export default function CartDrawer() {
               <div key={item.cart_item_id} style={{ display: 'flex', gap: '1rem' }}>
                 <div style={{ width: '80px', height: '80px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '0.5rem', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
                   {item.image_url ? (
-                    <Image src={item.image_url} alt={item.product_name} fill style={{ objectFit: 'cover' }} />
+                    <Image src={item.image_url} alt={item.itemType === 'merch' ? item.product_name! : item.event_name!} fill style={{ objectFit: 'cover' }} />
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.3 }}><ShoppingCart size={24}/></div>
                   )}
@@ -57,8 +57,11 @@ export default function CartDrawer() {
                 
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div>
-                    <h4 style={{ fontSize: '0.875rem', fontWeight: 600, lineHeight: 1.2 }}>{item.product_name}</h4>
-                    {item.variant_name && <p style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '0.25rem' }}>{item.variant_name}</p>}
+                    <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--color-magenta)', fontWeight: 800, marginBottom: '0.25rem' }}>
+                      {item.itemType === 'merch' ? 'Merch' : 'Boleta'}
+                    </div>
+                    <h4 style={{ fontSize: '0.875rem', fontWeight: 600, lineHeight: 1.2 }}>{item.itemType === 'merch' ? item.product_name : item.event_name}</h4>
+                    {(item.variant_name || item.ticket_tier_name) && <p style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '0.25rem' }}>{item.itemType === 'merch' ? item.variant_name : item.ticket_tier_name}</p>}
                     <p style={{ fontSize: '0.875rem', fontWeight: 700, marginTop: '0.25rem', color: 'var(--color-magenta)' }}>${item.unit_price.toLocaleString('es-CO')}</p>
                   </div>
                   
