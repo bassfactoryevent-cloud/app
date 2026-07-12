@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import HorizontalScroll from "@/components/ui/HorizontalScroll";
 import { Calendar, MapPin } from "lucide-react";
+import AdBanner from "@/components/AdBanner";
 
 export const revalidate = 60; // Revalidate every minute
 
@@ -217,9 +218,7 @@ export default async function Home() {
           <div className={styles.sidebarColumn}>
             
             {/* Banner Publicidad Vertical */}
-            <div className={styles.adBannerVertical}>
-              Banner<br/>Publicidad
-            </div>
+            <AdBanner placementName="home_sidebar" />
 
             {/* Ravers: Reseña */}
             <div className={styles.raversReviews}>
@@ -242,9 +241,7 @@ export default async function Home() {
         {/* SECCIONES INFERIORES */}
         
         {/* Banner Publicidad Horizontal */}
-        <div className={styles.adBannerHorizontal}>
-          Publicidad
-        </div>
+        <AdBanner placementName="home_horizontal" />
 
         {/* Registro */}
         <div className={styles.registrationBanner}>

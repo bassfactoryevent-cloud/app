@@ -67,10 +67,12 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
               <div>
                 <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Ubicación (Placement) *</label>
                 <select name="placement_name" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'black', color: 'white' }}>
-                  <option value="home_hero">Home Hero Banner</option>
-                  <option value="events_sidebar">Events Sidebar</option>
-                  <option value="merch_top">Merch Top Banner</option>
-                  <option value="djs_banner">DJs Page Banner</option>
+                  <option value="home_horizontal">Home - Banner Inferior (Horizontal)</option>
+                  <option value="home_sidebar">Home - Sidebar Derecho (Vertical)</option>
+                  <option value="blog_horizontal">Blog - Banner en Artículo (Horizontal)</option>
+                  <option value="event_horizontal">Eventos - Banner en Evento (Horizontal)</option>
+                  <option value="events_sidebar">Eventos - Sidebar (Vertical)</option>
+                  <option value="djs_banner">DJs - Banner Principal (Horizontal)</option>
                 </select>
                 <p style={{ fontSize: '0.75rem', opacity: 0.5, marginTop: '0.25rem' }}>El lugar donde aparecerá el anuncio en la web.</p>
               </div>

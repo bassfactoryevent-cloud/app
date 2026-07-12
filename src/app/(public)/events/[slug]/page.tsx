@@ -2,6 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import { Calendar, MapPin, Music, Briefcase } from "lucide-react";
 import EventCheckout from "./EventCheckout";
+import AdBanner from "@/components/AdBanner";
 import styles from "../../../admin/components/TiptapEditor.module.css"; // Reuse tiptap styles for rendering
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
@@ -118,6 +119,10 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
               </div>
             </div>
           )}
+
+          <div style={{ marginTop: '2rem' }}>
+            <AdBanner placementName="event_horizontal" />
+          </div>
 
         </div>
 
