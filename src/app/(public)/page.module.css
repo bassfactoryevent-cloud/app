@@ -134,27 +134,27 @@
 .cardButton {
   margin-top: 1rem;
   align-self: flex-start;
-  padding: 0.25rem 0.6rem;
+  padding: 0.35rem 0.75rem;
   background-color: var(--color-magenta);
   color: white;
-  border-radius: 10px;
-  font-size: 0.65rem;
-  font-weight: 800;
-  text-transform: uppercase;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: none;
   transition: all 0.2s ease;
 }
 
 .cardButtonOutline {
   margin-top: 1rem;
   align-self: flex-start;
-  padding: 0.25rem 0.6rem;
+  padding: 0.35rem 0.75rem;
   background-color: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.2);
   color: white;
-  border-radius: 10px;
-  font-size: 0.65rem;
-  font-weight: 800;
-  text-transform: uppercase;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: none;
   transition: all 0.2s ease;
 }
 
