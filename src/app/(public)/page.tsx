@@ -196,20 +196,22 @@ export default async function Home() {
             </div>
 
             {/* 2. Noticias, Cultura (Blog) */}
-            {principalPost && (
-              <div style={{ marginBottom: '2rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1rem' }}>
-                  <div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, letterSpacing: '-0.03em' }}>Noticias, Cultura</h2>
-                  </div>
-                  <Link href="/blog" style={{ fontSize: '0.875rem', fontWeight: 600, opacity: 0.8, color: 'var(--color-magenta)', textDecoration: 'none' }}>
-                    Ver Más
-                  </Link>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              
+              {/* Encabezado del bloque agrupado */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingBottom: '0.5rem' }}>
+                <div>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, letterSpacing: '-0.03em' }}>Noticias, Cultura</h2>
                 </div>
-                
-                <div style={{ display: 'flex', flexWrap: 'wrap', width: '100%', backgroundColor: '#0a0a0a', borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <Link href="/blog" style={{ fontSize: '0.875rem', fontWeight: 600, opacity: 0.8, color: 'var(--color-magenta)', textDecoration: 'none' }}>
+                  Ver Más
+                </Link>
+              </div>
+
+              {principalPost && (
+                <div className={styles.principalHeroContainer}>
                   {/* Left: Image */}
-                  <div style={{ flex: '1 1 50%', minWidth: '300px', minHeight: '300px', position: 'relative', backgroundColor: '#111' }}>
+                  <div className={styles.principalHeroImage}>
                     {principalPost.cover_image && (
                       <img 
                         src={principalPost.cover_image}
@@ -219,49 +221,49 @@ export default async function Home() {
                     )}
                   </div>
                   {/* Right: Content */}
-                  <div style={{ flex: '1 1 50%', minWidth: '300px', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '3rem 2rem' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-start' }}>
-                      <span style={{ backgroundColor: 'var(--color-magenta)', color: 'white', padding: '0.25rem 1rem', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <div className={styles.principalHeroContent}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'flex-start' }}>
+                      <span className={styles.principalHeroTag}>
                         Noticias, Cultura
                       </span>
-                      <h2 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.1, margin: 0 }}>
+                      <h2 className={styles.principalHeroTitle}>
                         {principalPost.title}
                       </h2>
-                      <p style={{ fontSize: '1rem', opacity: 0.8, lineHeight: 1.5, margin: 0 }}>
+                      <p className={styles.principalHeroExcerpt}>
                         {principalPost.excerpt || (principalPost.content?.replace(/<[^>]+>/g, '').substring(0, 140) + '...')}
                       </p>
-                      <div style={{ marginTop: '0.5rem' }}>
-                        <Link href={`/blog/${principalPost.slug}`} style={{ display: 'inline-block', backgroundColor: 'white', color: 'black', padding: '0.75rem 1.5rem', borderRadius: '100px', fontWeight: 700, textDecoration: 'none', transition: 'opacity 0.2s', fontSize: '0.875rem' }}>
+                      <div style={{ marginTop: 'auto' }}>
+                        <Link href={`/blog/${principalPost.slug}`} className={styles.principalHeroButton}>
                           Seguir leyendo
                         </Link>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-
-            <HorizontalScroll title={principalPost ? "" : "Noticias, Cultura"} viewAllLink={principalPost ? undefined : "/blog"}>
-              {posts && posts.length > 0 ? posts.filter((p: any) => p.id !== principalPost?.id).map((post: any) => (
-                <Link href={`/blog/${post.slug}`} key={post.id} className={styles.card}>
-                  <div style={{ position: 'relative', width: '100%', aspectRatio: '16/10' }}>
-                    <img src={post.cover_image || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=400"} alt={post.title} className={styles.cardImage} style={{ position: 'absolute', top: 0, left: 0, height: '100%' }} />
-                    {post.categories && (
-                      <div style={{ position: 'absolute', top: '0.5rem', left: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', padding: '0.25rem 0.5rem', borderRadius: '100px', fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', zIndex: 2 }}>
-                        {post.categories.name}
-                      </div>
-                    )}
-                  </div>
-                  <h3 className={styles.cardTitle}>{post.title}</h3>
-                  <p className={styles.cardSubtitle} style={{ marginTop: '0.5rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', flex: 1 }}>
-                    {post.excerpt}
-                  </p>
-                  <span className={styles.cardButtonOutline}>Ver Más</span>
-                </Link>
-              )) : (
-                <p style={{ color: 'var(--color-text-secondary)', padding: '1rem' }}>No hay noticias publicadas aún.</p>
               )}
-            </HorizontalScroll>
+
+              <HorizontalScroll title="" viewAllLink="">
+                {posts && posts.length > 0 ? posts.filter((p: any) => p.id !== principalPost?.id).map((post: any) => (
+                  <Link href={`/blog/${post.slug}`} key={post.id} className={styles.card}>
+                    <div style={{ position: 'relative', width: '100%', aspectRatio: '16/10' }}>
+                      <img src={post.cover_image || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=400"} alt={post.title} className={styles.cardImage} style={{ position: 'absolute', top: 0, left: 0, height: '100%', marginBottom: 0 }} />
+                      {post.categories && (
+                        <div style={{ position: 'absolute', top: '0.5rem', left: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', padding: '0.25rem 0.5rem', borderRadius: '100px', fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', zIndex: 2 }}>
+                          {post.categories.name}
+                        </div>
+                      )}
+                    </div>
+                    <h3 className={styles.cardTitle} style={{ marginTop: '1rem' }}>{post.title}</h3>
+                    <p className={styles.cardSubtitle} style={{ marginTop: '0.5rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', flex: 1 }}>
+                      {post.excerpt}
+                    </p>
+                    <span className={styles.cardButtonOutline}>Ver Más</span>
+                  </Link>
+                )) : (
+                  <p style={{ color: 'var(--color-text-secondary)', padding: '1rem' }}>No hay noticias publicadas aún.</p>
+                )}
+              </HorizontalScroll>
+            </div>
 
             {/* 3. Merch */}
             <HorizontalScroll title="Merch" viewAllLink="/merch">
