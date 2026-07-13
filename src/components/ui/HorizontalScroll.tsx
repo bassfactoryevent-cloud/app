@@ -2,6 +2,7 @@
 
 import React, { useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 
 interface HorizontalScrollProps {
   title: string;
@@ -31,9 +32,9 @@ export default function HorizontalScroll({ title, subtitle, children, viewAllLin
         
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           {viewAllLink && (
-            <a href={viewAllLink} style={{ fontSize: '0.875rem', fontWeight: 600, opacity: 0.8, marginRight: '1rem', color: 'var(--color-magenta)' }}>
-              Ver todo
-            </a>
+            <Link href={viewAllLink} style={{ fontSize: '0.875rem', fontWeight: 600, opacity: 0.8, marginRight: '1rem', color: 'var(--color-magenta)', textDecoration: 'none' }}>
+              Ver Más
+            </Link>
           )}
           <button 
             onClick={() => scroll('left')}

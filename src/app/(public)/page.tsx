@@ -36,10 +36,19 @@ export default async function Home() {
   // Fetch Blog Posts
   const { data: posts } = await supabase
     .from('posts')
-    .select('*')
+    .select('*, categories (name, slug)')
     .eq('is_published', true)
     .order('created_at', { ascending: false })
     .limit(8);
+
+  // Fetch Principal Blog Post
+  const { data: principalPosts } = await supabase
+    .from('posts')
+    .select('*, categories (name, slug)')
+    .eq('is_published', true)
+    .eq('is_principal', true)
+    .limit(1);
+  const principalPost = principalPosts?.[0];
 
   // Fetch Hero Settings
   const { data: heroSettings } = await supabase
@@ -163,7 +172,7 @@ export default async function Home() {
           <div className={styles.contentColumn}>
             
             {/* 1. Eventos */}
-            <HorizontalScroll title="Eventos">
+            <HorizontalScroll title="Eventos" viewAllLink="/events">
               {events && events.slice(0, 8).map(event => (
                 <Link href={`/events/${event.slug}`} key={event.id} className={styles.card}>
                   <img src={event.cover_image || "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?q=80&w=400"} alt={event.title} className={styles.cardImage} />
@@ -187,10 +196,62 @@ export default async function Home() {
             </div>
 
             {/* 2. Noticias, Cultura (Blog) */}
-            <HorizontalScroll title="Noticias, Cultura">
-              {posts && posts.length > 0 ? posts.map(post => (
+            {principalPost && (
+              <div style={{ marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1rem' }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, letterSpacing: '-0.03em' }}>Noticias, Cultura</h2>
+                  </div>
+                  <Link href="/blog" style={{ fontSize: '0.875rem', fontWeight: 600, opacity: 0.8, color: 'var(--color-magenta)', textDecoration: 'none' }}>
+                    Ver Más
+                  </Link>
+                </div>
+                
+                <div style={{ display: 'flex', flexWrap: 'wrap', width: '100%', backgroundColor: '#0a0a0a', borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  {/* Left: Image */}
+                  <div style={{ flex: '1 1 50%', minWidth: '300px', minHeight: '300px', position: 'relative', backgroundColor: '#111' }}>
+                    {principalPost.cover_image && (
+                      <img 
+                        src={principalPost.cover_image}
+                        alt={principalPost.title}
+                        style={{ objectFit: 'cover', width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}
+                      />
+                    )}
+                  </div>
+                  {/* Right: Content */}
+                  <div style={{ flex: '1 1 50%', minWidth: '300px', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '3rem 2rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-start' }}>
+                      <span style={{ backgroundColor: 'var(--color-magenta)', color: 'white', padding: '0.25rem 1rem', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Noticias, Cultura
+                      </span>
+                      <h2 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.1, margin: 0 }}>
+                        {principalPost.title}
+                      </h2>
+                      <p style={{ fontSize: '1rem', opacity: 0.8, lineHeight: 1.5, margin: 0 }}>
+                        {principalPost.excerpt || (principalPost.content?.replace(/<[^>]+>/g, '').substring(0, 140) + '...')}
+                      </p>
+                      <div style={{ marginTop: '0.5rem' }}>
+                        <Link href={`/blog/${principalPost.slug}`} style={{ display: 'inline-block', backgroundColor: 'white', color: 'black', padding: '0.75rem 1.5rem', borderRadius: '100px', fontWeight: 700, textDecoration: 'none', transition: 'opacity 0.2s', fontSize: '0.875rem' }}>
+                          Seguir leyendo
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <HorizontalScroll title={principalPost ? "" : "Noticias, Cultura"} viewAllLink={principalPost ? undefined : "/blog"}>
+              {posts && posts.length > 0 ? posts.filter((p: any) => p.id !== principalPost?.id).map((post: any) => (
                 <Link href={`/blog/${post.slug}`} key={post.id} className={styles.card}>
-                  <img src={post.cover_image || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=400"} alt={post.title} className={styles.cardImage} />
+                  <div style={{ position: 'relative', width: '100%', aspectRatio: '16/10' }}>
+                    <img src={post.cover_image || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=400"} alt={post.title} className={styles.cardImage} style={{ position: 'absolute', top: 0, left: 0, height: '100%' }} />
+                    {post.categories && (
+                      <div style={{ position: 'absolute', top: '0.5rem', left: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', padding: '0.25rem 0.5rem', borderRadius: '100px', fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', zIndex: 2 }}>
+                        {post.categories.name}
+                      </div>
+                    )}
+                  </div>
                   <h3 className={styles.cardTitle}>{post.title}</h3>
                   <p className={styles.cardSubtitle} style={{ marginTop: '0.5rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', flex: 1 }}>
                     {post.excerpt}
@@ -203,7 +264,7 @@ export default async function Home() {
             </HorizontalScroll>
 
             {/* 3. Merch */}
-            <HorizontalScroll title="Merch">
+            <HorizontalScroll title="Merch" viewAllLink="/merch">
               {merch && merch.slice(0, 8).map(product => {
                 const primaryImage = product.merch_product_images?.find((img: any) => img.is_primary)?.image_url || product.merch_product_images?.[0]?.image_url || "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=400";
                 return (
