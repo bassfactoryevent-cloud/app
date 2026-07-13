@@ -40,6 +40,7 @@ export async function createBlogPost(formData: FormData) {
   const cover_image = formData.get("cover_image") as string;
   const category_id = formData.get("category_id") as string;
   const is_published = formData.get("is_published") === "on";
+  const is_principal = formData.get("is_principal") === "on";
   
   const excerpt = formData.get("excerpt") as string;
   const meta_title = formData.get("meta_title") as string;
@@ -57,10 +58,22 @@ export async function createBlogPost(formData: FormData) {
     cover_image: cover_image || null,
     category_id: category_id || null,
     is_published,
+    is_principal,
     excerpt: excerpt || null,
     meta_title: meta_title || null,
     meta_description: meta_description || null,
   };
+
+  if (is_principal) {
+    let query = supabase.from("posts").select("id").eq("is_principal", true);
+    if (post_id) {
+      query = query.neq("id", post_id);
+    }
+    const { data: existingPrincipal } = await query.limit(1);
+    if (existingPrincipal && existingPrincipal.length > 0) {
+      throw new Error("Ya existe un artículo principal activo. Debes desactivarlo primero antes de marcar uno nuevo como principal.");
+    }
+  }
 
   let post: any;
 

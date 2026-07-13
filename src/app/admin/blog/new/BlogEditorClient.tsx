@@ -149,6 +149,11 @@ export default function BlogEditorClient({
             <label htmlFor="is_published" style={{ fontWeight: 500 }}>Publicar Inmediatamente</label>
           </div>
 
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+            <input type="checkbox" id="is_principal" name="is_principal" style={{ width: '1.2rem', height: '1.2rem', accentColor: 'var(--color-magenta)' }} defaultChecked={initialData ? initialData.is_principal : false} />
+            <label htmlFor="is_principal" style={{ fontWeight: 500 }}>Establecer como Artículo Principal (Hero)</label>
+          </div>
+
           <button 
             type="submit"
             style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', border: 'none', fontSize: '1rem', fontWeight: 600, cursor: 'pointer' }}
