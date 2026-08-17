@@ -118,7 +118,15 @@ p { color: var(--color-text-secondary); margin-bottom: var(--space-2); font-size
 @media (max-width: 900px) {
   body {
     padding-bottom: 70px; /* Space for MobileBottomNav */
+    font-size: 14px; /* Default body size */
   }
+
+  /* Refined typography for App-like feel on mobile */
+  h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+  h2 { font-size: 1.25rem; margin-bottom: 0.75rem; }
+  h3 { font-size: 1.125rem; margin-bottom: 0.5rem; }
+  h4 { font-size: 1rem; }
+  p { font-size: 0.875rem; margin-bottom: 0.75rem; }
 }
 
 @media (max-width: 768px) {

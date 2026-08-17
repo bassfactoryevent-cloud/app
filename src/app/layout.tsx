@@ -18,6 +18,13 @@ export const metadata: Metadata = {
   description: "La plataforma definitiva para eventos, ticketing, djs, y mercancía de la cultura de música electrónica.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 import { Toaster } from "sonner";
 
 export default function RootLayout({
