@@ -26,8 +26,8 @@ export default async function DjEPKPage({ params }: { params: Promise<{ slug: st
     .from("djs")
     .select(`
       *,
-      bookings (
-        performance_time,
+      event_djs (
+        set_time,
         events (id, title, slug, location_name, status, start_date)
       )
     `)
@@ -39,7 +39,7 @@ export default async function DjEPKPage({ params }: { params: Promise<{ slug: st
   }
 
   // Sort bookings (upcoming first)
-  const bookings = dj.bookings?.filter((b: any) => b.events && b.events.status !== 'cancelled').sort((a: any, b: any) => new Date(a.performance_time).getTime() - new Date(b.performance_time).getTime()) || [];
+  const bookings = dj.event_djs?.filter((b: any) => b.events && b.events.status !== 'cancelled').sort((a: any, b: any) => new Date(a.events.start_date || a.set_time || 0).getTime() - new Date(b.events.start_date || b.set_time || 0).getTime()) || [];
 
   return (
     <div style={{ paddingBottom: '4rem' }}>
@@ -110,7 +110,7 @@ export default async function DjEPKPage({ params }: { params: Promise<{ slug: st
                       <Link key={idx} href={`/events/${evt.slug}`} style={{ textDecoration: 'none', color: 'inherit', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.05)', transition: 'background-color 0.2s' }} className="booking-card">
                         <div>
                           <p style={{ fontSize: '0.875rem', color: 'var(--color-magenta)', fontWeight: 700, marginBottom: '0.25rem' }}>
-                            {new Date(booking.performance_time).toLocaleString('es-CO')}
+                            {new Date(evt.start_date || booking.set_time).toLocaleString('es-CO')}
                           </p>
                           <h4 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{evt.title}</h4>
                           <p style={{ opacity: 0.7, fontSize: '0.875rem', marginTop: '0.25rem' }}>{evt.location_name}</p>
