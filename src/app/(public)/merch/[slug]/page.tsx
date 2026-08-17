@@ -53,7 +53,7 @@ export default async function MerchProductPage({ params }: { params: Promise<{ s
         <span style={{ color: 'var(--color-magenta)' }}>{product.title}</span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '4rem', alignItems: 'start' }}>
         
         {/* Columna Izquierda: Imágenes */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
