@@ -1,6 +1,8 @@
 import { Megaphone } from "lucide-react";
 import Link from "next/link";
 import { createCampaign } from "../actions";
+import ActionForm from "@/components/admin/ActionForm";
+import SubmitButton from "@/components/admin/SubmitButton";
 
 export default function NewCampaignPage() {
   return (
@@ -15,7 +17,7 @@ export default function NewCampaignPage() {
         </h1>
       </div>
 
-      <form action={createCampaign} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: '1rem', border: '1px solid var(--color-border)', backdropFilter: 'blur(10px)' }}>
+      <ActionForm action={createCampaign} successMessage="¡Campaña creada exitosamente!" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: '1rem', border: '1px solid var(--color-border)', backdropFilter: 'blur(10px)' }}>
         
         <div>
           <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Nombre de la Campaña *</label>
@@ -58,11 +60,11 @@ export default function NewCampaignPage() {
           </div>
         </div>
 
-        <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem', alignSelf: 'flex-start' }}>
+        <SubmitButton style={{ marginTop: '1rem', alignSelf: 'flex-start' }}>
           Crear Campaña
-        </button>
+        </SubmitButton>
 
-      </form>
+      </ActionForm>
     </div>
   );
 }

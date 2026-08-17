@@ -5,6 +5,8 @@ import Link from "next/link";
 import { addAdToCampaign, deleteAd, updateCampaign, updateAd } from "../actions";
 import Image from "next/image";
 import ImageUpload from "@/components/admin/ImageUpload";
+import ActionForm from "@/components/admin/ActionForm";
+import SubmitButton from "@/components/admin/SubmitButton";
 
 export default async function CampaignDetailsPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ editBanner?: string }> }) {
   const supabase = await createClient();
@@ -36,7 +38,7 @@ export default async function CampaignDetailsPage({ params, searchParams }: { pa
         {/* Detalles de Campaña */}
         <div style={{ backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: '1rem', border: '1px solid var(--color-border)', backdropFilter: 'blur(10px)' }}>
           <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Ajustes</h2>
-          <form action={updateCampaign.bind(null, campaign.id)} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <ActionForm action={updateCampaign.bind(null, campaign.id)} successMessage="¡Campaña actualizada exitosamente!" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Nombre</label>
               <input type="text" name="name" defaultValue={campaign.name} required style={{ width: '100%' }} />
@@ -57,8 +59,8 @@ export default async function CampaignDetailsPage({ params, searchParams }: { pa
               <input type="checkbox" name="is_active" defaultChecked={campaign.is_active} id="active-check" />
               <label htmlFor="active-check" style={{ fontSize: '0.875rem' }}>Campaña Activa</label>
             </div>
-            <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem', alignSelf: 'flex-start' }}>Guardar Cambios</button>
-          </form>
+            <SubmitButton style={{ marginTop: '1rem', alignSelf: 'flex-start' }}>Guardar Cambios</SubmitButton>
+          </ActionForm>
         </div>
 
         {/* Banners */}
@@ -75,7 +77,7 @@ export default async function CampaignDetailsPage({ params, searchParams }: { pa
                     </Link>
                   )}
                 </div>
-                <form action={editingAd ? updateAd.bind(null, editingAd.id, campaign.id) : addAdToCampaign.bind(null, campaign.id)} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <ActionForm action={editingAd ? updateAd.bind(null, editingAd.id, campaign.id) : addAdToCampaign.bind(null, campaign.id)} successMessage={editingAd ? "¡Banner actualizado!" : "¡Banner añadido exitosamente!"} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Ubicación (Placement) *</label>
                     <select name="placement_name" defaultValue={editingAd?.ad_placements?.name || "home_horizontal"} required style={{ width: '100%' }}>
@@ -102,10 +104,10 @@ export default async function CampaignDetailsPage({ params, searchParams }: { pa
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>URL de Destino (Link al hacer clic)</label>
                     <input type="url" name="target_url" defaultValue={editingAd?.target_url || ""} placeholder="https://..." style={{ width: '100%' }} />
                   </div>
-                  <button type="submit" className="btn btn-primary" style={{ alignSelf: 'flex-start', marginTop: '0.5rem' }}>
+                  <SubmitButton style={{ alignSelf: 'flex-start', marginTop: '0.5rem' }}>
                     {editingAd ? 'Guardar Cambios' : <><Plus size={16} /> Añadir Banner</>}
-                  </button>
-                </form>
+                  </SubmitButton>
+                </ActionForm>
               </div>
             );
           })()}
@@ -134,11 +136,11 @@ export default async function CampaignDetailsPage({ params, searchParams }: { pa
                       <Link href={`/admin/ads/${campaign.id}?editBanner=${ad.id}`} style={{ padding: '0.5rem', backgroundColor: 'transparent', color: '#fbbf24', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                         <Pencil size={18} />
                       </Link>
-                      <form action={deleteAd.bind(null, ad.id, campaign.id)}>
-                        <button type="submit" style={{ padding: '0.5rem', backgroundColor: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                      <ActionForm action={deleteAd.bind(null, ad.id, campaign.id)} successMessage="¡Banner eliminado!">
+                        <SubmitButton pendingText="" className="" style={{ padding: '0.5rem', backgroundColor: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                           <Trash2 size={20} />
-                        </button>
-                      </form>
+                        </SubmitButton>
+                      </ActionForm>
                     </div>
                   </div>
                 );

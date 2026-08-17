@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 import { Save, Image as ImageIcon, Loader2 } from "lucide-react";
 import TiptapEditor from "../../components/TiptapEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
+import SubmitButton from "@/components/admin/SubmitButton";
 
 export default function BlogEditorClient({ 
   categories, 
@@ -154,13 +155,12 @@ export default function BlogEditorClient({
             <label htmlFor="is_principal" style={{ fontWeight: 500 }}>Establecer como Artículo Principal (Hero)</label>
           </div>
 
-          <button 
-            type="submit"
+          <SubmitButton 
             style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', border: 'none', fontSize: '1rem', fontWeight: 600, cursor: 'pointer' }}
           >
             <Save size={20} />
             Guardar Artículo
-          </button>
+          </SubmitButton>
         </div>
 
         {/* Caja de Portada */}

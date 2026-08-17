@@ -7,6 +7,7 @@ import TiptapEditor from "../../components/TiptapEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
 import Link from "next/link";
 import { toast } from "sonner";
+import SubmitButton from "@/components/admin/SubmitButton";
 
 type VariantData = { name: string, quantity: number, price_override: string };
 
@@ -43,9 +44,7 @@ export default function MerchFormClient({ categories, initialData }: { categorie
   const removeImage = (index: number) => setImages(images.filter((_, i) => i !== index));
 
   return (
-    <form action="/api/admin/merch" method="POST" onSubmit={async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.currentTarget);
+    <form action={async (formData) => {
       formData.set("description", description);
       formData.set("variants_json", JSON.stringify(variants));
       formData.set("images_json", JSON.stringify(images));
@@ -74,14 +73,14 @@ export default function MerchFormClient({ categories, initialData }: { categorie
           <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Package size={28} /> {initialData ? 'Editar Producto' : 'Crear Nuevo Producto'}</h1>
           <p style={{ opacity: 0.7, marginTop: '0.5rem' }}>Configura tallas, imágenes y el precio de tu merch.</p>
         </div>
-        <button type="submit" style={{
+        <SubmitButton style={{
           display: 'flex', alignItems: 'center', gap: '0.5rem',
           backgroundColor: 'var(--color-magenta)', color: 'white',
           padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-md)',
           border: 'none', fontWeight: 600, cursor: 'pointer'
         }}>
           <Save size={18} /> {initialData ? 'Guardar Cambios' : 'Publicar Producto'}
-        </button>
+        </SubmitButton>
       </div>
 
       <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>

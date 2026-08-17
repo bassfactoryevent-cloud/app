@@ -1,6 +1,9 @@
 import { createClient } from "@/utils/supabase/server";
 import { createSponsor, deleteSponsor } from "../events/actions";
 import { Briefcase, PlusCircle } from "lucide-react";
+import ActionForm from "@/components/admin/ActionForm";
+import SubmitButton from "@/components/admin/SubmitButton";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 export default async function AdminSponsors() {
   const supabase = await createClient();
@@ -18,7 +21,7 @@ export default async function AdminSponsors() {
 
       <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
         {/* Formulario */}
-        <form action={createSponsor} style={{ flex: '1 1 300px', backgroundColor: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <ActionForm action={createSponsor} successMessage="¡Patrocinador añadido!" style={{ flex: '1 1 300px', backgroundColor: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.05)' }}>
           <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>Añadir Patrocinador</h2>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -32,12 +35,8 @@ export default async function AdminSponsors() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label htmlFor="logo_url" style={{ fontWeight: 600, fontSize: '0.875rem' }}>URL del Logo</label>
-              <input 
-                type="url" id="logo_url" name="logo_url" required
-                placeholder="https://..."
-                style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }}
-              />
+              <label htmlFor="logo_url" style={{ fontWeight: 600, fontSize: '0.875rem' }}>URL del Logo (O súbelo)</label>
+              <ImageUpload name="logo_url" bucket="sponsors" label="Subir logo" />
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -49,14 +48,11 @@ export default async function AdminSponsors() {
               />
             </div>
 
-            <button 
-              type="submit"
-              style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: 'none', fontWeight: 600, cursor: 'pointer', marginTop: '1rem' }}
-            >
+            <SubmitButton style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: 'none', fontWeight: 600, cursor: 'pointer', marginTop: '1rem' }}>
               <PlusCircle size={18} /> Guardar Marca
-            </button>
+            </SubmitButton>
           </div>
-        </form>
+        </ActionForm>
 
         {/* Lista */}
         <div style={{ flex: '2 1 400px', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)', overflow: 'hidden' }}>

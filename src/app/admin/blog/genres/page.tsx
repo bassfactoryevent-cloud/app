@@ -1,6 +1,8 @@
 import { createClient } from "@/utils/supabase/server";
 import { createGenre } from "../actions";
-import { Save, Music } from "lucide-react";
+import { Music } from "lucide-react";
+import ActionForm from "@/components/admin/ActionForm";
+import SubmitButton from "@/components/admin/SubmitButton";
 
 export default async function AdminGenres() {
   const supabase = await createClient();
@@ -18,7 +20,7 @@ export default async function AdminGenres() {
 
       <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
         {/* Formulario para Crear Género */}
-        <form action={createGenre} style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <ActionForm action={createGenre} successMessage="¡Género creado exitosamente!" style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.05)' }}>
           <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>Nuevo Género</h2>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -46,14 +48,11 @@ export default async function AdminGenres() {
               />
             </div>
 
-            <button 
-              type="submit"
-              style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: 'none', fontWeight: 600, cursor: 'pointer', marginTop: '1rem' }}
-            >
-              <Save size={18} /> Crear Género
-            </button>
+            <SubmitButton style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: 'none', fontWeight: 600, cursor: 'pointer', marginTop: '1rem' }}>
+              Crear Género
+            </SubmitButton>
           </div>
-        </form>
+        </ActionForm>
 
         {/* Lista de Géneros */}
         <div style={{ flex: 1, backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)', overflow: 'hidden' }}>

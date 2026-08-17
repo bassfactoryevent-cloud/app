@@ -2,6 +2,8 @@ import { createClient } from "@/utils/supabase/server";
 import { Tag, Trash2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { createMerchCategory, deleteMerchCategory } from "../actions";
+import ActionForm from "@/components/admin/ActionForm";
+import SubmitButton from "@/components/admin/SubmitButton";
 
 export default async function MerchCategoriesPage() {
   const supabase = await createClient();
@@ -21,7 +23,7 @@ export default async function MerchCategoriesPage() {
 
       <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
         {/* Formulario de Creación */}
-        <form action={createMerchCategory} style={{ flex: 1, backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(128,128,128,0.2)' }}>
+        <ActionForm action={createMerchCategory} successMessage="¡Categoría creada exitosamente!" style={{ flex: 1, backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(128,128,128,0.2)' }}>
           <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(128,128,128,0.1)', paddingBottom: '0.5rem' }}>Nueva Categoría</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
@@ -36,11 +38,11 @@ export default async function MerchCategoriesPage() {
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Descripción (opcional)</label>
               <textarea name="description" rows={3} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit', resize: 'vertical' }}></textarea>
             </div>
-            <button type="submit" style={{ padding: '0.75rem', backgroundColor: 'var(--color-magenta)', color: 'white', border: 'none', borderRadius: 'var(--radius-md)', fontWeight: 700, cursor: 'pointer', marginTop: '1rem' }}>
+            <SubmitButton style={{ padding: '0.75rem', backgroundColor: 'var(--color-magenta)', color: 'white', border: 'none', borderRadius: 'var(--radius-md)', fontWeight: 700, cursor: 'pointer', marginTop: '1rem' }}>
               Crear Categoría
-            </button>
+            </SubmitButton>
           </div>
-        </form>
+        </ActionForm>
 
         {/* Lista de Categorías */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -51,11 +53,11 @@ export default async function MerchCategoriesPage() {
                 <p style={{ opacity: 0.5, fontSize: '0.875rem' }}>/{cat.slug}</p>
                 {cat.description && <p style={{ opacity: 0.7, fontSize: '0.875rem', marginTop: '0.5rem' }}>{cat.description}</p>}
               </div>
-              <form action={deleteMerchCategory.bind(null, cat.id)}>
-                <button type="submit" style={{ padding: '0.5rem', backgroundColor: 'transparent', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}>
+              <ActionForm action={deleteMerchCategory.bind(null, cat.id)} successMessage="¡Categoría eliminada!">
+                <SubmitButton pendingText="" style={{ padding: '0.5rem', backgroundColor: 'transparent', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}>
                   <Trash2 size={16} />
-                </button>
-              </form>
+                </SubmitButton>
+              </ActionForm>
             </div>
           ))}
           {categories?.length === 0 && (

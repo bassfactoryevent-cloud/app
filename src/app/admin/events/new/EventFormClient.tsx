@@ -7,6 +7,7 @@ import TiptapEditor from "../../components/TiptapEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
 import Link from "next/link";
 import { toast } from "sonner";
+import SubmitButton from "@/components/admin/SubmitButton";
 
 type TicketData = { id?: string, name: string, price: number, quantity: number, sales_start: string, sales_end: string };
 
@@ -54,9 +55,7 @@ export default function EventFormClient({ djs, sponsors, initialData }: { djs: a
   };
 
   return (
-    <form action="/api/admin/events" method="POST" onSubmit={async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.currentTarget);
+    <form action={async (formData) => {
       formData.set("description", description);
       formData.set("tickets_json", JSON.stringify(tickets));
       formData.set("djs_json", JSON.stringify(selectedDjs));
@@ -86,14 +85,14 @@ export default function EventFormClient({ djs, sponsors, initialData }: { djs: a
           <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Calendar size={28} /> {initialData ? 'Editar Evento' : 'Crear Nuevo Evento'}</h1>
           <p style={{ opacity: 0.7, marginTop: '0.5rem' }}>Configura toda la información, boletas y line up del evento.</p>
         </div>
-        <button type="submit" style={{
+        <SubmitButton style={{
           display: 'flex', alignItems: 'center', gap: '0.5rem',
           backgroundColor: 'var(--color-magenta)', color: 'white',
           padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-md)',
           border: 'none', fontWeight: 600, cursor: 'pointer'
         }}>
           <Save size={18} /> {initialData ? 'Guardar Cambios' : 'Publicar Evento'}
-        </button>
+        </SubmitButton>
       </div>
 
       <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
