@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/server";
 import { ArrowLeft, Calendar } from "lucide-react";
 import { Metadata, ResolvingMetadata } from "next";
 import AdBanner from "@/components/AdBanner";
+import { ShareButtons } from "@/components/ui/ShareButtons";
 import styles from "../../../admin/components/TiptapEditor.module.css"; // Reuse tiptap styles for public render
 
 export const revalidate = 60;
@@ -168,6 +169,8 @@ export default async function BlogPostPage({ params }: Props) {
             dangerouslySetInnerHTML={{ __html: contentPart2 }} 
           />
         )}
+
+        <ShareButtons title={post.title} text={post.excerpt} />
 
         <div style={{ marginTop: '4rem' }}>
           <AdBanner placementName="blog_horizontal" />

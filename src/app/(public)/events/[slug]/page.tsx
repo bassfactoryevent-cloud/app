@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Calendar, MapPin, Music, Briefcase } from "lucide-react";
 import EventCheckout from "./EventCheckout";
 import AdBanner from "@/components/AdBanner";
+import { ShareButtons } from "@/components/ui/ShareButtons";
 import styles from "../../../admin/components/TiptapEditor.module.css"; // Reuse tiptap styles for rendering
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
@@ -119,6 +120,8 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
               </div>
             </div>
           )}
+
+          <ShareButtons title={`Bassfactory Event: ${event.title}`} text={event.location_name} />
 
           <div style={{ marginTop: '2rem' }}>
             <AdBanner placementName="event_horizontal" />
