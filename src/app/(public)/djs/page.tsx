@@ -15,7 +15,8 @@ export default async function PublicDjsPage() {
   const { data: djs } = await supabase
     .from("djs")
     .select("*")
-    .order("stage_name", { ascending: true });
+    .eq("type", "colectivo")
+    .order("name", { ascending: true });
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '4rem 1rem' }}>
@@ -36,18 +37,18 @@ export default async function PublicDjsPage() {
         {djs?.map((dj: any) => (
           <Link key={dj.id} href={`/djs/${dj.slug}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
             <div style={{ position: 'relative', height: '400px', borderRadius: '1rem', overflow: 'hidden', cursor: 'pointer' }} className="group">
-              {dj.image_url ? (
-                <Image src={dj.image_url} alt={dj.stage_name} fill style={{ objectFit: 'cover', transition: 'transform 0.5s ease' }} className="dj-image" />
+              {dj.photo_url ? (
+                <Image src={dj.photo_url} alt={dj.name} fill style={{ objectFit: 'cover', transition: 'transform 0.5s ease' }} className="dj-image" />
               ) : (
                 <div style={{ backgroundColor: 'rgba(255,255,255,0.05)', display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', opacity: 0.3 }}>
                   <Music size={64} />
                 </div>
               )}
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%)', padding: '2rem 1.5rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>{dj.stage_name}</h3>
-                {dj.bio && (
+                <h3 style={{ fontSize: '1.5rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>{dj.name}</h3>
+                {dj.bio_short && (
                   <p style={{ fontSize: '0.875rem', opacity: 0.8, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                    {dj.bio.replace(/<[^>]*>?/gm, '')}
+                    {dj.bio_short}
                   </p>
                 )}
               </div>

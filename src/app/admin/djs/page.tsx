@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
-import { createDj, deleteDj } from "../events/actions";
+import { createDj, deleteDj } from "./actions";
 import { Music, PlusCircle, Trash2, Edit } from "lucide-react";
 import Link from "next/link";
 import ImageUpload from "@/components/admin/ImageUpload";
@@ -24,6 +24,21 @@ export default async function AdminDjs() {
           <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>Añadir Artista</h2>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <label style={{ fontWeight: 600, fontSize: '0.875rem' }}>Tipo de Artista</label>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
+                  <input type="radio" name="type" value="colectivo" defaultChecked />
+                  Del Colectivo (Con EPK)
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
+                  <input type="radio" name="type" value="invitado" />
+                  Invitado
+                </label>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <label htmlFor="name" style={{ fontWeight: 600, fontSize: '0.875rem' }}>Nombre del DJ</label>
               <input 
@@ -34,7 +49,16 @@ export default async function AdminDjs() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <ImageUpload name="photo_url" bucket="djs" label="URL de Foto (Opcional)" />
+              <label htmlFor="collective_name" style={{ fontWeight: 600, fontSize: '0.875rem' }}>Nombre del Colectivo / Agencia (Solo para invitados)</label>
+              <input 
+                type="text" id="collective_name" name="collective_name"
+                placeholder="Ej. Awakenings, Drumcode..."
+                style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <ImageUpload name="photo_url" bucket="djs" label="URL de Foto (Opcional para invitados, requerida para Colectivo)" />
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -50,7 +74,7 @@ export default async function AdminDjs() {
               type="submit"
               style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: 'none', fontWeight: 600, cursor: 'pointer', marginTop: '1rem' }}
             >
-              <PlusCircle size={18} /> Guardar DJ
+              <PlusCircle size={18} /> Guardar y Continuar
             </button>
           </div>
         </form>
@@ -77,10 +101,16 @@ export default async function AdminDjs() {
                       <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.1)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {dj.photo_url ? <img src={dj.photo_url} alt={dj.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Music size={16} opacity={0.5} />}
                       </div>
-                      <span style={{ fontWeight: 500 }}>{dj.name}</span>
+                      <div>
+                        <span style={{ fontWeight: 500, display: 'block' }}>{dj.name}</span>
+                        <span style={{ fontSize: '0.75rem', color: dj.type === 'colectivo' ? 'var(--color-magenta)' : 'var(--color-text-secondary)' }}>
+                          {dj.type === 'colectivo' ? 'Colectivo' : `Invitado (${dj.collective_name || 'Sin colectivo'})`}
+                        </span>
+                      </div>
                     </td>
                     <td style={{ padding: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      {dj.soundcloud_url ? <a href={dj.soundcloud_url} target="_blank" rel="noreferrer" style={{ color: 'var(--color-magenta)' }}>Soundcloud</a> : '-'}
+                      {dj.soundcloud_url && <a href={dj.soundcloud_url} target="_blank" rel="noreferrer" style={{ color: 'var(--color-magenta)' }}>SC</a>}
+                      {dj.slug && <a href={`/djs/${dj.slug}`} target="_blank" rel="noreferrer" style={{ color: 'var(--color-magenta)' }}>EPK</a>}
                       <Link href={`/admin/djs/${dj.id}`} style={{ color: 'inherit', opacity: 0.7, marginLeft: '1rem' }}>
                         <Edit size={18} />
                       </Link>
