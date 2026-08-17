@@ -1,8 +1,8 @@
 import { createClient } from "@/utils/supabase/server";
-import { createDj, deleteDj } from "./actions";
-import { Music, PlusCircle, Trash2, Edit } from "lucide-react";
+import { Music, Edit, ExternalLink, Globe } from "lucide-react";
 import Link from "next/link";
-import ImageUpload from "@/components/admin/ImageUpload";
+import DjForm from "./DjForm";
+import DeleteDjButton from "./DeleteDjButton";
 
 export default async function AdminDjs() {
   const supabase = await createClient();
@@ -20,64 +20,7 @@ export default async function AdminDjs() {
 
       <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
         {/* Formulario */}
-        <form action={createDj} style={{ flex: '1 1 300px', backgroundColor: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>Añadir Artista</h2>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontWeight: 600, fontSize: '0.875rem' }}>Tipo de Artista</label>
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
-                  <input type="radio" name="type" value="colectivo" defaultChecked />
-                  Del Colectivo (Con EPK)
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
-                  <input type="radio" name="type" value="invitado" />
-                  Invitado
-                </label>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label htmlFor="name" style={{ fontWeight: 600, fontSize: '0.875rem' }}>Nombre del DJ</label>
-              <input 
-                type="text" id="name" name="name" required 
-                placeholder="Ej. Charlotte de Witte"
-                style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label htmlFor="collective_name" style={{ fontWeight: 600, fontSize: '0.875rem' }}>Nombre del Colectivo / Agencia (Solo para invitados)</label>
-              <input 
-                type="text" id="collective_name" name="collective_name"
-                placeholder="Ej. Awakenings, Drumcode..."
-                style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <ImageUpload name="photo_url" bucket="djs" label="URL de Foto (Opcional para invitados, requerida para Colectivo)" />
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label htmlFor="soundcloud_url" style={{ fontWeight: 600, fontSize: '0.875rem' }}>Soundcloud URL (Opcional)</label>
-              <input 
-                type="url" id="soundcloud_url" name="soundcloud_url"
-                placeholder="https://soundcloud.com/..."
-                style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }}
-              />
-            </div>
-
-            <button 
-              type="submit"
-              style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: 'none', fontWeight: 600, cursor: 'pointer', marginTop: '1rem' }}
-            >
-              <PlusCircle size={18} /> Guardar y Continuar
-            </button>
-          </div>
-        </form>
+        <DjForm />
 
         {/* Lista */}
         <div style={{ flex: '2 1 400px', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)', overflow: 'hidden' }}>
@@ -85,7 +28,7 @@ export default async function AdminDjs() {
             <thead style={{ backgroundColor: 'rgba(128,128,128,0.05)', borderBottom: '1px solid rgba(128,128,128,0.2)' }}>
               <tr>
                 <th style={{ padding: '1rem' }}>Artista</th>
-                <th style={{ padding: '1rem' }}>Enlaces</th>
+                <th style={{ padding: '1rem', textAlign: 'right' }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -108,12 +51,23 @@ export default async function AdminDjs() {
                         </span>
                       </div>
                     </td>
-                    <td style={{ padding: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      {dj.soundcloud_url && <a href={dj.soundcloud_url} target="_blank" rel="noreferrer" style={{ color: 'var(--color-magenta)' }}>SC</a>}
-                      {dj.slug && <a href={`/djs/${dj.slug}`} target="_blank" rel="noreferrer" style={{ color: 'var(--color-magenta)' }}>EPK</a>}
-                      <Link href={`/admin/djs/${dj.id}`} style={{ color: 'inherit', opacity: 0.7, marginLeft: '1rem' }}>
-                        <Edit size={18} />
-                      </Link>
+                    <td style={{ padding: '1rem' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'flex-end' }}>
+                        {dj.soundcloud_url && (
+                          <a href={dj.soundcloud_url} target="_blank" rel="noreferrer" title="Soundcloud" style={{ color: 'inherit', opacity: 0.6, padding: '0.25rem' }}>
+                            <Music size={18} />
+                          </a>
+                        )}
+                        {dj.type === 'colectivo' && dj.slug && (
+                          <a href={`/djs/${dj.slug}`} target="_blank" rel="noreferrer" title="Ver EPK Público" style={{ color: 'var(--color-magenta)', opacity: 0.8, padding: '0.25rem' }}>
+                            <ExternalLink size={18} />
+                          </a>
+                        )}
+                        <Link href={`/admin/djs/${dj.id}`} title="Editar Perfil" style={{ color: 'inherit', opacity: 0.8, padding: '0.25rem' }}>
+                          <Edit size={18} />
+                        </Link>
+                        <DeleteDjButton djId={dj.id} djName={dj.name} />
+                      </div>
                     </td>
                   </tr>
                 ))
