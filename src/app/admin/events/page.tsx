@@ -71,11 +71,14 @@ export default async function AdminEvents() {
                 </div>
 
                 <div style={{ marginTop: 'auto', display: 'flex', gap: '0.5rem', borderTop: '1px solid rgba(128,128,128,0.1)', paddingTop: '1rem' }}>
+                  <Link href={`/admin/events/${event.id}/dashboard`} style={{ flex: 1, textAlign: 'center', padding: '0.5rem', backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#3b82f6', borderRadius: 'var(--radius-md)', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600 }}>
+                    Ventas
+                  </Link>
                   <Link href={`/admin/events/${event.id}`} style={{ flex: 1, textAlign: 'center', padding: '0.5rem', backgroundColor: 'rgba(128,128,128,0.1)', borderRadius: 'var(--radius-md)', textDecoration: 'none', color: 'inherit', fontSize: '0.875rem' }}>
                     Editar
                   </Link>
                   <Link href={`/admin/events/${event.id}/scanner`} style={{ flex: 1, textAlign: 'center', padding: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', borderRadius: 'var(--radius-md)', textDecoration: 'none', fontSize: '0.875rem' }}>
-                    Escáner QR
+                    Escáner
                   </Link>
                 </div>
               </div>
