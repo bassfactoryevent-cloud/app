@@ -21,8 +21,8 @@ export default async function EventsPage() {
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '4rem 2rem' }}>
       <header style={{ marginBottom: '4rem', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '-0.02em' }}>Próximos Eventos</h1>
-        <p style={{ fontSize: '1.25rem', opacity: 0.7, maxWidth: '600px', margin: '0 auto' }}>Reserva tus entradas para los mejores shows y fiestas de la escena.</p>
+        <h1 style={{ fontWeight: 900, marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '-0.02em' }}>Próximos Eventos</h1>
+        <p style={{ opacity: 0.7, maxWidth: '600px', margin: '0 auto' }}>Reserva tus entradas para los mejores shows y fiestas de la escena.</p>
       </header>
 
       <div style={{ margin: '0 auto 4rem auto', maxWidth: '800px', width: '100%' }}>

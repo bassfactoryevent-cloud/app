@@ -94,11 +94,11 @@ export default async function DjEPKPage({ params }: { params: Promise<{ slug: st
             )}
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, minWidth: '300px' }}>
-              <h1 style={{ fontSize: '4rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: 1, margin: 0, color: 'white' }}>
+              <h1 style={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: 1, margin: 0, color: 'white', wordBreak: 'break-word' }}>
                 {dj.name}
               </h1>
               {dj.bio_short && (
-                <p style={{ fontSize: '1.25rem', color: 'var(--color-magenta)', fontWeight: 600, maxWidth: '600px', margin: 0 }}>
+                <p style={{ color: 'var(--color-magenta)', fontWeight: 600, maxWidth: '600px', margin: 0 }}>
                   {dj.bio_short}
                 </p>
               )}
@@ -112,7 +112,7 @@ export default async function DjEPKPage({ params }: { params: Promise<{ slug: st
         {/* UPCOMING EVENTS (SLIDER AL ESTILO HOME) */}
         {allBookings.length > 0 && (
           <section>
-            <h2 style={{ fontSize: '2rem', fontWeight: 900, textTransform: 'uppercase', marginBottom: '1.5rem', letterSpacing: '-0.02em' }}>
+            <h2 style={{ fontWeight: 900, textTransform: 'uppercase', marginBottom: '1.5rem', letterSpacing: '-0.02em' }}>
               Tour Dates & Events
             </h2>
             <HorizontalScroll title="" viewAllLink="">

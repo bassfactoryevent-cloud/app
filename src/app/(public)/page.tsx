@@ -201,7 +201,7 @@ export default async function Home() {
               {/* Encabezado del bloque agrupado */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingBottom: '0.5rem' }}>
                 <div>
-                  <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, letterSpacing: '-0.03em' }}>Noticias, Cultura</h2>
+                  <h2 style={{ fontWeight: 800, margin: 0, letterSpacing: '-0.03em' }}>Noticias, Cultura</h2>
                 </div>
                 <Link href="/blog" style={{ fontSize: '0.875rem', fontWeight: 600, opacity: 0.8, color: 'var(--color-magenta)', textDecoration: 'none' }}>
                   Ver Más
