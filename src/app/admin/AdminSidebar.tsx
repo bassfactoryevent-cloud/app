@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { LayoutDashboard, FileText, Calendar, Music, ShoppingCart, Settings, Briefcase, Megaphone, LogOut, MonitorPlay } from "lucide-react";
+import { LayoutDashboard, FileText, Calendar, Music, ShoppingCart, Settings, Briefcase, Megaphone, LogOut, MonitorPlay, Users } from "lucide-react";
 import styles from "./AdminLayout.module.css";
 import logo from "../../../public/bassfactorylogo1.png";
 import { signOut } from "../(auth)/actions";
@@ -22,6 +22,7 @@ export function AdminSidebar({ profile }: { profile: any }) {
     {
       title: "Gestión Core",
       items: [
+        { name: "Usuarios", href: "/admin/users", icon: <Users size={20} /> },
         { name: "Eventos", href: "/admin/events", icon: <Calendar size={20} /> },
         { name: "DJs & Booking", href: "/admin/djs", icon: <Music size={20} /> },
         { name: "Patrocinadores", href: "/admin/sponsors", icon: <Briefcase size={20} /> },

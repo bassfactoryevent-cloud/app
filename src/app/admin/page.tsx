@@ -12,15 +12,25 @@ export default async function AdminDashboard() {
     { count: sponsorsCount },
     { count: merchCount },
     { count: postsCount },
-    { count: campaignsCount }
+    { count: campaignsCount },
+    { count: usersCount },
+    { data: ticketOrders },
+    { data: merchOrders }
   ] = await Promise.all([
     supabase.from("events").select("*", { count: "exact", head: true }),
     supabase.from("djs").select("*", { count: "exact", head: true }),
     supabase.from("sponsors").select("*", { count: "exact", head: true }),
     supabase.from("merch_products").select("*", { count: "exact", head: true }),
     supabase.from("posts").select("*", { count: "exact", head: true }),
-    supabase.from("ad_campaigns").select("*", { count: "exact", head: true })
+    supabase.from("ad_campaigns").select("*", { count: "exact", head: true }),
+    supabase.from("profiles").select("*", { count: "exact", head: true }),
+    supabase.from("orders").select("total_amount").eq("status", "paid"),
+    supabase.from("merch_orders").select("total_amount").eq("status", "paid")
   ]);
+
+  const ticketSales = ticketOrders?.reduce((acc, order) => acc + Number(order.total_amount), 0) || 0;
+  const merchSales = merchOrders?.reduce((acc, order) => acc + Number(order.total_amount), 0) || 0;
+  const totalSales = ticketSales + merchSales;
 
   const stats = [
     { name: "Eventos", count: eventsCount || 0, icon: <Calendar size={24} />, href: "/admin/events", color: "#3b82f6" },
@@ -38,11 +48,11 @@ export default async function AdminDashboard() {
           Bienvenido al Panel B2B de Bassfactory
         </h1>
         <p style={{ opacity: 0.7, fontSize: "1rem", color: "#e5e5e5" }}>
-          Resumen general del ecosistema. Selecciona un módulo para gestionar el contenido.
+          Resumen general del ecosistema y rendimiento comercial.
         </p>
       </div>
 
-      <DashboardGrid stats={stats} />
+      <DashboardGrid stats={stats} totalSales={totalSales} totalUsers={usersCount || 0} />
     </div>
   );
 }
