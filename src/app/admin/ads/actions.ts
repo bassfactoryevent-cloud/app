@@ -54,7 +54,6 @@ export async function deleteCampaign(id: string) {
   const { error } = await supabase.from("ad_campaigns").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/ads");
-  redirect("/admin/ads");
 }
 
 export async function addAdToCampaign(campaignId: string, formData: FormData) {
