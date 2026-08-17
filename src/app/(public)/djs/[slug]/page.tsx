@@ -2,8 +2,9 @@ import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ChevronRight, Mail, Phone, Download, Music, Globe } from "lucide-react";
+import { ArrowLeft, Mail, Phone, Download, Music, Globe, Calendar, MapPin } from "lucide-react";
 import AdBanner from "@/components/AdBanner";
+import HorizontalScroll from "@/components/ui/HorizontalScroll";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const supabase = await createClient();
@@ -28,7 +29,7 @@ export default async function DjEPKPage({ params }: { params: Promise<{ slug: st
       *,
       event_djs (
         set_time,
-        events (id, title, slug, location_name, status, start_date)
+        events (id, title, slug, location_name, status, start_date, cover_image)
       )
     `)
     .eq("slug", (await params).slug)
@@ -46,7 +47,8 @@ export default async function DjEPKPage({ params }: { params: Promise<{ slug: st
       date: new Date(evt.start_date || b.set_time || 0),
       title: evt.title,
       location: evt.location_name,
-      slug: evt.slug
+      slug: evt.slug,
+      cover_image: evt.cover_image
     };
   }) || [];
 
@@ -55,7 +57,8 @@ export default async function DjEPKPage({ params }: { params: Promise<{ slug: st
     date: new Date(b.date),
     title: b.title,
     location: b.location,
-    url: b.ticket_url
+    url: b.ticket_url,
+    cover_image: null
   }));
 
   // Ordenar todo y mostrar solo eventos desde hoy
@@ -83,25 +86,103 @@ export default async function DjEPKPage({ params }: { params: Promise<{ slug: st
             <ArrowLeft size={16} /> Volver a Artistas
           </Link>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <h1 style={{ fontSize: '4rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: 1, margin: 0, color: 'white' }}>
-              {dj.name}
-            </h1>
-            {dj.bio_short && (
-              <p style={{ fontSize: '1.25rem', color: 'var(--color-magenta)', fontWeight: 600, maxWidth: '600px', margin: 0 }}>
-                {dj.bio_short}
-              </p>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2rem', flexWrap: 'wrap' }}>
+            {dj.photo_url && (
+              <div style={{ width: '150px', height: '150px', borderRadius: '50%', overflow: 'hidden', border: '4px solid rgba(255,255,255,0.1)', flexShrink: 0, backgroundColor: '#111', position: 'relative' }}>
+                <Image src={dj.photo_url} alt={`Foto de perfil de ${dj.name}`} fill style={{ objectFit: 'cover' }} />
+              </div>
             )}
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, minWidth: '300px' }}>
+              <h1 style={{ fontSize: '4rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: 1, margin: 0, color: 'white' }}>
+                {dj.name}
+              </h1>
+              {dj.bio_short && (
+                <p style={{ fontSize: '1.25rem', color: 'var(--color-magenta)', fontWeight: 600, maxWidth: '600px', margin: 0 }}>
+                  {dj.bio_short}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '4rem 1rem', display: 'grid', gridTemplateColumns: '1fr', gap: '4rem' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '4rem 1rem', display: 'flex', flexDirection: 'column', gap: '4rem' }}>
+        
+        {/* UPCOMING EVENTS (SLIDER AL ESTILO HOME) */}
+        {allBookings.length > 0 && (
+          <section>
+            <h2 style={{ fontSize: '2rem', fontWeight: 900, textTransform: 'uppercase', marginBottom: '1.5rem', letterSpacing: '-0.02em' }}>
+              Tour Dates & Events
+            </h2>
+            <HorizontalScroll title="" viewAllLink="">
+              {allBookings.map((booking: any, idx: number) => {
+                const CardComponent = booking.type === 'internal' ? Link : 'a';
+                const hrefProps = booking.type === 'internal' 
+                  ? { href: `/events/${booking.slug}` }
+                  : { href: booking.url || '#', target: booking.url ? '_blank' : undefined, rel: booking.url ? 'noreferrer' : undefined };
+                
+                const fallbackImage = dj.photo_url || "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?q=80&w=400";
+                
+                return (
+                  <CardComponent 
+                    key={idx} 
+                    {...hrefProps} 
+                    style={{ 
+                      textDecoration: 'none', 
+                      color: 'inherit', 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      backgroundColor: 'rgba(255,255,255,0.03)', 
+                      borderRadius: '1rem', 
+                      overflow: 'hidden', 
+                      border: '1px solid rgba(255,255,255,0.05)', 
+                      transition: 'transform 0.2s, borderColor 0.2s',
+                      minWidth: '280px',
+                      maxWidth: '350px'
+                    }} 
+                    className="hover-card-transform"
+                  >
+                    <div style={{ height: '200px', position: 'relative', backgroundColor: '#111' }}>
+                      <img 
+                        src={booking.cover_image || fallbackImage} 
+                        alt={booking.title} 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                      />
+                      <div style={{ position: 'absolute', top: '1rem', left: '1rem', backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', padding: '0.5rem 1rem', borderRadius: '0.5rem', textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-magenta)', fontWeight: 700 }}>
+                          {booking.date.toLocaleDateString('es-ES', { month: 'short' })}
+                        </div>
+                        <div style={{ fontSize: '1.25rem', fontWeight: 900 }}>
+                          {booking.date.getDate()}
+                        </div>
+                      </div>
+                      {booking.type === 'external' && (
+                        <div style={{ position: 'absolute', top: '1rem', right: '1rem', backgroundColor: 'var(--color-magenta)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>
+                          Externo
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1rem', lineHeight: 1.2 }}>{booking.title}</h3>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: 0.7, marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                        <MapPin size={16} />
+                        <span>{booking.location}</span>
+                      </div>
+                    </div>
+                  </CardComponent>
+                )
+              })}
+            </HorizontalScroll>
+          </section>
+        )}
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '4rem' }}>
           
-          {/* COLUMNA IZQUIERDA: BIO, CONTACTO, FOTOS */}
+          {/* COLUMNA IZQUIERDA: BIO & FOTOS */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
-            
             {dj.bio_full && (
               <section>
                 <h2 style={{ fontSize: '1.5rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Biography</h2>
@@ -111,12 +192,29 @@ export default async function DjEPKPage({ params }: { params: Promise<{ slug: st
               </section>
             )}
 
-            {/* BOOKING / CONTACTO MOVIDO A LA IZQUIERDA */}
+            {dj.press_photos && dj.press_photos.length > 0 && (
+              <section>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Press Photos</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem' }}>
+                  {dj.press_photos.map((photo: string, i: number) => (
+                    <div key={i} style={{ position: 'relative', aspectRatio: '1/1', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                      <Image src={photo} alt={`Press photo ${i + 1}`} fill style={{ objectFit: 'cover' }} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+
+          {/* COLUMNA DERECHA: BOOKING Y LINKS */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+            
+            {/* BOOKING / CONTACTO */}
             <section style={{ backgroundColor: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.05)' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '1.5rem', color: 'var(--color-magenta)' }}>Booking & Contact</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {dj.contact_email && (
-                  <a href={`mailto:${dj.contact_email}`} style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'inherit', textDecoration: 'none', padding: '1rem', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 'var(--radius-md)' }}>
+                  <a href={`mailto:${dj.contact_email}`} style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'inherit', textDecoration: 'none', padding: '1rem', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 'var(--radius-md)', transition: 'background-color 0.2s' }} className="hover-bg-light">
                     <Mail size={20} style={{ color: 'var(--color-magenta)' }} />
                     <span style={{ fontWeight: 500 }}>{dj.contact_email}</span>
                   </a>
@@ -134,53 +232,6 @@ export default async function DjEPKPage({ params }: { params: Promise<{ slug: st
                 )}
               </div>
             </section>
-
-            {dj.press_photos && dj.press_photos.length > 0 && (
-              <section>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Press Photos</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem' }}>
-                  {dj.press_photos.map((photo: string, i: number) => (
-                    <div key={i} style={{ position: 'relative', aspectRatio: '1/1', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                      <Image src={photo} alt={`Press photo ${i + 1}`} fill style={{ objectFit: 'cover' }} />
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-            
-          </div>
-
-          {/* COLUMNA DERECHA: UPCOMING EVENTS Y LINKS */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
-            
-            {/* UPCOMING EVENTS MOVIDO A LA DERECHA */}
-            {allBookings.length > 0 && (
-              <section>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Upcoming Tour Dates</h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {allBookings.map((booking: any, idx: number) => {
-                    const CardComponent = booking.type === 'internal' ? Link : 'a';
-                    const hrefProps = booking.type === 'internal' 
-                      ? { href: `/events/${booking.slug}` }
-                      : { href: booking.url || '#', target: booking.url ? '_blank' : undefined, rel: booking.url ? 'noreferrer' : undefined };
-                    
-                    return (
-                      <CardComponent key={idx} {...hrefProps} style={{ textDecoration: 'none', color: 'inherit', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.05)', transition: 'background-color 0.2s' }} className="booking-card">
-                        <div>
-                          <p style={{ fontSize: '0.875rem', color: 'var(--color-magenta)', fontWeight: 700, marginBottom: '0.25rem' }}>
-                            {booking.date.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })}
-                            {booking.type === 'external' && <span style={{ marginLeft: '0.5rem', backgroundColor: 'rgba(255,255,255,0.1)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontSize: '0.7rem' }}>Externo</span>}
-                          </p>
-                          <h4 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{booking.title}</h4>
-                          <p style={{ opacity: 0.7, fontSize: '0.875rem', marginTop: '0.25rem' }}>{booking.location}</p>
-                        </div>
-                        <ChevronRight size={24} style={{ opacity: 0.5 }} />
-                      </CardComponent>
-                    )
-                  })}
-                </div>
-              </section>
-            )}
 
             {/* MÚSICA Y REDES */}
             <section>
@@ -237,8 +288,12 @@ export default async function DjEPKPage({ params }: { params: Promise<{ slug: st
         </div>
       </div>
       <style dangerouslySetInnerHTML={{__html: `
-        .booking-card:hover {
-          background-color: rgba(255,255,255,0.05) !important;
+        .hover-bg-light:hover {
+          background-color: rgba(255,255,255,0.1) !important;
+        }
+        .hover-card-transform:hover {
+          transform: translateY(-5px);
+          border-color: rgba(255,255,255,0.2) !important;
         }
       `}} />
     </div>
