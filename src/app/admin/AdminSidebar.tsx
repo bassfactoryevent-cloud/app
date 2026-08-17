@@ -65,8 +65,8 @@ export function AdminSidebar({ profile }: { profile: any }) {
       </div>
       <nav className={styles.nav}>
         {navGroups.map((group, groupIdx) => (
-          <div key={group.title} style={{ marginBottom: '1.5rem' }}>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-text-secondary)', padding: '0 1rem', marginBottom: '0.5rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+          <div key={group.title} style={{ marginBottom: '0.5rem' }}>
+            <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--color-text-secondary)', padding: '0 1rem', marginBottom: '0.25rem', fontWeight: 700, letterSpacing: '0.05em' }}>
               {group.title}
             </div>
             {group.items.map((item) => {
@@ -89,7 +89,7 @@ export function AdminSidebar({ profile }: { profile: any }) {
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     />
                   )}
-                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '1rem', color: isActive ? 'var(--color-accent)' : 'inherit' }}>
+                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '0.75rem', color: isActive ? 'var(--color-accent)' : 'inherit' }}>
                     {item.icon}
                     <span style={{ color: isActive ? 'var(--color-white)' : 'inherit' }}>{item.name}</span>
                   </div>
@@ -97,7 +97,7 @@ export function AdminSidebar({ profile }: { profile: any }) {
               );
             })}
             {groupIdx < navGroups.length - 1 && (
-              <div style={{ height: '1px', backgroundColor: 'rgba(255,255,255,0.05)', margin: '1rem' }} />
+              <div style={{ height: '1px', backgroundColor: 'rgba(255,255,255,0.05)', margin: '0.75rem 1rem' }} />
             )}
           </div>
         ))}
