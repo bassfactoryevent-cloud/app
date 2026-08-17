@@ -9,7 +9,6 @@ export default async function AdminEvents() {
     .order("created_at", { ascending: false });
 
   return (
-  return (
     <EventsClient initialEvents={events || []} error={error} />
   );
 }
