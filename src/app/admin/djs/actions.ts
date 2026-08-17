@@ -72,6 +72,14 @@ export async function updateDjEPK(id: string, formData: FormData) {
     }
   } catch(e) {}
 
+  const external_bookings_json = formData.get("external_bookings") as string;
+  let external_bookings: any[] = [];
+  try {
+    if (external_bookings_json) {
+      external_bookings = JSON.parse(external_bookings_json);
+    }
+  } catch(e) {}
+
   const payload = {
     name,
     slug,
@@ -91,7 +99,8 @@ export async function updateDjEPK(id: string, formData: FormData) {
     music_beatport,
     music_apple,
     music_youtube,
-    press_photos
+    press_photos,
+    external_bookings
   };
 
   const { error } = await supabase.from("djs").update(payload).eq("id", id);

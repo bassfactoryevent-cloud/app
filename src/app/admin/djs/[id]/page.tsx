@@ -4,13 +4,20 @@ import Link from "next/link";
 import { ArrowLeft, Save, User, Music, Globe, FileText } from "lucide-react";
 import { updateDjEPK } from "../actions";
 import ImageUpload from "@/components/admin/ImageUpload";
+import ExternalBookingsManager from "./ExternalBookingsManager";
 
 export default async function EditDjPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
 
   const { data: dj } = await supabase
     .from("djs")
-    .select("*")
+    .select(`
+      *,
+      event_djs (
+        set_time,
+        events (id, title, slug, location_name, status, start_date)
+      )
+    `)
     .eq("id", (await params).id)
     .single();
 
@@ -19,6 +26,16 @@ export default async function EditDjPage({ params }: { params: Promise<{ id: str
   }
 
   const isColectivo = dj.type === 'colectivo';
+
+  // Format internal bookings
+  const internalBookings = dj.event_djs?.filter((b: any) => b.events && b.events.status !== 'cancelled').map((b: any) => {
+    const evt = b.events;
+    return {
+      date: evt.start_date || b.set_time || "",
+      title: evt.title,
+      location: evt.location_name
+    };
+  }) || [];
 
   return (
     <div style={{ maxWidth: '900px', paddingBottom: '4rem' }}>
@@ -175,6 +192,12 @@ export default async function EditDjPage({ params }: { params: Promise<{ id: str
                 </div>
               </div>
             </section>
+            
+            {/* MANAGER DE BOOKINGS EXTERNOS */}
+            <ExternalBookingsManager 
+              defaultBookings={dj.external_bookings || []} 
+              internalBookings={internalBookings} 
+            />
           </>
         )}
         
