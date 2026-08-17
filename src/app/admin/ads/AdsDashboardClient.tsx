@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Megaphone, PlusCircle, Building2, Calendar as CalendarIcon, GripVertical, X } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { deleteCampaign, addAdToCampaign, togglePlacementVip, updateAdsOrder, removeAdFromPlacement, togglePlacementActive, updateAdPlacement } from "./actions";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 
@@ -106,10 +107,10 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
       await addAdToCampaign(modalCampaign.id, formData);
       setModalOpen(false);
       setModalCampaign(null);
-      // Wait a bit to let server action revalidate
+      toast.success("Banner asignado correctamente");
     } catch (error) {
       console.error(error);
-      alert("Error al asignar banner");
+      toast.error("Error al asignar banner");
     } finally {
       setIsSubmitting(false);
     }
@@ -149,18 +150,20 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
             const handleToggleVip = async () => {
               try {
                 await togglePlacementVip(placement.id, !isVip);
+                toast.success(isVip ? "Estado VIP removido" : "Estado VIP activado");
               } catch (error) {
                 console.error(error);
-                alert("Error cambiando estado VIP");
+                toast.error("Error cambiando estado VIP");
               }
             };
             
             const handleToggleActive = async () => {
               try {
                 await togglePlacementActive(placement.id, !isActive);
+                toast.success(isActive ? "Ubicación desactivada" : "Ubicación activada");
               } catch (error) {
                 console.error(error);
-                alert("Error cambiando estado de la ubicación");
+                toast.error("Error cambiando estado de la ubicación");
               }
             };
 
@@ -248,8 +251,9 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
                                     setIsSubmitting(true);
                                     await removeAdFromPlacement(occupants[0].id);
                                     setConfirmConfig(null);
+                                    toast.success("Banner removido de la ubicación");
                                   } catch (error) {
-                                    alert("Error eliminando");
+                                    toast.error("Error eliminando banner");
                                   } finally {
                                     setIsSubmitting(false);
                                   }
@@ -416,8 +420,9 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
                             setIsSubmitting(true);
                             await deleteCampaign(camp.id);
                             setConfirmConfig(null);
+                            toast.success("Campaña eliminada correctamente");
                           } catch (error) {
-                            alert("Error eliminando campaña");
+                            toast.error("Error eliminando campaña");
                           } finally {
                             setIsSubmitting(false);
                           }
@@ -491,8 +496,9 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
                             await updateAdPlacement(ad.id, dropTarget);
                             setModalOpen(false);
                             setModalCampaign(null);
+                            toast.success("Banner reasignado correctamente");
                           } catch(err) {
-                            alert("Error moviendo banner");
+                            toast.error("Error moviendo banner");
                           } finally {
                             setIsSubmitting(false);
                           }
@@ -599,8 +605,9 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
                               await removeAdFromPlacement(ad.id);
                               setVipAds(prev => prev.filter(a => a.id !== ad.id));
                               setConfirmConfig(null);
+                              toast.success("Banner VIP removido");
                             } catch (error) {
-                              alert("Error eliminando");
+                              toast.error("Error eliminando banner VIP");
                             } finally {
                               setIsSubmitting(false);
                             }
@@ -627,8 +634,9 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
                   try {
                     await updateAdsOrder(vipAds.map((a, i) => ({ id: a.id, order_index: i })));
                     setVipModalPlacement(null);
+                    toast.success("Orden VIP guardado");
                   } catch (e) {
-                    alert("Error guardando orden");
+                    toast.error("Error guardando orden");
                   } finally {
                     setIsSubmitting(false);
                   }
