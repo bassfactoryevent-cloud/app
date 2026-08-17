@@ -39,7 +39,7 @@ export default async function MerchProductPage({ params }: { params: Promise<{ s
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '4rem 1rem' }}>
       {/* Breadcrumbs */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem', fontSize: '0.875rem', opacity: 0.7 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem', fontSize: '0.875rem', opacity: 0.7 }}>
         <Link href="/merch" style={{ color: 'inherit', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
           <ArrowLeft size={14} /> Volver a la Tienda
         </Link>
