@@ -15,15 +15,30 @@ export default async function UserProfilePage({ params }: { params: { id: string
     .single();
 
   if (profileError || !profile) {
-    return notFound();
+    return (
+      <div style={{ color: "white", padding: "2rem" }}>
+        <h1>Error loading profile</h1>
+        <pre>{JSON.stringify(profileError, null, 2)}</pre>
+        <p>Profile ID: {id}</p>
+      </div>
+    );
   }
 
   // Fetch Ticket Orders
-  const { data: ticketOrders } = await supabase
+  const { data: ticketOrders, error: ticketError } = await supabase
     .from("orders")
     .select("*")
     .eq("user_id", id)
     .order("created_at", { ascending: false });
+
+  if (ticketError) {
+    return (
+      <div style={{ color: "white", padding: "2rem" }}>
+        <h1>Error loading ticket orders</h1>
+        <pre>{JSON.stringify(ticketError, null, 2)}</pre>
+      </div>
+    );
+  }
 
   // Fetch Merch Orders
   const { data: merchOrders } = await supabase
