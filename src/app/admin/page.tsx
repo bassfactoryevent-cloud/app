@@ -1,6 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { Calendar, Music, Briefcase, ShoppingCart, FileText, Megaphone } from "lucide-react";
-import Link from "next/link";
+import DashboardGrid from "./DashboardGrid";
 
 export default async function AdminDashboard() {
   const supabase = await createClient();
@@ -42,51 +42,7 @@ export default async function AdminDashboard() {
         </p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1.5rem" }}>
-        {stats.map((stat) => (
-          <Link href={stat.href} key={stat.name} style={{ textDecoration: "none" }}>
-            <div style={{
-              backgroundColor: "var(--color-surface, #111)",
-              border: "1px solid var(--color-border, #333)",
-              borderRadius: "1rem",
-              padding: "1.5rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "1.5rem",
-              transition: "transform 0.2s, borderColor 0.2s",
-              cursor: "pointer"
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = "translateY(-4px)";
-              e.currentTarget.style.borderColor = stat.color;
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.borderColor = "var(--color-border, #333)";
-            }}>
-              <div style={{
-                backgroundColor: `${stat.color}20`, // 20% opacity
-                color: stat.color,
-                padding: "1rem",
-                borderRadius: "0.75rem",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center"
-              }}>
-                {stat.icon}
-              </div>
-              <div>
-                <h3 style={{ fontSize: "0.875rem", color: "var(--color-text-secondary, #a1a1aa)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.25rem" }}>
-                  {stat.name}
-                </h3>
-                <p style={{ fontSize: "2rem", fontWeight: 700, color: "white", margin: 0, lineHeight: 1 }}>
-                  {stat.count}
-                </p>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
+      <DashboardGrid stats={stats} />
     </div>
   );
 }
