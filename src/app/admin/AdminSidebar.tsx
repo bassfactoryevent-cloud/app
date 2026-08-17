@@ -57,9 +57,10 @@ export function AdminSidebar({ profile }: { profile: any }) {
           <Image
             src={logo}
             alt="Bassfactory Logo"
-            width={110}
-            height={28}
-            style={{ objectFit: "contain", filter: "brightness(0) invert(1)" }}
+            width={400}
+            height={206}
+            style={{ width: "130px", height: "auto", objectFit: "contain", filter: "brightness(0) invert(1)" }}
+            priority
           />
         </Link>
       </div>

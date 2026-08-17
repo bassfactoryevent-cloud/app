@@ -14,9 +14,10 @@ export default function AuthLayout({
           <Image
             src={logo}
             alt="Bassfactory Logo"
-            width={140}
-            height={35}
-            style={{ objectFit: "contain", filter: "brightness(0) invert(1)" }}
+            width={400}
+            height={206}
+            style={{ width: "200px", height: "auto", objectFit: "contain", filter: "brightness(0) invert(1)" }}
+            priority
           />
         </Link>
       </header>
