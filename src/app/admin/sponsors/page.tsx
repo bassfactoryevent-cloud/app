@@ -2,7 +2,6 @@ import { createClient } from "@/utils/supabase/server";
 import { createSponsor, deleteSponsor, updateSponsor } from "../events/actions";
 import { Briefcase, PlusCircle, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { Briefcase, PlusCircle } from "lucide-react";
 import ActionForm from "@/components/admin/ActionForm";
 import SubmitButton from "@/components/admin/SubmitButton";
 import ImageUpload from "@/components/admin/ImageUpload";
