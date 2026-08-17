@@ -28,7 +28,7 @@ export default async function DjEPKPage({ params }: { params: Promise<{ slug: st
       *,
       bookings (
         performance_time,
-        events (id, name, slug, location, date, status)
+        events (id, title, slug, location_name, status, start_date)
       )
     `)
     .eq("slug", (await params).slug)
@@ -112,8 +112,8 @@ export default async function DjEPKPage({ params }: { params: Promise<{ slug: st
                           <p style={{ fontSize: '0.875rem', color: 'var(--color-magenta)', fontWeight: 700, marginBottom: '0.25rem' }}>
                             {new Date(booking.performance_time).toLocaleString('es-CO')}
                           </p>
-                          <h4 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{evt.name}</h4>
-                          <p style={{ opacity: 0.7, fontSize: '0.875rem', marginTop: '0.25rem' }}>{evt.location}</p>
+                          <h4 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{evt.title}</h4>
+                          <p style={{ opacity: 0.7, fontSize: '0.875rem', marginTop: '0.25rem' }}>{evt.location_name}</p>
                         </div>
                         <ChevronRight size={24} style={{ opacity: 0.5 }} />
                       </Link>
