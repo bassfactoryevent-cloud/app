@@ -107,3 +107,10 @@ export async function saveMerchProduct(formData: FormData) {
   revalidatePath(`/merch/${slug}`);
   redirect("/admin/merch");
 }
+
+export async function deleteMerchProduct(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("merch_products").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/merch");
+}
