@@ -2,6 +2,7 @@
   display: flex;
   height: 100vh;
   width: 100vw;
+  overflow: hidden;
   background-color: var(--color-bg);
   color: var(--color-text-primary);
 }
@@ -26,6 +27,19 @@
   flex-direction: column;
   gap: var(--space-1);
   padding: 0 var(--space-2);
+  flex: 1;
+  overflow-y: auto;
+}
+
+.nav::-webkit-scrollbar {
+  width: 4px;
+}
+.nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+.nav::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
 }
 
 .navLink {
