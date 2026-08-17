@@ -11,9 +11,9 @@ const FacebookIcon = ({ size = 18 }) => (
   </svg>
 );
 
-const TwitterIcon = ({ size = 18 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
+const XIcon = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
   </svg>
 );
 const InstagramIcon = ({ size = 18 }) => (
@@ -134,7 +134,7 @@ export function ShareButtons({ title, text = "", url }: ShareButtonsProps) {
 
         <button
           onClick={() => openShareWindow(shareLinks.twitter)}
-          aria-label="Compartir en X (Twitter)"
+          aria-label="Compartir en X"
           style={{
             display: "flex", alignItems: "center", justifyContent: "center",
             width: "40px", height: "40px", borderRadius: "50%",
@@ -144,7 +144,7 @@ export function ShareButtons({ title, text = "", url }: ShareButtonsProps) {
           onMouseOver={(e) => e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.15)"}
           onMouseOut={(e) => e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)"}
         >
-          <TwitterIcon size={18} />
+          <XIcon size={18} />
         </button>
 
         <button
