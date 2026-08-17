@@ -61,7 +61,9 @@ export async function addAdToCampaign(campaignId: string, formData: FormData) {
   const supabase = await createClient();
   
   const placement_name = formData.get("placement_name") as string;
-  const image_url = formData.get("image_url") as string;
+  const uploadedUrl = formData.get("image_url") as string;
+  const fallbackUrl = formData.get("image_url_fallback") as string;
+  const image_url = uploadedUrl || fallbackUrl;
   const target_url = formData.get("target_url") as string || null;
 
   // Find or create placement
@@ -99,7 +101,9 @@ export async function updateAd(adId: string, campaignId: string, formData: FormD
   const supabase = await createClient();
   
   const placement_name = formData.get("placement_name") as string;
-  const image_url = formData.get("image_url") as string;
+  const uploadedUrl = formData.get("image_url") as string;
+  const fallbackUrl = formData.get("image_url_fallback") as string;
+  const image_url = uploadedUrl || fallbackUrl;
   const target_url = formData.get("target_url") as string || null;
 
   // Find or create placement

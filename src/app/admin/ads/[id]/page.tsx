@@ -4,6 +4,7 @@ import { Megaphone, Plus, Trash2, Pencil } from "lucide-react";
 import Link from "next/link";
 import { addAdToCampaign, deleteAd, updateCampaign, updateAd } from "../actions";
 import Image from "next/image";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 export default async function CampaignDetailsPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ editBanner?: string }> }) {
   const supabase = await createClient();
@@ -90,8 +91,12 @@ export default async function CampaignDetailsPage({ params, searchParams }: { pa
                     <p style={{ fontSize: '0.75rem', opacity: 0.5, marginTop: '0.25rem' }}>El lugar donde aparecerá el anuncio en la web.</p>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>URL del Recurso (Imagen o Video MP4/WEBM) *</label>
-                    <input type="url" name="image_url" defaultValue={editingAd?.image_url || ""} required placeholder="https://..." style={{ width: '100%' }} />
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Recurso Gráfico del Banner *</label>
+                    <ImageUpload name="image_url" bucket="ads" defaultImage={editingAd?.image_url} label="Subir Imagen al Servidor (Recomendado)" />
+                    <div style={{ marginTop: '1rem' }}>
+                      <p style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: '0.25rem' }}>O si prefieres usar un enlace externo permanente (ej. video en Cloudinary):</p>
+                      <input type="url" name="image_url_fallback" defaultValue={editingAd?.image_url || ""} placeholder="https://..." style={{ width: '100%', fontSize: '0.875rem' }} />
+                    </div>
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>URL de Destino (Link al hacer clic)</label>
