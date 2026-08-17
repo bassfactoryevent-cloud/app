@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import styles from "./Header.module.css";
-import { ThemeToggle } from "./ThemeToggle";
 
 export function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,10 +28,6 @@ export function MobileMenu() {
               <Link href="/djs" onClick={toggleMenu} className={styles.mobileNavLink}>DJs & Booking</Link>
               <Link href="/merch" onClick={toggleMenu} className={styles.mobileNavLink}>Merch</Link>
               <Link href="/blog" onClick={toggleMenu} className={styles.mobileNavLink}>Cultura</Link>
-              
-              <div className={styles.mobileMenuFooter}>
-                <ThemeToggle />
-              </div>
             </nav>
           </div>
         </>

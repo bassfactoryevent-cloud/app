@@ -4,7 +4,6 @@ import styles from "./Header.module.css";
 import CartIcon from "@/components/CartIcon";
 import { createClient } from "@/utils/supabase/server";
 import UserMenu from "./UserMenu";
-import { ThemeToggle } from "./ThemeToggle";
 import { MobileMenu } from "./MobileMenu";
 
 export default async function Header() {
@@ -53,10 +52,6 @@ export default async function Header() {
           </nav>
 
           <div className={styles.actionsGroup}>
-            <div className={styles.desktopOnly}>
-              <ThemeToggle />
-            </div>
-            
             <CartIcon />
             
             {user ? (

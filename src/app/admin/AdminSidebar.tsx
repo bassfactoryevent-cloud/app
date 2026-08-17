@@ -12,16 +12,41 @@ import { motion } from "framer-motion";
 export function AdminSidebar({ profile }: { profile: any }) {
   const pathname = usePathname();
 
-  const navItems = [
-    { name: "Dashboard B2B", href: "/admin", icon: <LayoutDashboard size={20} /> },
-    { name: "Eventos", href: "/admin/events", icon: <Calendar size={20} /> },
-    { name: "DJs & Booking", href: "/admin/djs", icon: <Music size={20} /> },
-    { name: "Patrocinadores", href: "/admin/sponsors", icon: <Briefcase size={20} /> },
-    { name: "Pautas (Ads)", href: "/admin/ads", icon: <Megaphone size={20} /> },
-    { name: "Merch", href: "/admin/merch", icon: <ShoppingCart size={20} /> },
-    { name: "Blog", href: "/admin/blog", icon: <FileText size={20} /> },
-    { name: "Banner Principal", href: "/admin/hero", icon: <MonitorPlay size={20} /> },
-    { name: "Ajustes", href: "/admin/settings", icon: <Settings size={20} /> },
+  const navGroups = [
+    {
+      title: "Resumen",
+      items: [
+        { name: "Dashboard B2B", href: "/admin", icon: <LayoutDashboard size={20} /> },
+      ]
+    },
+    {
+      title: "Gestión Core",
+      items: [
+        { name: "Eventos", href: "/admin/events", icon: <Calendar size={20} /> },
+        { name: "DJs & Booking", href: "/admin/djs", icon: <Music size={20} /> },
+        { name: "Patrocinadores", href: "/admin/sponsors", icon: <Briefcase size={20} /> },
+      ]
+    },
+    {
+      title: "Marketing & Tienda",
+      items: [
+        { name: "Pautas (Ads)", href: "/admin/ads", icon: <Megaphone size={20} /> },
+        { name: "Merch", href: "/admin/merch", icon: <ShoppingCart size={20} /> },
+      ]
+    },
+    {
+      title: "Contenido",
+      items: [
+        { name: "Blog", href: "/admin/blog", icon: <FileText size={20} /> },
+        { name: "Banner Principal", href: "/admin/hero", icon: <MonitorPlay size={20} /> },
+      ]
+    },
+    {
+      title: "Plataforma",
+      items: [
+        { name: "Ajustes", href: "/admin/settings", icon: <Settings size={20} /> },
+      ]
+    }
   ];
 
   return (
@@ -38,33 +63,43 @@ export function AdminSidebar({ profile }: { profile: any }) {
         </Link>
       </div>
       <nav className={styles.nav}>
-        {navItems.map((item) => {
-          const isActive = 
-            item.href === "/admin" 
-              ? pathname === "/admin" 
-              : pathname === item.href || pathname.startsWith(`${item.href}/`);
-          
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`${styles.navLink} ${isActive ? styles.navLinkActive : ""}`}
-              style={{ position: 'relative' }}
-            >
-              {isActive && (
-                <motion.div
-                  layoutId="adminActiveTab"
-                  style={{ position: 'absolute', inset: 0, borderRadius: 'var(--radius-md)', background: 'var(--color-surface-hover)', zIndex: 0 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                />
-              )}
-              <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '1rem', color: isActive ? 'var(--color-accent)' : 'inherit' }}>
-                {item.icon}
-                <span style={{ color: isActive ? 'var(--color-white)' : 'inherit' }}>{item.name}</span>
-              </div>
-            </Link>
-          );
-        })}
+        {navGroups.map((group, groupIdx) => (
+          <div key={group.title} style={{ marginBottom: '1.5rem' }}>
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-text-secondary)', padding: '0 1rem', marginBottom: '0.5rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+              {group.title}
+            </div>
+            {group.items.map((item) => {
+              const isActive = 
+                item.href === "/admin" 
+                  ? pathname === "/admin" 
+                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
+              
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`${styles.navLink} ${isActive ? styles.navLinkActive : ""}`}
+                  style={{ position: 'relative' }}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="adminActiveTab"
+                      style={{ position: 'absolute', inset: 0, borderRadius: 'var(--radius-md)', background: 'var(--color-surface-hover)', zIndex: 0 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  )}
+                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '1rem', color: isActive ? 'var(--color-accent)' : 'inherit' }}>
+                    {item.icon}
+                    <span style={{ color: isActive ? 'var(--color-white)' : 'inherit' }}>{item.name}</span>
+                  </div>
+                </Link>
+              );
+            })}
+            {groupIdx < navGroups.length - 1 && (
+              <div style={{ height: '1px', backgroundColor: 'rgba(255,255,255,0.05)', margin: '1rem' }} />
+            )}
+          </div>
+        ))}
       </nav>
       
       <div style={{ padding: '1.5rem' }}>
