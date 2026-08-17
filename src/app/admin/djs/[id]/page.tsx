@@ -5,6 +5,7 @@ import { ArrowLeft, Save, User, Music, Globe, FileText } from "lucide-react";
 import { updateDjEPK } from "../actions";
 import ImageUpload from "@/components/admin/ImageUpload";
 import ExternalBookingsManager from "./ExternalBookingsManager";
+import SaveDjForm from "./SaveDjForm";
 
 export default async function EditDjPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
@@ -52,7 +53,7 @@ export default async function EditDjPage({ params }: { params: Promise<{ id: str
         </div>
       </div>
 
-      <form action={updateDjEPK.bind(null, dj.id)} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <SaveDjForm djId={dj.id}>
         
         {/* SECCIÓN BÁSICA */}
         <section style={{ backgroundColor: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -216,15 +217,7 @@ export default async function EditDjPage({ params }: { params: Promise<{ id: str
           </section>
         )}
 
-        <div style={{ position: 'sticky', bottom: '2rem', backgroundColor: 'var(--color-background)', padding: '1rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 'var(--radius-lg)', display: 'flex', justifyContent: 'flex-end', zIndex: 10 }}>
-          <button 
-            type="submit"
-            style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', padding: '1rem 2rem', borderRadius: 'var(--radius-md)', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: '1.1rem' }}
-          >
-            <Save size={20} /> Guardar Cambios
-          </button>
-        </div>
-      </form>
+      </SaveDjForm>
     </div>
   );
 }
