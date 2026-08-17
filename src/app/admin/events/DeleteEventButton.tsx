@@ -9,16 +9,26 @@ export default function DeleteEventButton({ id, eventName }: { id: string, event
   const [isPending, startTransition] = useTransition();
 
   const handleDelete = () => {
-    if (window.confirm(`¿Estás seguro de que quieres eliminar permanentemente el evento "${eventName}"? Se eliminarán todas las entradas, ventas y registros asociados.`)) {
-      startTransition(async () => {
-        try {
-          await deleteEvent(id);
-          toast.success("Evento eliminado exitosamente");
-        } catch (error: any) {
-          toast.error(`Error al eliminar: ${error.message}`);
-        }
-      });
-    }
+    toast(`¿Eliminar evento "${eventName}"?`, {
+      description: "Esta acción es irreversible y borrará todas las entradas.",
+      action: {
+        label: "Eliminar",
+        onClick: () => {
+          startTransition(async () => {
+            try {
+              await deleteEvent(id);
+              toast.success("Evento eliminado exitosamente");
+            } catch (error: any) {
+              toast.error(`Error al eliminar: ${error.message}`);
+            }
+          });
+        },
+      },
+      cancel: {
+        label: "Cancelar",
+        onClick: () => {},
+      },
+    });
   };
 
   return (
