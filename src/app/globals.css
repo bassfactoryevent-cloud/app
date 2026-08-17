@@ -115,6 +115,12 @@ p { color: var(--color-text-secondary); margin-bottom: var(--space-2); font-size
   padding: 0 var(--space-3);
   width: 100%;
 }
+@media (max-width: 900px) {
+  body {
+    padding-bottom: 70px; /* Space for MobileBottomNav */
+  }
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 0 var(--space-2);

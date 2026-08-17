@@ -4,7 +4,7 @@ import styles from "./Header.module.css";
 import CartIcon from "@/components/CartIcon";
 import { createClient } from "@/utils/supabase/server";
 import UserMenu from "./UserMenu";
-import { MobileMenu } from "./MobileMenu";
+import { MobileBottomNav } from "./MobileBottomNav";
 
 export default async function Header() {
   const supabase = await createClient();
@@ -64,12 +64,12 @@ export default async function Header() {
                 Ingresar
               </Link>
             )}
-
-            {/* Mobile Hamburger Menu */}
-            <MobileMenu />
           </div>
         </div>
       </div>
+
+      {/* Mobile B2B Bottom Navigation */}
+      <MobileBottomNav />
     </header>
   );
 }
