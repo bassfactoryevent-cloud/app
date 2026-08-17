@@ -48,9 +48,9 @@ export default function CheckoutClient() {
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '4rem 1rem' }}>
       <h1 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '2rem' }}>Finalizar Compra</h1>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '4rem', alignItems: 'start' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4rem', alignItems: 'flex-start' }}>
         {/* Formulario */}
-        <form id="checkout-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <form id="checkout-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem', flex: '1 1 60%', minWidth: '300px' }}>
           
           {/* Info Contacto */}
           <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -60,12 +60,12 @@ export default function CheckoutClient() {
                 <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Nombre Completo *</label>
                 <input type="text" name="customer_name" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
               </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <div style={{ flex: '1 1 250px' }}>
                   <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Correo Electrónico (Aquí enviaremos la confirmación o boletas) *</label>
                   <input type="email" name="customer_email" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: '1 1 250px' }}>
                   <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Teléfono *</label>
                   <input type="tel" name="customer_phone" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
                 </div>
@@ -84,16 +84,16 @@ export default function CheckoutClient() {
                   <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Dirección Completa *</label>
                   <input type="text" name="shipping_address" required placeholder="Calle, Carrera, Número, Apto/Casa" style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
                 </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                  <div style={{ flex: '1 1 200px' }}>
                     <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Ciudad *</label>
                     <input type="text" name="shipping_city" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
                   </div>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: '1 1 200px' }}>
                     <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>País *</label>
                     <input type="text" name="shipping_country" defaultValue="Colombia" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
                   </div>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: '1 1 200px' }}>
                     <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Código Postal</label>
                     <input type="text" name="shipping_zip" style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
                   </div>
@@ -104,7 +104,7 @@ export default function CheckoutClient() {
         </form>
 
         {/* Resumen */}
-        <div style={{ position: 'sticky', top: '100px', backgroundColor: 'rgba(255,255,255,0.02)', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ position: 'sticky', top: '100px', backgroundColor: 'rgba(255,255,255,0.02)', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)', flex: '1 1 300px', width: '100%' }}>
           <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Resumen del Pedido</h2>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
