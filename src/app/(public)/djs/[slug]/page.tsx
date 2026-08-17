@@ -2,7 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ChevronRight, Mail, Phone, Download, Music, Globe, Instagram, Facebook, Twitter } from "lucide-react";
+import { ArrowLeft, ChevronRight, Mail, Phone, Download, Music, Globe } from "lucide-react";
 import AdBanner from "@/components/AdBanner";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
@@ -186,17 +186,17 @@ export default async function DjEPKPage({ params }: { params: Promise<{ slug: st
                 )}
                 {dj.social_instagram && (
                   <a href={dj.social_instagram} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#E1306C', color: 'white', borderRadius: '2rem', textDecoration: 'none', fontWeight: 600, fontSize: '0.875rem' }}>
-                    <Instagram size={16} /> Instagram
+                    <Globe size={16} /> Instagram
                   </a>
                 )}
                 {dj.social_facebook && (
                   <a href={dj.social_facebook} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#4267B2', color: 'white', borderRadius: '2rem', textDecoration: 'none', fontWeight: 600, fontSize: '0.875rem' }}>
-                    <Facebook size={16} /> Facebook
+                    <Globe size={16} /> Facebook
                   </a>
                 )}
                 {dj.social_x && (
                   <a href={dj.social_x} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', backgroundColor: '#1DA1F2', color: 'white', borderRadius: '2rem', textDecoration: 'none', fontWeight: 600, fontSize: '0.875rem' }}>
-                    <Twitter size={16} /> X (Twitter)
+                    <Globe size={16} /> X (Twitter)
                   </a>
                 )}
               </div>
