@@ -61,6 +61,23 @@ export async function createSponsor(formData: FormData) {
   revalidatePath("/admin/sponsors");
 }
 
+export async function updateSponsor(id: string, formData: FormData) {
+  const supabase = await createClient();
+  const name = formData.get("name") as string;
+  const logo_url = formData.get("logo_url") as string;
+  const website_url = formData.get("website_url") as string;
+
+  const { error } = await supabase.from("sponsors").update({ name, logo_url, website_url }).eq("id", id);
+
+  if (error) {
+    console.error("Error updating Sponsor:", error);
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/admin/sponsors");
+  redirect("/admin/sponsors");
+}
+
 export async function deleteSponsor(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("sponsors").delete().eq("id", id);
