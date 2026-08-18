@@ -20,12 +20,10 @@ export default function SettingsForm({ user, profile }: { user: any; profile: an
     const avatar_url = formData.get("avatar_url") as string;
 
     try {
-      const { error } = await supabase.from("profiles").upsert({
-        id: user.id,
+      const { error } = await supabase.from("profiles").update({
         full_name,
-        email: user.email,
         avatar_url
-      });
+      }).eq("id", user.id);
 
       if (error) throw error;
 
