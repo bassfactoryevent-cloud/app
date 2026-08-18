@@ -62,7 +62,7 @@ export default async function TransferAcceptPage({ params }: { params: { id: str
     "use server";
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user || !transfer) return;
 
     // 1. Marcar transfer como aceptado
     await supabase.from("ticket_transfers").update({ status: 'accepted' }).eq("id", transfer.id);
@@ -86,6 +86,7 @@ export default async function TransferAcceptPage({ params }: { params: { id: str
 
   async function rejectTransfer() {
     "use server";
+    if (!transfer) return;
     const supabase = await createClient();
     await supabase.from("ticket_transfers").update({ status: 'rejected' }).eq("id", transfer.id);
     revalidatePath(`/account/tickets/transfer/${transfer.id}`);
