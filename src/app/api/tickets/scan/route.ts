@@ -24,7 +24,9 @@ export async function POST(req: Request) {
         id, 
         status, 
         tier_id,
-        ticket_tiers!inner(event_id, name)
+        assigned_name,
+        ticket_tiers!inner(event_id, name),
+        merch_orders!inner(customer_name)
       `)
       .eq("qr_hash", qr_hash)
       .single();
@@ -36,6 +38,9 @@ export async function POST(req: Request) {
     const t = ticket as any;
     const tierEventId = Array.isArray(t.ticket_tiers) ? t.ticket_tiers[0]?.event_id : t.ticket_tiers?.event_id;
     const tierName = Array.isArray(t.ticket_tiers) ? t.ticket_tiers[0]?.name : t.ticket_tiers?.name;
+    const orderCustomerName = Array.isArray(t.merch_orders) ? t.merch_orders[0]?.customer_name : t.merch_orders?.customer_name;
+    
+    const attendeeName = t.assigned_name || orderCustomerName || 'Desconocido';
 
     if (tierEventId !== event_id) {
       return NextResponse.json({ 
@@ -65,7 +70,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ 
       success: true, 
-      message: `Acceso concedido. (Localidad: ${tierName})`
+      message: `Acceso concedido a ${attendeeName}. (Localidad: ${tierName})`
     });
 
   } catch (err: any) {
