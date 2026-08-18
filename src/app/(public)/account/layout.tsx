@@ -27,6 +27,9 @@ export default function AccountLayout({
       }
     };
     fetchProfile();
+
+    window.addEventListener("profile_updated", fetchProfile);
+    return () => window.removeEventListener("profile_updated", fetchProfile);
   }, [pathname]); // Refresh when path changes in case they updated settings
 
 
