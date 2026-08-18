@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import Image from "next/image";
 import { Calendar, MapPin, QrCode, Send, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { assignTicket } from "./actions";
+import { initiateTransfer, cancelTransfer } from "./actions";
 import { toast } from "sonner";
 
 export default function TicketCard({ ticket, eventDate }: { ticket: any; eventDate: string }) {
@@ -12,6 +12,13 @@ export default function TicketCard({ ticket, eventDate }: { ticket: any; eventDa
   const [isHovered, setIsHovered] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  // Buscar si hay transferencia pendiente
+  const pendingTransfers = Array.isArray(ticket.ticket_transfers) 
+    ? ticket.ticket_transfers.filter((t: any) => t.status === 'pending')
+    : ticket.ticket_transfers?.status === 'pending' ? [ticket.ticket_transfers] : [];
+  
+  const pendingTransfer = pendingTransfers[0];
 
   const handleAssign = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -21,11 +28,23 @@ export default function TicketCard({ ticket, eventDate }: { ticket: any; eventDa
 
     startTransition(async () => {
       try {
-        await assignTicket(ticket.id, name, email);
-        toast.success("Boleta enviada exitosamente por correo.");
+        await initiateTransfer(ticket.id, name, email);
+        toast.success("Transferencia iniciada. Se envió un correo a tu amigo.");
         setShowModal(false);
       } catch (err: any) {
-        toast.error(err.message || "Hubo un error asignando la boleta.");
+        toast.error(err.message || "Hubo un error iniciando la transferencia.");
+      }
+    });
+  };
+
+  const handleCancelTransfer = () => {
+    if (!pendingTransfer) return;
+    startTransition(async () => {
+      try {
+        await cancelTransfer(pendingTransfer.id);
+        toast.success("Transferencia cancelada.");
+      } catch (err: any) {
+        toast.error(err.message || "Error al cancelar.");
       }
     });
   };
@@ -86,7 +105,13 @@ export default function TicketCard({ ticket, eventDate }: { ticket: any; eventDa
 
         {/* Asignación Actual / Botón de Enviar */}
         <div style={{ marginTop: 'auto', paddingTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          {ticket.assigned_name ? (
+          {pendingTransfer ? (
+            <div style={{ fontSize: '0.875rem' }}>
+              <span style={{ color: '#f59e0b', fontWeight: 600 }}>Pendiente por aceptar: </span>
+              <br/>
+              <span style={{ opacity: 0.8 }}>{pendingTransfer.to_email}</span>
+            </div>
+          ) : ticket.assigned_name ? (
             <div style={{ fontSize: '0.875rem' }}>
               <span style={{ opacity: 0.6 }}>A nombre de: </span>
               <strong style={{ color: 'white' }}>{ticket.assigned_name}</strong>
@@ -95,14 +120,24 @@ export default function TicketCard({ ticket, eventDate }: { ticket: any; eventDa
             <div style={{ fontSize: '0.875rem', opacity: 0.6 }}>Sin asignar (Tuya)</div>
           )}
 
-          {ticket.status === 'valid' && (
+          {ticket.status === 'valid' && !pendingTransfer && (
             <button 
               onClick={() => setShowModal(true)}
               style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, transition: 'all 0.2s' }}
               onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}
               onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
             >
-              <Send size={16} /> Enviar a amigo
+              <Send size={16} /> Transferir Boleta
+            </button>
+          )}
+
+          {pendingTransfer && (
+            <button 
+              onClick={handleCancelTransfer}
+              disabled={isPending}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', backgroundColor: 'transparent', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '0.5rem', cursor: isPending ? 'not-allowed' : 'pointer', fontSize: '0.875rem', fontWeight: 600, opacity: isPending ? 0.5 : 1 }}
+            >
+              <X size={16} /> Cancelar
             </button>
           )}
         </div>
@@ -114,7 +149,13 @@ export default function TicketCard({ ticket, eventDate }: { ticket: any; eventDa
         <div style={{ position: 'absolute', top: '-10px', left: '-10px', width: '20px', height: '20px', borderRadius: '50%', backgroundColor: 'var(--color-bg)' }} />
         <div style={{ position: 'absolute', bottom: '-10px', left: '-10px', width: '20px', height: '20px', borderRadius: '50%', backgroundColor: 'var(--color-bg)' }} />
 
-        {ticket.status === 'valid' ? (
+        {pendingTransfer ? (
+          <div style={{ textAlign: 'center', opacity: 0.5 }}>
+            <Lock size={48} style={{ margin: '0 auto 1rem' }} />
+            <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>EN TRANSFERENCIA</div>
+            <div style={{ fontSize: '0.65rem', marginTop: '0.5rem' }}>QR Oculto temporalmente</div>
+          </div>
+        ) : ticket.status === 'valid' ? (
           <>
             <div style={{ width: '130px', height: '130px', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', borderRadius: '0.5rem', padding: '10px' }}>
               <QrCode size={110} color="black" />
@@ -146,9 +187,9 @@ export default function TicketCard({ ticket, eventDate }: { ticket: any; eventDa
                 <X size={20} />
               </button>
               
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>Enviar Boleta</h3>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>Transferir Boleta</h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-                Asigna esta boleta a un amigo. Le enviaremos el código QR inmediatamente por correo electrónico.
+                Esta acción enviará un enlace de aceptación a tu amigo. Si acepta, <strong>perderás la propiedad</strong> de la boleta y el QR cambiará.
               </p>
 
               <form onSubmit={handleAssign} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

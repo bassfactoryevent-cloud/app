@@ -11,12 +11,14 @@ interface EventDashboardClientProps {
   initialTiers: any[];
   initialOrders: any[];
   initialTickets: any[];
+  initialTransfers: any[];
 }
 
-export default function EventDashboardClient({ event, initialTiers, initialOrders, initialTickets }: EventDashboardClientProps) {
+export default function EventDashboardClient({ event, initialTiers, initialOrders, initialTickets, initialTransfers }: EventDashboardClientProps) {
   const supabase = createClient();
   const [orders, setOrders] = useState(initialOrders);
   const [tickets, setTickets] = useState(initialTickets);
+  const [transfers, setTransfers] = useState(initialTransfers);
   
   // Realtime subscription
   useEffect(() => {
@@ -158,7 +160,7 @@ export default function EventDashboardClient({ event, initialTiers, initialOrder
           </h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
             {initialTiers.map(tier => {
-              const soldInTier = tickets.filter(t => t.ticket_tier_id === tier.id).length;
+              const soldInTier = tickets.filter(t => t.tier_id === tier.id || t.ticket_tier_id === tier.id).length;
               const totalCapacity = tier.quantity_available + soldInTier; // Simple approximation if quantity_available means remaining. If it means total initially, then soldInTier / quantity_available.
               // Let's assume quantity_available is the CURRENT stock. Total stock was quantity_available + soldInTier.
               const percentage = totalCapacity > 0 ? (soldInTier / totalCapacity) * 100 : 0;
@@ -243,6 +245,64 @@ export default function EventDashboardClient({ event, initialTiers, initialOrder
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      {/* Transfers Table */}
+      <div style={{ marginTop: "2rem", backgroundColor: "var(--color-surface, #111)", border: "1px solid var(--color-border, #333)", borderRadius: "var(--radius-lg)", overflow: "hidden" }}>
+        <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--color-border, #333)" }}>
+          <h3 style={{ fontSize: "1.25rem", fontWeight: 600, margin: 0, color: "white" }}>
+            Historial de Transferencias (P2P)
+          </h3>
+          <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)", marginTop: "0.5rem" }}>
+            Auditoría de todos los tickets enviados entre usuarios.
+          </p>
+        </div>
+        
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+            <thead>
+              <tr style={{ backgroundColor: "rgba(255,255,255,0.02)", borderBottom: "1px solid var(--color-border, #333)" }}>
+                <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.875rem" }}>Ticket ID</th>
+                <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.875rem" }}>Enviado a</th>
+                <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.875rem" }}>Fecha</th>
+                <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.875rem" }}>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transfers.length === 0 ? (
+                <tr>
+                  <td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "var(--color-text-secondary)" }}>
+                    No hay transferencias registradas para este evento.
+                  </td>
+                </tr>
+              ) : (
+                transfers.map((t) => (
+                  <tr key={t.id} style={{ borderBottom: "1px solid var(--color-border, #333)" }}>
+                    <td style={{ padding: "1rem", fontSize: "0.75rem", fontFamily: "monospace", color: "var(--color-text-secondary)" }}>
+                      {t.ticket_id.substring(0, 8)}...
+                    </td>
+                    <td style={{ padding: "1rem" }}>
+                      <div style={{ fontWeight: 600, color: "white" }}>{t.to_name || 'Sin Nombre'}</div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>{t.to_email}</div>
+                    </td>
+                    <td style={{ padding: "1rem", color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
+                      {new Date(t.created_at).toLocaleString()}
+                    </td>
+                    <td style={{ padding: "1rem" }}>
+                      <span style={{
+                        padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.75rem", fontWeight: 600,
+                        backgroundColor: t.status === 'accepted' ? 'rgba(34, 197, 94, 0.2)' : t.status === 'rejected' || t.status === 'cancelled' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                        color: t.status === 'accepted' ? '#22c55e' : t.status === 'rejected' || t.status === 'cancelled' ? '#ef4444' : '#f59e0b', textTransform: "uppercase"
+                      }}>
+                        {t.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

@@ -2,41 +2,100 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import { Resend } from "resend";
 
-export async function assignTicket(ticketId: string, name: string, email: string) {
+const resend = new Resend(process.env.RESEND_API_KEY);
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://bassfactory.co";
+
+export async function initiateTransfer(ticketId: string, name: string, email: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    throw new Error("Debes iniciar sesión para asignar una boleta.");
+    throw new Error("Debes iniciar sesión para transferir una boleta.");
   }
 
   // Verificar que el ticket pertenezca al usuario
-  const { data: ticket } = await supabase.from("tickets").select("id, user_id").eq("id", ticketId).single();
+  const { data: ticket } = await supabase.from("tickets").select(`
+    id, 
+    user_id, 
+    ticket_tiers!inner(events!inner(title, image_url))
+  `).eq("id", ticketId).single();
   
   if (!ticket || ticket.user_id !== user.id) {
     throw new Error("No tienes permiso para modificar esta boleta.");
   }
 
-  // Actualizar la boleta
-  const { error } = await supabase
-    .from("tickets")
-    .update({
-      assigned_name: name,
-      assigned_email: email,
-      transferred_at: new Date().toISOString(),
-    })
-    .eq("id", ticketId);
+  // Verificar si ya hay una transferencia pendiente
+  const { data: pendingTransfer } = await supabase
+    .from("ticket_transfers")
+    .select("id")
+    .eq("ticket_id", ticketId)
+    .eq("status", "pending")
+    .single();
 
-  if (error) {
-    console.error("Assign error", error);
-    throw new Error("Error al asignar la boleta.");
+  if (pendingTransfer) {
+    throw new Error("Ya existe una transferencia en curso para esta boleta.");
   }
 
-  // Disparar envío inmediato de correo en background
-  import("@/utils/sendTicketEmail").then(({ sendTicketEmail }) => {
-    sendTicketEmail(ticketId, name, email).catch(console.error);
-  });
+  // Crear la transferencia
+  const { data: transfer, error } = await supabase
+    .from("ticket_transfers")
+    .insert([{
+      ticket_id: ticketId,
+      from_user_id: user.id,
+      to_email: email,
+      to_name: name,
+      status: 'pending'
+    }])
+    .select("id")
+    .single();
+
+  if (error || !transfer) {
+    console.error("Transfer error", error);
+    throw new Error("Error al iniciar la transferencia.");
+  }
+
+  const t = ticket as any;
+  const eventTitle = Array.isArray(t.ticket_tiers?.events) ? t.ticket_tiers.events[0]?.title : t.ticket_tiers?.events?.title;
+  
+  // Enviar correo de invitación
+  if (process.env.RESEND_API_KEY) {
+    await resend.emails.send({
+      from: "Bassfactory Tickets <tickets@bassfactory.co>",
+      to: email,
+      subject: `Alguien te ha enviado una entrada para ${eventTitle}`,
+      html: `<p>Hola ${name},</p>
+             <p><strong>${user.user_metadata?.name || 'Alguien'}</strong> te ha transferido una boleta oficial para <strong>${eventTitle}</strong>.</p>
+             <p>Para aceptar y descargar tu boleta, debes iniciar sesión (o registrarte) y aceptar la transferencia:</p>
+             <p><a href="${APP_URL}/account/tickets/transfer/${transfer.id}" style="display:inline-block;padding:12px 24px;background-color:#ec4899;color:white;text-decoration:none;border-radius:6px;font-weight:bold;">Aceptar Boleta</a></p>
+             <p>Si no la aceptas, la boleta regresará al comprador original.</p>`
+    });
+  }
+
+  revalidatePath("/account/tickets");
+  return { success: true };
+}
+
+export async function cancelTransfer(transferId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("No autorizado");
+
+  const { data: transfer } = await supabase.from("ticket_transfers").select("id, from_user_id, status").eq("id", transferId).single();
+  
+  if (!transfer || transfer.from_user_id !== user.id) {
+    throw new Error("No autorizado para cancelar esta transferencia");
+  }
+
+  if (transfer.status !== 'pending') {
+    throw new Error("La transferencia ya no está pendiente");
+  }
+
+  const { error } = await supabase.from("ticket_transfers").update({ status: 'cancelled' }).eq("id", transferId);
+  
+  if (error) throw new Error("Error cancelando la transferencia");
 
   revalidatePath("/account/tickets");
   return { success: true };

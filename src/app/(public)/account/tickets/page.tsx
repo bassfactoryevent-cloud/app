@@ -26,6 +26,12 @@ export default async function AccountTicketsPage() {
           location_name,
           image_url
         )
+      ),
+      ticket_transfers (
+        id,
+        to_email,
+        to_name,
+        status
       )
     `)
     .eq("user_id", user.id)

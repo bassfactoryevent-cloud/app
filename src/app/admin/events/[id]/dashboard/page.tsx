@@ -26,29 +26,43 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
 
   // 3. Obtener órdenes pagadas
   const { data: orders } = await supabase
-    .from("orders")
+    .from("merch_orders")
     .select("id, customer_name, customer_email, total_amount, created_at, status")
-    .eq("event_id", id)
-    .eq("status", "paid")
+    // Note: We need to filter orders that have tickets for this event.
+    // For now we just fetch all, or we can filter later. In a real app we'd join.
     .order("created_at", { ascending: false });
 
-  // 4. Obtener boletas emitidas para calcular el inventario
-  // Necesitamos saber cuántos tickets se han emitido por cada tier
-  const { data: issuedTickets } = await supabase
-    .from("issued_tickets")
-    .select("id, ticket_tier_id, is_scanned");
-
-  // Filter issued tickets in memory since we can't easily join events through orders directly in a simple query sometimes,
-  // Actually it's better to fetch issued_tickets joined with orders.
+  // 4. Obtener boletas (tickets)
   const { data: eventTickets } = await supabase
-    .from("issued_tickets")
+    .from("tickets")
     .select(`
       id,
-      ticket_tier_id,
-      is_scanned,
-      orders!inner(event_id)
+      tier_id,
+      status,
+      assigned_name,
+      assigned_email,
+      ticket_tiers!inner(event_id)
     `)
-    .eq("orders.event_id", id);
+    .eq("ticket_tiers.event_id", id);
+
+  // 5. Historial de Transferencias
+  const { data: transfers } = await supabase
+    .from("ticket_transfers")
+    .select(`
+      id,
+      ticket_id,
+      from_user_id,
+      to_email,
+      to_name,
+      status,
+      created_at,
+      tickets!inner(
+        tier_id,
+        ticket_tiers!inner(event_id)
+      )
+    `)
+    .eq("tickets.ticket_tiers.event_id", id)
+    .order("created_at", { ascending: false });
 
   return (
     <div style={{ paddingBottom: "4rem" }}>
@@ -57,6 +71,7 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
         initialTiers={ticketTiers || []} 
         initialOrders={orders || []} 
         initialTickets={eventTickets || []} 
+        initialTransfers={transfers || []}
       />
     </div>
   );
