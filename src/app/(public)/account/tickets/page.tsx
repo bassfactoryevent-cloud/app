@@ -9,23 +9,15 @@ export default async function AccountTicketsPage() {
   if (!user) redirect("/login");
 
   // Load user tickets with event details
-  const { data: tickets } = await supabase
+  const { data: rawTickets } = await supabase
     .from("tickets")
     .select(`
       id,
       qr_hash,
       status,
+      tier_id,
       orders (
         id
-      ),
-      ticket_tiers (
-        name,
-        events (
-          title,
-          start_time,
-          location_name,
-          image_url
-        )
       ),
       ticket_transfers (
         id,
@@ -36,6 +28,33 @@ export default async function AccountTicketsPage() {
     `)
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
+
+  let tickets: any[] = [];
+  
+  if (rawTickets && rawTickets.length > 0) {
+    const tierIds = rawTickets.map((t: any) => t.tier_id).filter(Boolean);
+    const { data: tiersData } = await supabase
+      .from("ticket_tiers")
+      .select(`
+        id,
+        name,
+        events (
+          title,
+          start_time,
+          location_name,
+          image_url
+        )
+      `)
+      .in("id", tierIds);
+      
+    tickets = rawTickets.map((t: any) => {
+      const tier = tiersData?.find((tr: any) => tr.id === t.tier_id);
+      return {
+        ...t,
+        ticket_tiers: tier
+      };
+    });
+  }
 
   return (
     <div>

@@ -24,17 +24,29 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
     );
   }
 
-  // Fetch Tickets instead of Orders
-  const { data: ticketOrders, error: ticketError } = await supabase
+  const { data: rawTickets, error: ticketError } = await supabase
     .from("tickets")
-    .select(`
-      id,
-      created_at,
-      status,
-      ticket_tiers ( name, events ( title ) )
-    `)
+    .select(`id, created_at, status, tier_id`)
     .eq("user_id", id)
     .order("created_at", { ascending: false });
+
+  let ticketOrders: any[] = [];
+  
+  if (rawTickets && rawTickets.length > 0) {
+    const tierIds = rawTickets.map((t: any) => t.tier_id).filter(Boolean);
+    const { data: tiersData } = await supabase
+      .from("ticket_tiers")
+      .select(`id, name, events ( title )`)
+      .in("id", tierIds);
+      
+    ticketOrders = rawTickets.map((t: any) => {
+      const tier = tiersData?.find((tr: any) => tr.id === t.tier_id);
+      return {
+        ...t,
+        ticket_tiers: tier
+      };
+    });
+  }
 
   if (ticketError) {
     return (
