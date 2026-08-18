@@ -240,6 +240,7 @@ export default function EventFormClient({ djs, sponsors, initialData }: { djs: a
             <select name="status" defaultValue={initialData?.status || "draft"} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }}>
               <option value="draft">Borrador (Oculto)</option>
               <option value="published">Publicado (En Vivo)</option>
+              <option value="archived">Archivado (Finalizado)</option>
             </select>
           </div>
 
