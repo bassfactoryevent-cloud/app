@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Mail, Calendar, ShoppingCart, Ticket, Tag } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
   const { id } = await params;
@@ -130,7 +132,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
           <div style={{ width: "100%", textAlign: "left", display: "flex", flexDirection: "column", gap: "1rem", borderTop: "1px solid var(--color-border, #333)", paddingTop: "1.5rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", color: "var(--color-text-secondary)" }}>
               <Mail size={16} />
-              <span style={{ fontSize: "0.875rem", wordBreak: "break-all" }}>Usuario Base de Datos</span>
+              <span style={{ fontSize: "0.875rem", wordBreak: "break-all" }}>{profile.email || "Sin correo electrónico"}</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", color: "var(--color-text-secondary)" }}>
               <Calendar size={16} />
