@@ -4,6 +4,8 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import crypto from "crypto";
 import { Resend } from "resend";
+import { revalidatePath } from "next/cache";
+import { getPurchaseConfirmationEmail } from "@/utils/emailTemplates";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -159,14 +161,19 @@ export async function processCheckout(formData: FormData) {
   // Enviar correo de confirmación básico usando Resend
   try {
     if (process.env.RESEND_API_KEY) {
+      const htmlContent = getPurchaseConfirmationEmail(
+        customer_name, 
+        total_amount.toLocaleString('es-CO'), 
+        order.id.substring(0, 8).toUpperCase(),
+        ticketItems.length > 0,
+        cartItems.some(i => !i.ticket_tier_id)
+      );
+      
       await resend.emails.send({
-        from: "Bassfactory Tickets <tickets@bassfactory.co>",
+        from: "Bassfactory Ventas <ventas@bassfactory.co>",
         to: customer_email,
         subject: `Confirmación de Compra - Orden #${order.id.substring(0, 8).toUpperCase()}`,
-        html: `<p>Hola ${customer_name},</p>
-               <p>Tu compra en Bassfactory ha sido confirmada con éxito.</p>
-               <p><b>Total pagado:</b> $${total_amount.toLocaleString('es-CO')}</p>
-               <p>Gracias por tu compra.</p>`
+        html: htmlContent
       });
     }
   } catch (emailError) {

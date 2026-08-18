@@ -4,6 +4,7 @@ import { renderToStream } from "@react-pdf/renderer";
 import { TicketPDF } from "@/components/pdf/TicketPDF";
 import QRCode from "qrcode";
 import React from "react";
+import { getTicketDeliveryEmail } from "@/utils/emailTemplates";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -85,10 +86,7 @@ export async function sendTicketEmail(ticketId: string, customName?: string, cus
         from: "Bassfactory Tickets <tickets@bassfactory.co>",
         to: finalEmail,
         subject: `Tu Entrada: ${event.title} - Bassfactory`,
-        html: `<p>Hola ${finalName},</p>
-               <p>¡Tu entrada para <strong>${event.title}</strong> está lista!</p>
-               <p>Adjunto encuentras tu boleta oficial en PDF con el código QR. Recuerda llevar este PDF en tu celular o impreso para escanear en la puerta.</p>
-               <p>Nos vemos en el dancefloor.</p>`,
+        html: getTicketDeliveryEmail(finalName, event.title, eventDateStr, event.location),
         attachments: [
           {
             filename: `Ticket-${event.title.replace(/\s+/g, '-')}.pdf`,

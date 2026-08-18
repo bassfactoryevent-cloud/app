@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
+import { getTransferInitiatedEmail } from "@/utils/emailTemplates";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://bassfactory.co";
@@ -65,11 +66,12 @@ export async function initiateTransfer(ticketId: string, name: string, email: st
       from: "Bassfactory Tickets <tickets@bassfactory.co>",
       to: email,
       subject: `Alguien te ha enviado una entrada para ${eventTitle}`,
-      html: `<p>Hola ${name},</p>
-             <p><strong>${user.user_metadata?.name || 'Alguien'}</strong> te ha transferido una boleta oficial para <strong>${eventTitle}</strong>.</p>
-             <p>Para aceptar y descargar tu boleta, debes iniciar sesión (o registrarte) y aceptar la transferencia:</p>
-             <p><a href="${APP_URL}/account/tickets/transfer/${transfer.id}" style="display:inline-block;padding:12px 24px;background-color:#ec4899;color:white;text-decoration:none;border-radius:6px;font-weight:bold;">Aceptar Boleta</a></p>
-             <p>Si no la aceptas, la boleta regresará al comprador original.</p>`
+      html: getTransferInitiatedEmail(
+        name, 
+        user.user_metadata?.name || 'Alguien', 
+        eventTitle, 
+        `${APP_URL}/account/tickets/transfer/${transfer.id}`
+      )
     });
   }
 

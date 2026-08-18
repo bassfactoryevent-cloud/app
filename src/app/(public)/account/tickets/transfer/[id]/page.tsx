@@ -35,7 +35,8 @@ export default async function TransferAcceptPage({ params }: { params: { id: str
         )
       ),
       users!ticket_transfers_from_user_id_fkey (
-        raw_user_meta_data
+        raw_user_meta_data,
+        email
       )
     `)
     .eq("id", params.id)
@@ -79,6 +80,23 @@ export default async function TransferAcceptPage({ params }: { params: { id: str
     import("@/utils/sendTicketEmail").then(({ sendTicketEmail }) => {
       sendTicketEmail(t.id, user.user_metadata?.name || transfer.to_name, user.email || transfer.to_email).catch(console.error);
     });
+
+    // 4. Notificar al dueño original que la boleta fue aceptada
+    const senderEmail = (usersData as any)?.email;
+    const receiverName = user.user_metadata?.name || transfer.to_name || "El destinatario";
+    if (senderEmail && process.env.RESEND_API_KEY) {
+      import("resend").then(async ({ Resend }) => {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        const { getTransferAcceptedEmail } = await import("@/utils/emailTemplates");
+        
+        await resend.emails.send({
+          from: "Bassfactory Tickets <tickets@bassfactory.co>",
+          to: senderEmail,
+          subject: `Boleta aceptada por ${receiverName}`,
+          html: getTransferAcceptedEmail(senderName, receiverName, event.title)
+        });
+      }).catch(console.error);
+    }
 
     revalidatePath(`/account/tickets/transfer/${transfer.id}`);
     revalidatePath(`/account/tickets`);
