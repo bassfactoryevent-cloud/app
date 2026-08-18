@@ -13,6 +13,7 @@ export async function processCheckout(formData: FormData) {
   const customer_name = formData.get("customer_name") as string;
   const customer_email = formData.get("customer_email") as string;
   const customer_phone = formData.get("customer_phone") as string;
+  const user_id = formData.get("user_id") as string;
   
   const hasMerchStr = formData.get("hasMerch") as string;
   const hasMerch = hasMerchStr === 'true';
@@ -54,7 +55,8 @@ export async function processCheckout(formData: FormData) {
     shipping_cost,
     total_amount,
     status: "paid", // Temporalmente 'paid' para simular éxito
-    payment_provider: "simulated"
+    payment_provider: "simulated",
+    user_id
   }]).select("id").single();
 
   if (orderError) {
@@ -127,12 +129,13 @@ export async function processCheckout(formData: FormData) {
           order_id: order.id,
           tier_id: item.ticket_tier_id,
           qr_hash: qrHash,
-          status: 'valid'
+          status: 'valid',
+          user_id
         });
       }
     }
 
-    const { error: ticketsError } = await supabase.from("tickets").insert(ticketsToInsert);
+    const { data: insertedTickets, error: ticketsError } = await supabase.from("tickets").insert(ticketsToInsert).select("id");
     if (ticketsError) {
       console.error("Tickets error", ticketsError);
       throw new Error("Error generando las entradas: " + ticketsError.message);
@@ -161,13 +164,21 @@ export async function processCheckout(formData: FormData) {
         html: `<p>Hola ${customer_name},</p>
                <p>Tu compra en Bassfactory ha sido confirmada con éxito.</p>
                <p><b>Total pagado:</b> $${total_amount.toLocaleString('es-CO')}</p>
-               <p>Si compraste boletas, recuerda que <b>te enviaremos el código QR oficial 1 día antes del evento</b> a este mismo correo por motivos de seguridad.</p>
                <p>Gracias por tu compra.</p>`
       });
     }
   } catch (emailError) {
     console.error("Error sending confirmation email", emailError);
     // No bloqueamos la compra si falla el correo
+  }
+
+  // Despachar tickets inmediatamente (en background, no bloqueamos el redirect)
+  if (ticketItems.length > 0 && insertedTickets) {
+    import("@/utils/sendTicketEmail").then(({ sendTicketEmail }) => {
+      insertedTickets.forEach((t: any) => {
+        sendTicketEmail(t.id).catch(console.error);
+      });
+    });
   }
 
   // Redirigir al success

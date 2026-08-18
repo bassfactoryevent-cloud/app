@@ -7,7 +7,7 @@ import Image from "next/image";
 import { Package, Lock, Truck, Ticket } from "lucide-react";
 import { processCheckout } from "./actions";
 
-export default function CheckoutClient() {
+export default function CheckoutClient({ user }: { user: any }) {
   const { items, getTotalPrice, clearCart } = useCartStore();
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -33,6 +33,7 @@ export default function CheckoutClient() {
     const formData = new FormData(e.currentTarget);
     formData.set("items", JSON.stringify(items));
     formData.set("hasMerch", hasMerch.toString());
+    formData.set("user_id", user.id);
     
     try {
       await processCheckout(formData);
@@ -58,12 +59,12 @@ export default function CheckoutClient() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Nombre Completo *</label>
-                <input type="text" name="customer_name" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
+                <input type="text" name="customer_name" defaultValue={user?.user_metadata?.name || ''} required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
               </div>
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                 <div style={{ flex: '1 1 250px' }}>
                   <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Correo Electrónico (Aquí enviaremos la confirmación o boletas) *</label>
-                  <input type="email" name="customer_email" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
+                  <input type="email" name="customer_email" defaultValue={user?.email || ''} required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'transparent', color: 'white' }} />
                 </div>
                 <div style={{ flex: '1 1 250px' }}>
                   <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Teléfono *</label>

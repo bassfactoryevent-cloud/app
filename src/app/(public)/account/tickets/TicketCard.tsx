@@ -1,13 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Image from "next/image";
-import { Calendar, MapPin, QrCode } from "lucide-react";
-import { motion } from "framer-motion";
+import { Calendar, MapPin, QrCode, Send, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { assignTicket } from "./actions";
+import { toast } from "sonner";
 
 export default function TicketCard({ ticket, eventDate }: { ticket: any; eventDate: string }) {
   const event = ticket.ticket_tiers.events;
   const [isHovered, setIsHovered] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  const handleAssign = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+
+    startTransition(async () => {
+      try {
+        await assignTicket(ticket.id, name, email);
+        toast.success("Boleta enviada exitosamente por correo.");
+        setShowModal(false);
+      } catch (err: any) {
+        toast.error(err.message || "Hubo un error asignando la boleta.");
+      }
+    });
+  };
 
   return (
     <motion.div 
@@ -62,6 +83,29 @@ export default function TicketCard({ ticket, eventDate }: { ticket: any; eventDa
             <MapPin size={18} /> {event.location_name}
           </div>
         </div>
+
+        {/* Asignación Actual / Botón de Enviar */}
+        <div style={{ marginTop: 'auto', paddingTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {ticket.assigned_name ? (
+            <div style={{ fontSize: '0.875rem' }}>
+              <span style={{ opacity: 0.6 }}>A nombre de: </span>
+              <strong style={{ color: 'white' }}>{ticket.assigned_name}</strong>
+            </div>
+          ) : (
+            <div style={{ fontSize: '0.875rem', opacity: 0.6 }}>Sin asignar (Tuya)</div>
+          )}
+
+          {ticket.status === 'valid' && (
+            <button 
+              onClick={() => setShowModal(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, transition: 'all 0.2s' }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
+            >
+              <Send size={16} /> Enviar a amigo
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Right side: QR Code (Tear-off stub) */}
@@ -84,6 +128,51 @@ export default function TicketCard({ ticket, eventDate }: { ticket: any; eventDa
           <div style={{ color: '#E50914', fontWeight: 800, fontSize: '1.2rem', letterSpacing: '0.1em' }}>{ticket.status.toUpperCase()}</div>
         )}
       </div>
+
+      {/* Modal de Asignación */}
+      <AnimatePresence>
+        {showModal && (
+          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backdropFilter: 'blur(5px)' }}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1rem', padding: '2rem', width: '100%', maxWidth: '400px', position: 'relative' }}
+            >
+              <button 
+                onClick={() => setShowModal(false)}
+                style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'white', cursor: 'pointer', opacity: 0.5 }}
+              >
+                <X size={20} />
+              </button>
+              
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>Enviar Boleta</h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                Asigna esta boleta a un amigo. Le enviaremos el código QR inmediatamente por correo electrónico.
+              </p>
+
+              <form onSubmit={handleAssign} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Nombre de tu amigo</label>
+                  <input type="text" name="name" required defaultValue={ticket.assigned_name || ''} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'rgba(0,0,0,0.2)', color: 'white' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 600 }}>Correo electrónico</label>
+                  <input type="email" name="email" required defaultValue={ticket.assigned_email || ''} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'rgba(0,0,0,0.2)', color: 'white' }} />
+                </div>
+
+                <button 
+                  type="submit"
+                  disabled={isPending}
+                  style={{ width: '100%', marginTop: '1rem', padding: '1rem', backgroundColor: 'var(--color-magenta)', color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: 700, cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.7 : 1 }}
+                >
+                  {isPending ? 'Enviando...' : 'Enviar Boleta'}
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
