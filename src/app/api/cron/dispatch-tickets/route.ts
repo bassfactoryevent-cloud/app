@@ -71,6 +71,7 @@ export async function GET(req: Request) {
         });
 
         // Generar el Stream del PDF usando React.createElement ya que este archivo es .ts
+        // Se usa "as any" porque renderToStream exige estrictamente un <Document> en sus tipos
         const pdfStream = await renderToStream(
           React.createElement(TicketPDF, {
             eventName: event.title,
@@ -81,7 +82,7 @@ export async function GET(req: Request) {
             qrDataUri: qrDataUri,
             coverImageUrl: event.image_url,
             orderId: ticket.merch_orders.id
-          })
+          }) as any
         );
 
         // Convertir stream a buffer
