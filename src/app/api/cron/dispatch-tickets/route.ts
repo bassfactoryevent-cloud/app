@@ -24,9 +24,9 @@ export async function GET(req: Request) {
 
     const { data: events, error: eventsError } = await supabase
       .from("events")
-      .select("id, title, date, location, image_url")
-      .gte("date", tomorrowStart)
-      .lte("date", tomorrowEnd);
+      .select("id, title, start_date, location_name, cover_image, description")
+      .gte("start_date", tomorrowStart)
+      .lte("start_date", tomorrowEnd);
 
     if (eventsError || !events || events.length === 0) {
       return NextResponse.json({ message: "No events for tomorrow" });
@@ -73,7 +73,7 @@ export async function GET(req: Request) {
           }
         });
 
-        const eventDateStr = new Date(event.date).toLocaleDateString('es-CO', { 
+        const eventDateStr = new Date(event.start_date).toLocaleDateString('es-CO', { 
           weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
         });
 
@@ -83,11 +83,13 @@ export async function GET(req: Request) {
           React.createElement(TicketPDF, {
             eventName: event.title,
             eventDate: eventDateStr,
-            eventLocation: event.location,
+            eventLocation: event.location_name,
             ticketTierName: tierName || 'General',
             customerName: customerName || 'Cliente',
             qrDataUri: qrDataUri,
-            coverImageUrl: event.image_url,
+            eventDescription: event.description,
+            coverImageUrl: event.cover_image,
+            logoUrl: process.env.NEXT_PUBLIC_APP_URL ? `${process.env.NEXT_PUBLIC_APP_URL}/Bass-Factory-Blanco-Sin-Letras.png` : "https://bassfactory.co/Bass-Factory-Blanco-Sin-Letras.png",
             orderId: orderId || ticket.id
           }) as any
         );
