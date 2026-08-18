@@ -20,8 +20,9 @@ export default function EventDashboardClient({ event, initialTiers, initialOrder
   
   // Realtime subscription
   useEffect(() => {
-    const channel = supabase
-      .channel('schema-db-changes')
+    // Escuchar nuevas órdenes
+    const ordersChannel = supabase
+      .channel('schema-db-changes-orders')
       .on(
         'postgres_changes',
         {
@@ -35,22 +36,52 @@ export default function EventDashboardClient({ event, initialTiers, initialOrder
           if (newOrder.status === 'paid') {
             setOrders((prev) => [newOrder, ...prev]);
             toast.success(`¡Nueva venta! ${newOrder.customer_name} compró boletas.`);
-            // Note: Since a new order generates issued_tickets, we should ideally refetch the tickets, 
-            // but for realtime UI feedback, just the revenue and order list updating is great.
+          }
+        }
+      )
+      .subscribe();
+
+    // Escuchar actualizaciones de boletas escaneadas
+    const ticketsChannel = supabase
+      .channel('schema-db-changes-tickets')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'tickets'
+        },
+        (payload) => {
+          const updatedTicket = payload.new;
+          if (updatedTicket.status === 'scanned') {
+            setTickets((prev) => {
+              const newTickets = [...prev];
+              const idx = newTickets.findIndex(t => t.id === updatedTicket.id);
+              if (idx !== -1) {
+                newTickets[idx] = updatedTicket;
+              } else {
+                newTickets.push(updatedTicket);
+              }
+              return newTickets;
+            });
+            // Opcional: toast para cuando escanean
+            // toast.info("Nueva boleta escaneada en puerta");
           }
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(ordersChannel);
+      supabase.removeChannel(ticketsChannel);
     };
   }, [event.id, supabase]);
 
   // Derived calculations
   const totalRevenue = orders.reduce((sum, o) => sum + Number(o.total_amount), 0);
   const totalTicketsSold = tickets.length;
-  const totalScanned = tickets.filter(t => t.is_scanned).length;
+  // Acepta is_scanned (viejo) o status === 'scanned' (nuevo)
+  const totalScanned = tickets.filter(t => t.is_scanned || t.status === 'scanned').length;
 
   const formatCurrency = (val: number) => `$${val.toLocaleString('es-CO')}`;
 

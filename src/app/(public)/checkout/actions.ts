@@ -3,6 +3,9 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import crypto from "crypto";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function processCheckout(formData: FormData) {
   const supabase = await createClient();
@@ -127,6 +130,25 @@ export async function processCheckout(formData: FormData) {
         }
       }
     }
+  }
+
+  // Enviar correo de confirmación básico usando Resend
+  try {
+    if (process.env.RESEND_API_KEY) {
+      await resend.emails.send({
+        from: "Bassfactory Tickets <tickets@bassfactory.co>",
+        to: customer_email,
+        subject: `Confirmación de Compra - Orden #${order.id.substring(0, 8).toUpperCase()}`,
+        html: `<p>Hola ${customer_name},</p>
+               <p>Tu compra en Bassfactory ha sido confirmada con éxito.</p>
+               <p><b>Total pagado:</b> $${total_amount.toLocaleString('es-CO')}</p>
+               <p>Si compraste boletas, recuerda que <b>te enviaremos el código QR oficial 1 día antes del evento</b> a este mismo correo por motivos de seguridad.</p>
+               <p>Gracias por tu compra.</p>`
+      });
+    }
+  } catch (emailError) {
+    console.error("Error sending confirmation email", emailError);
+    // No bloqueamos la compra si falla el correo
   }
 
   // Redirigir al success
