@@ -51,7 +51,8 @@ export default async function TransferAcceptPage({ params }: { params: { id: str
     );
   }
 
-  const senderName = transfer.users?.raw_user_meta_data?.name || "Un usuario";
+  const usersData = Array.isArray(transfer.users) ? transfer.users[0] : transfer.users;
+  const senderName = (usersData as any)?.raw_user_meta_data?.name || "Un usuario";
   const t = transfer.tickets as any;
   const tier = Array.isArray(t.ticket_tiers) ? t.ticket_tiers[0] : t.ticket_tiers;
   const event = Array.isArray(tier.events) ? tier.events[0] : tier.events;
