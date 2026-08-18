@@ -54,7 +54,14 @@ export async function GET(req: Request) {
 
       if (!tickets || tickets.length === 0) continue;
 
-      for (const ticket of tickets) {
+      for (const rawTicket of tickets) {
+        const ticket = rawTicket as any;
+        
+        const tierName = Array.isArray(ticket.ticket_tiers) ? ticket.ticket_tiers[0]?.name : ticket.ticket_tiers?.name;
+        const customerName = Array.isArray(ticket.merch_orders) ? ticket.merch_orders[0]?.customer_name : ticket.merch_orders?.customer_name;
+        const customerEmail = Array.isArray(ticket.merch_orders) ? ticket.merch_orders[0]?.customer_email : ticket.merch_orders?.customer_email;
+        const orderId = Array.isArray(ticket.merch_orders) ? ticket.merch_orders[0]?.id : ticket.merch_orders?.id;
+
         // Generar Data URI del QR
         const qrDataUri = await QRCode.toDataURL(ticket.qr_hash, {
           errorCorrectionLevel: 'H',
@@ -77,11 +84,11 @@ export async function GET(req: Request) {
             eventName: event.title,
             eventDate: eventDateStr,
             eventLocation: event.location,
-            ticketTierName: ticket.ticket_tiers.name,
-            customerName: ticket.merch_orders.customer_name,
+            ticketTierName: tierName || 'General',
+            customerName: customerName || 'Cliente',
             qrDataUri: qrDataUri,
             coverImageUrl: event.image_url,
-            orderId: ticket.merch_orders.id
+            orderId: orderId || ticket.id
           }) as any
         );
 
@@ -96,9 +103,9 @@ export async function GET(req: Request) {
         if (process.env.RESEND_API_KEY) {
           await resend.emails.send({
             from: "Bassfactory Tickets <tickets@bassfactory.co>",
-            to: ticket.merch_orders.customer_email,
+            to: customerEmail,
             subject: `Tus Entradas: ${event.title} - Bassfactory`,
-            html: `<p>Hola ${ticket.merch_orders.customer_name},</p>
+            html: `<p>Hola ${customerName},</p>
                    <p>¡El evento es mañana! Adjunto encuentras tu boleta oficial en PDF con el código QR.</p>
                    <p>Recuerda llevar este PDF en tu celular o impreso para escanear en la puerta.</p>
                    <p>Nos vemos en el dancefloor.</p>`,
