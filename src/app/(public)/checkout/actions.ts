@@ -166,7 +166,7 @@ export async function processCheckout(formData: FormData) {
         total_amount.toLocaleString('es-CO'), 
         order.id.substring(0, 8).toUpperCase(),
         ticketItems.length > 0,
-        cartItems.some(i => !i.ticket_tier_id)
+        merchItems.length > 0
       );
       
       await resend.emails.send({
