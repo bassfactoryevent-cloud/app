@@ -4,6 +4,7 @@ import { Resend } from "resend";
 import { renderToStream } from "@react-pdf/renderer";
 import { TicketPDF } from "@/components/pdf/TicketPDF";
 import QRCode from "qrcode";
+import React from "react";
 
 // Inicializamos Supabase Admin (para leer cosas seguras en CRON jobs)
 // Nota: en producción debe usarse SERVICE_ROLE_KEY
@@ -69,18 +70,18 @@ export async function GET(req: Request) {
           weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
         });
 
-        // Generar el Stream del PDF
+        // Generar el Stream del PDF usando React.createElement ya que este archivo es .ts
         const pdfStream = await renderToStream(
-          <TicketPDF
-            eventName={event.title}
-            eventDate={eventDateStr}
-            eventLocation={event.location}
-            ticketTierName={ticket.ticket_tiers.name}
-            customerName={ticket.merch_orders.customer_name}
-            qrDataUri={qrDataUri}
-            coverImageUrl={event.image_url}
-            orderId={ticket.merch_orders.id}
-          />
+          React.createElement(TicketPDF, {
+            eventName: event.title,
+            eventDate: eventDateStr,
+            eventLocation: event.location,
+            ticketTierName: ticket.ticket_tiers.name,
+            customerName: ticket.merch_orders.customer_name,
+            qrDataUri: qrDataUri,
+            coverImageUrl: event.image_url,
+            orderId: ticket.merch_orders.id
+          })
         );
 
         // Convertir stream a buffer
