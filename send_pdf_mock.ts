@@ -34,6 +34,7 @@ async function run() {
       qrDataUri: qrDataUri,
       eventDescription: "Sumérgete en más de 12 horas continuas del mejor techno industrial. Disfruta de un line-up de talla mundial en el mejor venue de la ciudad.",
       logoUrl: "https://bassfactory.co/Bass-Factory-Blanco-Sin-Letras.png",
+      coverImageUrl: "https://bassfactory.co/industrial_shadows_1782405312617.png",
       orderId: "TEST-ORD-001"
     }) as any
   );

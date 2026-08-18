@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image, Svg, Path } from '@react-pdf/renderer';
 
 const styles = StyleSheet.create({
   page: {
@@ -35,6 +35,13 @@ const styles = StyleSheet.create({
     color: '#A1A1AA',
     marginTop: 5,
   },
+  bannerImage: {
+    width: '100%',
+    height: 120,
+    objectFit: 'cover',
+    borderRadius: 8,
+    marginBottom: 20,
+  },
   mainContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -59,6 +66,23 @@ const styles = StyleSheet.create({
     color: '#D4D4D8',
     lineHeight: 1.5,
     marginBottom: 10,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  infoIcon: {
+    width: 14,
+    height: 14,
+    marginRight: 8,
+    marginTop: 1,
+  },
+  infoTextInline: {
+    fontSize: 10,
+    color: '#D4D4D8',
+    lineHeight: 1.5,
+    flex: 1,
   },
   ticketDetails: {
     width: '50%',
@@ -119,6 +143,7 @@ interface TicketPDFProps {
   customerName: string;
   qrDataUri: string;
   eventDescription?: string;
+  coverImageUrl?: string;
   logoUrl: string;
   orderId: string;
 }
@@ -131,6 +156,7 @@ export const TicketPDF = ({
   customerName,
   qrDataUri,
   eventDescription,
+  coverImageUrl,
   logoUrl,
   orderId
 }: TicketPDFProps) => (
@@ -141,33 +167,63 @@ export const TicketPDF = ({
         <Image src={logoUrl} style={styles.logo} />
         <View style={styles.titleWrapper}>
           <Text style={styles.eventTitle}>{eventName}</Text>
-          <Text style={styles.eventDate}>{eventDate}</Text>
+          <Text style={styles.eventDate}>{eventDate.split(',')[0]}</Text>
         </View>
       </View>
+
+      {coverImageUrl && (
+        <Image src={coverImageUrl} style={styles.bannerImage} />
+      )}
 
       <View style={styles.mainContent}>
         <View style={styles.infoBlock}>
           <Text style={styles.infoTitle}>Información del Evento</Text>
-          <Text style={styles.infoText}>
-            Fecha: {eventDate}
-          </Text>
-          <Text style={styles.infoText}>
-            Lugar: {eventLocation}
-          </Text>
+          
+          <View style={styles.infoRow}>
+            <Svg viewBox="0 0 24 24" style={styles.infoIcon} fill="none" stroke="#D90416" strokeWidth={2}>
+              <Path d="M3 4h18v18H3z M16 2v4 M8 2v4 M3 10h18" />
+            </Svg>
+            <Text style={styles.infoTextInline}>{eventDate}</Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Svg viewBox="0 0 24 24" style={styles.infoIcon} fill="none" stroke="#D90416" strokeWidth={2}>
+              <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <Path d="M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+            </Svg>
+            <Text style={styles.infoTextInline}>{eventLocation}</Text>
+          </View>
+
           {eventDescription && (
-            <Text style={styles.infoText}>
-              Detalles: {eventDescription}
-            </Text>
+            <View style={styles.infoRow}>
+              <Svg viewBox="0 0 24 24" style={styles.infoIcon} fill="none" stroke="#D90416" strokeWidth={2}>
+                <Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </Svg>
+              <Text style={styles.infoTextInline}>{eventDescription}</Text>
+            </View>
           )}
-          <Text style={styles.infoText}>
-            • Recuerde llevar su documento de identidad.
-          </Text>
-          <Text style={styles.infoText}>
-            • Nos reservamos el derecho de admisión y permanencia.
-          </Text>
-          <Text style={styles.infoText}>
-            • El código QR es único y de un solo uso.
-          </Text>
+
+          <View style={{ marginTop: 10, borderTop: '1px solid #27272A', paddingTop: 10 }}>
+            <View style={styles.infoRow}>
+              <Svg viewBox="0 0 24 24" style={styles.infoIcon} fill="none" stroke="#A1A1AA" strokeWidth={2}>
+                <Path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <Path d="M22 4L12 14.01l-3-3" />
+              </Svg>
+              <Text style={styles.infoTextInline}>Lleva tu documento de identidad original.</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Svg viewBox="0 0 24 24" style={styles.infoIcon} fill="none" stroke="#A1A1AA" strokeWidth={2}>
+                <Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </Svg>
+              <Text style={styles.infoTextInline}>Nos reservamos el derecho de admisión.</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Svg viewBox="0 0 24 24" style={styles.infoIcon} fill="none" stroke="#A1A1AA" strokeWidth={2}>
+                <Path d="M3 3h18v18H3z M9 3v18 M15 3v18" />
+              </Svg>
+              <Text style={styles.infoTextInline}>El código QR es único e intransferible.</Text>
+            </View>
+          </View>
         </View>
 
         <View style={styles.ticketDetails}>

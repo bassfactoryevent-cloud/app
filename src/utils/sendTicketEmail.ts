@@ -22,7 +22,7 @@ export async function sendTicketEmail(ticketId: string, customName?: string, cus
         qr_hash,
         assigned_name,
         assigned_email,
-        ticket_tiers!inner(name, events!inner(title, start_date, location_name, description)),
+        ticket_tiers!inner(name, events!inner(title, start_date, location_name, description, cover_image)),
         merch_orders!inner(id, customer_name, customer_email)
       `)
       .eq("id", ticketId)
@@ -70,6 +70,7 @@ export async function sendTicketEmail(ticketId: string, customName?: string, cus
         customerName: finalName,
         qrDataUri: qrDataUri,
         eventDescription: event.description,
+        coverImageUrl: event.cover_image,
         logoUrl: process.env.NEXT_PUBLIC_APP_URL ? `${process.env.NEXT_PUBLIC_APP_URL}/Bass-Factory-Blanco-Sin-Letras.png` : "https://bassfactory.co/Bass-Factory-Blanco-Sin-Letras.png",
         orderId: order.id || ticket.id
       }) as any
