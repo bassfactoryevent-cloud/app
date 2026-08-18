@@ -22,11 +22,18 @@ export default async function EventsPage() {
     .in("status", ["published", "postponed", "cancelled"])
     .order("start_date", { ascending: true });
 
-  // Filter out past published events, but keep all postponed/cancelled ones visible
+  // Filter out past published events, using end_date if available
   const events = rawEvents?.filter(e => {
     if (e.status === "postponed" || e.status === "cancelled") return true;
-    if (e.status === "published" && e.start_date) {
-      return new Date(e.start_date) >= yesterday;
+    if (e.status === "published") {
+      const now = new Date();
+      if (e.end_date) {
+        return new Date(e.end_date) >= now;
+      }
+      if (e.start_date) {
+        return new Date(e.start_date) >= yesterday;
+      }
+      return true;
     }
     return false;
   });
