@@ -29,12 +29,11 @@ export async function signIn(formData: FormData) {
     if (profile && profile.role === 'admin') {
       return redirect("/admin");
     } else {
-      // TEMPORARY: Allow owner to access admin for testing even without role
-      return redirect("/admin");
+      return redirect("/account");
     }
   }
 
-  return redirect("/admin");
+  return redirect("/account");
 }
 
 export async function signUp(formData: FormData) {
@@ -57,7 +56,7 @@ export async function signUp(formData: FormData) {
     return redirect("/register?message=Error+al+crear+la+cuenta.+Inténtalo+de+nuevo.");
   }
 
-  return redirect("/account?message=Cuenta+creada.+Revisa+tu+correo+para+confirmar.");
+  return redirect("/login?message=Cuenta+creada.+Revisa+tu+correo+para+confirmar.");
 }
 
 export async function signOut() {
