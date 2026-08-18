@@ -19,6 +19,8 @@ const styles = StyleSheet.create({
   },
   logo: {
     width: 140,
+    height: 40,
+    objectFit: 'contain'
   },
   titleWrapper: {
     alignItems: 'flex-end',
@@ -38,11 +40,25 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 30,
   },
-  coverImage: {
+  infoBlock: {
     width: '45%',
-    height: 300,
-    objectFit: 'cover',
+    padding: 20,
+    backgroundColor: '#111111',
     borderRadius: 8,
+    border: '1px solid #27272A',
+  },
+  infoTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#D90416',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  infoText: {
+    fontSize: 10,
+    color: '#D4D4D8',
+    lineHeight: 1.5,
+    marginBottom: 10,
   },
   ticketDetails: {
     width: '50%',
@@ -102,7 +118,8 @@ interface TicketPDFProps {
   ticketTierName: string;
   customerName: string;
   qrDataUri: string;
-  coverImageUrl?: string;
+  eventDescription?: string;
+  logoUrl: string;
   orderId: string;
 }
 
@@ -113,15 +130,15 @@ export const TicketPDF = ({
   ticketTierName,
   customerName,
   qrDataUri,
-  coverImageUrl,
+  eventDescription,
+  logoUrl,
   orderId
 }: TicketPDFProps) => (
   <Document>
     <Page size="A4" style={styles.page}>
       
       <View style={styles.header}>
-        {/* Usamos texto como placeholder si no se inyecta la URL absoluta del logo */}
-        <Text style={{ fontSize: 24, fontWeight: 'bold' }}>BASSFACTORY</Text>
+        <Image src={logoUrl} style={styles.logo} />
         <View style={styles.titleWrapper}>
           <Text style={styles.eventTitle}>{eventName}</Text>
           <Text style={styles.eventDate}>{eventDate}</Text>
@@ -129,13 +146,29 @@ export const TicketPDF = ({
       </View>
 
       <View style={styles.mainContent}>
-        {coverImageUrl ? (
-          <Image src={coverImageUrl} style={styles.coverImage} />
-        ) : (
-          <View style={[styles.coverImage, { backgroundColor: '#27272A', justifyContent: 'center', alignItems: 'center' }]}>
-            <Text style={{ color: '#A1A1AA' }}>Sin Imagen</Text>
-          </View>
-        )}
+        <View style={styles.infoBlock}>
+          <Text style={styles.infoTitle}>Información del Evento</Text>
+          <Text style={styles.infoText}>
+            Fecha: {eventDate}
+          </Text>
+          <Text style={styles.infoText}>
+            Lugar: {eventLocation}
+          </Text>
+          {eventDescription && (
+            <Text style={styles.infoText}>
+              Detalles: {eventDescription}
+            </Text>
+          )}
+          <Text style={styles.infoText}>
+            • Recuerde llevar su documento de identidad.
+          </Text>
+          <Text style={styles.infoText}>
+            • Nos reservamos el derecho de admisión y permanencia.
+          </Text>
+          <Text style={styles.infoText}>
+            • El código QR es único y de un solo uso.
+          </Text>
+        </View>
 
         <View style={styles.ticketDetails}>
           <Text style={styles.label}>Asistente</Text>

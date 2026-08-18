@@ -22,7 +22,7 @@ export async function sendTicketEmail(ticketId: string, customName?: string, cus
         qr_hash,
         assigned_name,
         assigned_email,
-        ticket_tiers!inner(name, events!inner(title, date, location, image_url)),
+        ticket_tiers!inner(name, events!inner(title, start_date, location_name, description)),
         merch_orders!inner(id, customer_name, customer_email)
       `)
       .eq("id", ticketId)
@@ -56,7 +56,7 @@ export async function sendTicketEmail(ticketId: string, customName?: string, cus
       color: { dark: '#000000', light: '#ffffff' }
     });
 
-    const eventDateStr = new Date(event.date).toLocaleDateString('es-CO', { 
+    const eventDateStr = new Date(event.start_date).toLocaleDateString('es-CO', { 
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
     });
 
@@ -65,11 +65,12 @@ export async function sendTicketEmail(ticketId: string, customName?: string, cus
       React.createElement(TicketPDF, {
         eventName: event.title,
         eventDate: eventDateStr,
-        eventLocation: event.location,
+        eventLocation: event.location_name,
         ticketTierName: tier.name || 'General',
         customerName: finalName,
         qrDataUri: qrDataUri,
-        coverImageUrl: event.image_url,
+        eventDescription: event.description,
+        logoUrl: process.env.NEXT_PUBLIC_APP_URL ? `${process.env.NEXT_PUBLIC_APP_URL}/Bass-Factory-Blanco-Sin-Letras.png` : "https://bassfactory.co/Bass-Factory-Blanco-Sin-Letras.png",
         orderId: order.id || ticket.id
       }) as any
     );
@@ -86,7 +87,7 @@ export async function sendTicketEmail(ticketId: string, customName?: string, cus
         from: "Bassfactory Tickets <tickets@bassfactory.co>",
         to: finalEmail,
         subject: `Tu Entrada: ${event.title} - Bassfactory`,
-        html: getTicketDeliveryEmail(finalName, event.title, eventDateStr, event.location),
+        html: getTicketDeliveryEmail(finalName, event.title, eventDateStr, event.location_name),
         attachments: [
           {
             filename: `Ticket-${event.title.replace(/\s+/g, '-')}.pdf`,
