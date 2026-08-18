@@ -33,9 +33,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Boleta no encontrada o código QR inválido" }, { status: 404 });
     }
 
-    // 2. Validar que la boleta pertenece a este evento específico
-    if (ticket.ticket_tiers.event_id !== event_id) {
-      return NextResponse.json({ error: "Esta boleta pertenece a otro evento distinto" }, { status: 403 });
+    const t = ticket as any;
+    const tierEventId = Array.isArray(t.ticket_tiers) ? t.ticket_tiers[0]?.event_id : t.ticket_tiers?.event_id;
+    const tierName = Array.isArray(t.ticket_tiers) ? t.ticket_tiers[0]?.name : t.ticket_tiers?.name;
+
+    if (tierEventId !== event_id) {
+      return NextResponse.json({ 
+        success: false, 
+        message: "Esta boleta pertenece a otro evento."
+      }, { status: 403 });
     }
 
     // 3. Validar el estado de la boleta
@@ -59,7 +65,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ 
       success: true, 
-      message: `Acceso concedido. (Localidad: ${ticket.ticket_tiers.name})`
+      message: `Acceso concedido. (Localidad: ${tierName})`
     });
 
   } catch (err: any) {

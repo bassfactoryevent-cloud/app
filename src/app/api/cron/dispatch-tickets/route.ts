@@ -93,9 +93,9 @@ export async function GET(req: Request) {
         );
 
         // Convertir stream a buffer
-        const chunks = [];
+        const chunks: Uint8Array[] = [];
         for await (const chunk of pdfStream) {
-          chunks.push(chunk);
+          chunks.push(chunk as Uint8Array);
         }
         const pdfBuffer = Buffer.concat(chunks);
 
