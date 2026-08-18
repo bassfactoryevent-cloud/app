@@ -191,9 +191,7 @@ export default async function Home() {
             </HorizontalScroll>
 
             {/* Banner Publicidad Delgado (Bajo Eventos) */}
-            <div style={{ marginTop: '1rem', marginBottom: '1rem' }}>
-              <AdBanner placementName="home_horizontal_thin" />
-            </div>
+            <AdBanner placementName="home_horizontal_thin" />
 
             {/* 2. Noticias, Cultura (Blog) */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -281,9 +279,7 @@ export default async function Home() {
             </HorizontalScroll>
 
             {/* Banner Publicidad Horizontal */}
-            <div style={{ marginTop: '2rem', marginBottom: '1rem' }}>
-              <AdBanner placementName="home_horizontal" />
-            </div>
+            <AdBanner placementName="home_horizontal" />
 
           </div>
 
