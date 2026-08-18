@@ -15,11 +15,11 @@ export default async function EventsPage() {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
 
-  // Fetch only published events that have not ended yet
+  // Fetch published, postponed, and cancelled events that have not ended yet
   const { data: events } = await supabase
     .from("events")
     .select("*, ticket_tiers(*)")
-    .eq("status", "published")
+    .in("status", ["published", "postponed", "cancelled"])
     .gte("start_date", yesterday.toISOString())
     .order("start_date", { ascending: true });
 
@@ -62,6 +62,16 @@ export default async function EventsPage() {
                     <div style={{ position: 'absolute', top: '1rem', left: '1rem', backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', padding: '0.5rem 1rem', borderRadius: '0.5rem', textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
                       <div style={{ fontSize: '0.875rem', textTransform: 'uppercase', color: 'var(--color-magenta)', fontWeight: 700 }}>{date.toLocaleDateString('es-ES', { month: 'short' })}</div>
                       <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>{date.getDate()}</div>
+                    </div>
+                  )}
+                  {event.status === 'postponed' && (
+                    <div style={{ position: 'absolute', top: '1rem', right: '1rem', backgroundColor: '#f59e0b', color: 'white', padding: '0.25rem 0.75rem', borderRadius: '99px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>
+                      Aplazado
+                    </div>
+                  )}
+                  {event.status === 'cancelled' && (
+                    <div style={{ position: 'absolute', top: '1rem', right: '1rem', backgroundColor: '#ef4444', color: 'white', padding: '0.25rem 0.75rem', borderRadius: '99px', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>
+                      Cancelado
                     </div>
                   )}
                 </div>

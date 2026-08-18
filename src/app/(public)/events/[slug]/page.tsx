@@ -30,7 +30,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
     .eq("slug", (await params).slug)
     .single();
 
-  if (!event || event.status !== "published") {
+  if (!event || !["published", "postponed", "cancelled"].includes(event.status)) {
     notFound();
   }
 
@@ -53,6 +53,16 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
             {date && (
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Calendar size={20} /> {date.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </span>
+            )}
+            {event.status === 'postponed' && (
+              <span style={{ backgroundColor: '#f59e0b', color: 'white', padding: '0.25rem 0.75rem', borderRadius: '99px', fontSize: '0.875rem', fontWeight: 800, textTransform: 'uppercase' }}>
+                APLAZADO
+              </span>
+            )}
+            {event.status === 'cancelled' && (
+              <span style={{ backgroundColor: '#ef4444', color: 'white', padding: '0.25rem 0.75rem', borderRadius: '99px', fontSize: '0.875rem', fontWeight: 800, textTransform: 'uppercase' }}>
+                CANCELADO
               </span>
             )}
             {event.location_name && (
@@ -131,13 +141,25 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
 
         {/* Right Column: Checkout Widget */}
         <div style={{ flex: '1 1 350px', position: 'sticky', top: '2rem' }}>
-          <EventCheckout 
-            eventId={event.id}
-            eventName={event.title}
-            eventImage={event.cover_image}
-            isFree={event.is_free} 
-            ticketTiers={event.ticket_tiers || []} 
-          />
+          {event.status === 'postponed' ? (
+            <div style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', border: '1px solid #f59e0b', padding: '2rem', borderRadius: '1rem', textAlign: 'center' }}>
+              <h3 style={{ color: '#f59e0b', fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>Evento Aplazado</h3>
+              <p style={{ opacity: 0.8 }}>Las ventas están pausadas temporalmente hasta nuevo aviso.</p>
+            </div>
+          ) : event.status === 'cancelled' ? (
+            <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', padding: '2rem', borderRadius: '1rem', textAlign: 'center' }}>
+              <h3 style={{ color: '#ef4444', fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>Evento Cancelado</h3>
+              <p style={{ opacity: 0.8 }}>Este evento ha sido cancelado definitivamente.</p>
+            </div>
+          ) : (
+            <EventCheckout 
+              eventId={event.id}
+              eventName={event.title}
+              eventImage={event.cover_image}
+              isFree={event.is_free} 
+              ticketTiers={event.ticket_tiers || []} 
+            />
+          )}
         </div>
 
       </div>

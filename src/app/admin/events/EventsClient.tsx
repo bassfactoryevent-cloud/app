@@ -88,6 +88,8 @@ export default function EventsClient({ initialEvents, error }: { initialEvents: 
               <option value="all" style={{ backgroundColor: "#111" }}>Todos los estados</option>
               <option value="published" style={{ backgroundColor: "#111" }}>Publicados (Published)</option>
               <option value="draft" style={{ backgroundColor: "#111" }}>Borradores (Draft)</option>
+              <option value="postponed" style={{ backgroundColor: "#111" }}>Aplazados</option>
+              <option value="cancelled" style={{ backgroundColor: "#111" }}>Cancelados</option>
               <option value="archived" style={{ backgroundColor: "#111" }}>Archivados</option>
             </select>
           </div>
@@ -121,7 +123,14 @@ export default function EventsClient({ initialEvents, error }: { initialEvents: 
                     <Calendar size={48} />
                   </div>
                 )}
-                <div style={{ position: 'absolute', top: '1rem', right: '1rem', padding: '0.25rem 0.75rem', borderRadius: '99px', fontSize: '0.75rem', fontWeight: 600, backgroundColor: event.status === 'published' ? '#10b981' : 'rgba(0,0,0,0.6)', color: 'white' }}>
+                <div style={{ position: 'absolute', top: '1rem', right: '1rem', padding: '0.25rem 0.75rem', borderRadius: '99px', fontSize: '0.75rem', fontWeight: 600, 
+                  backgroundColor: 
+                    event.status === 'published' ? '#10b981' : 
+                    event.status === 'postponed' ? '#f59e0b' :
+                    event.status === 'cancelled' ? '#ef4444' :
+                    'rgba(0,0,0,0.6)', 
+                  color: 'white' 
+                }}>
                   {event.status.toUpperCase()}
                 </div>
               </div>

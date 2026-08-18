@@ -65,6 +65,24 @@ export async function processCheckout(formData: FormData) {
   const merchItems = items.filter((item: any) => item.itemType === 'merch');
   const ticketItems = items.filter((item: any) => item.itemType === 'ticket');
 
+  // Verify event statuses for tickets
+  if (ticketItems.length > 0) {
+    const tierIds = ticketItems.map((item: any) => item.ticket_tier_id);
+    const { data: tiers } = await supabase
+      .from("ticket_tiers")
+      .select("event_id, events(status)")
+      .in("id", tierIds);
+
+    if (tiers) {
+      for (const tier of tiers) {
+        const eventStatus = Array.isArray(tier.events) ? tier.events[0]?.status : tier.events?.status;
+        if (eventStatus !== 'published') {
+          throw new Error("No se pueden comprar boletas para este evento en este momento. Las ventas están pausadas o el evento ha sido cancelado.");
+        }
+      }
+    }
+  }
+
   // Procesar Merch
   if (merchItems.length > 0) {
     const orderItemsToInsert = merchItems.map((item: any) => ({
