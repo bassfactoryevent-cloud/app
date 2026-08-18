@@ -151,7 +151,7 @@ export default function EventsClient({ initialEvents, error }: { initialEvents: 
                   <Link href={`/admin/events/${event.id}`} style={{ flex: 1, textAlign: 'center', padding: '0.5rem', backgroundColor: 'rgba(128,128,128,0.1)', borderRadius: 'var(--radius-md)', textDecoration: 'none', color: 'inherit', fontSize: '0.875rem' }}>
                     Editar
                   </Link>
-                  <Link href={`/admin/events/${event.id}/scanner`} style={{ flex: 1, textAlign: 'center', padding: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', borderRadius: 'var(--radius-md)', textDecoration: 'none', fontSize: '0.875rem' }}>
+                  <Link href={`/admin/events/${event.id}/scan`} style={{ flex: 1, textAlign: 'center', padding: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', borderRadius: 'var(--radius-md)', textDecoration: 'none', fontSize: '0.875rem' }}>
                     Escáner
                   </Link>
                   <DeleteEventButton id={event.id} eventName={event.title} />

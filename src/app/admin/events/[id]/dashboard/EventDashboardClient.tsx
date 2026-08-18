@@ -97,12 +97,23 @@ export default function EventDashboardClient({ event, initialTiers, initialOrder
         }}>
           <ArrowLeft size={20} />
         </Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
           <Activity size={24} color="#3b82f6" />
           <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: 0, color: "white" }}>
             Ventas: {event.title}
           </h1>
         </div>
+        <Link href={`/admin/events/${event.id}/scan`} style={{
+          display: 'flex', alignItems: 'center', gap: '0.5rem',
+          backgroundColor: 'var(--color-magenta)', color: 'white',
+          padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-md)',
+          textDecoration: 'none', fontWeight: 600, transition: 'opacity 0.2s'
+        }}
+        onMouseOver={(e) => e.currentTarget.style.opacity = '0.9'}
+        onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
+        >
+          <ScanLine size={18} /> Abrir Escáner
+        </Link>
       </div>
 
       {/* KPI Grid */}
