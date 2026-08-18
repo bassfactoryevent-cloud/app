@@ -75,7 +75,8 @@ export async function processCheckout(formData: FormData) {
 
     if (tiers) {
       for (const tier of tiers) {
-        const eventStatus = Array.isArray(tier.events) ? tier.events[0]?.status : tier.events?.status;
+        const t = tier as any;
+        const eventStatus = Array.isArray(t.events) ? t.events[0]?.status : t.events?.status;
         if (eventStatus !== 'published') {
           throw new Error("No se pueden comprar boletas para este evento en este momento. Las ventas están pausadas o el evento ha sido cancelado.");
         }
