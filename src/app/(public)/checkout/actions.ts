@@ -116,6 +116,7 @@ export async function processCheckout(formData: FormData) {
   }
 
   // Procesar Tickets
+  let insertedTickets: any[] | null = null;
   if (ticketItems.length > 0) {
     const ticketsToInsert: any[] = [];
     
@@ -135,11 +136,12 @@ export async function processCheckout(formData: FormData) {
       }
     }
 
-    const { data: insertedTickets, error: ticketsError } = await supabase.from("tickets").insert(ticketsToInsert).select("id");
+    const { data, error: ticketsError } = await supabase.from("tickets").insert(ticketsToInsert).select("id");
     if (ticketsError) {
       console.error("Tickets error", ticketsError);
       throw new Error("Error generando las entradas: " + ticketsError.message);
     }
+    insertedTickets = data;
 
     // Restar stock de tickets
     for (const item of ticketItems) {
