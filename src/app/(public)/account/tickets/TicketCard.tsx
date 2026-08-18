@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Image from "next/image";
-import { Calendar, MapPin, QrCode, Send, X } from "lucide-react";
+import { Calendar, MapPin, QrCode, Send, X, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { initiateTransfer, cancelTransfer } from "./actions";
 import { toast } from "sonner";
