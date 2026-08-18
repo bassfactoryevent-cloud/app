@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { User, LogOut, Settings, Ticket } from "lucide-react";
 import { signOut } from "@/app/(auth)/actions";
 
-export default function UserMenu({ userEmail, userName }: { userEmail: string; userName: string }) {
+export default function UserMenu({ userEmail, userName, avatarUrl }: { userEmail: string; userName: string; avatarUrl?: string | null }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -34,9 +34,15 @@ export default function UserMenu({ userEmail, userName }: { userEmail: string; u
           alignItems: "center",
           justifyContent: "center",
           fontWeight: "bold",
-          fontSize: "14px"
+          fontSize: "14px",
+          overflow: "hidden"
         }}>
-          {userName.charAt(0).toUpperCase()}
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt={userName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            userName.charAt(0).toUpperCase()
+          )}
         </div>
         <span className="hide-on-mobile" style={{ fontSize: "14px", fontWeight: "500" }}>
           {userName.split(' ')[0]}

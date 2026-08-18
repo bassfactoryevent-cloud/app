@@ -9,6 +9,12 @@ import { MobileBottomNav } from "./MobileBottomNav";
 export default async function Header() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  
+  let profile = null;
+  if (user) {
+    const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+    profile = data;
+  }
 
   return (
     <header className={styles.headerWrapper}>
@@ -57,7 +63,8 @@ export default async function Header() {
             {user ? (
               <UserMenu 
                 userEmail={user.email || ''} 
-                userName={user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario'} 
+                userName={profile?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario'} 
+                avatarUrl={profile?.avatar_url}
               />
             ) : (
               <Link href="/login" className={styles.loginBtn}>

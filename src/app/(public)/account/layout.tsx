@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { User, Ticket, ShoppingBag, Bell, Settings, LogOut } from "lucide-react";
 import { signOut } from "../../(auth)/actions";
+import { createClient } from "@/utils/supabase/client";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/Card";
 
@@ -13,6 +15,20 @@ export default function AccountLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [profile, setProfile] = useState<any>(null);
+  
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+        setProfile(data || { full_name: user.user_metadata?.name });
+      }
+    };
+    fetchProfile();
+  }, [pathname]); // Refresh when path changes in case they updated settings
+
 
   const navItems = [
     { name: "Resumen", href: "/account", icon: <User size={20} />, exact: true },
@@ -29,12 +45,17 @@ export default function AccountLayout({
         <div className="container" style={{ position: 'relative', zIndex: 1, maxWidth: '1000px', margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2rem', paddingBottom: '2rem', flexWrap: 'wrap' }}>
             {/* Avatar */}
-            <div style={{ width: '120px', height: '120px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--color-magenta), var(--color-accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', fontWeight: 800, boxShadow: '0 8px 32px rgba(229, 9, 20, 0.3)' }}>
-              <User size={60} color="white" />
+            <div style={{ width: '120px', height: '120px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--color-magenta), var(--color-accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', fontWeight: 800, boxShadow: '0 8px 32px rgba(229, 9, 20, 0.3)', overflow: 'hidden' }}>
+              {profile?.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <User size={60} color="white" />
+              )}
             </div>
             <div style={{ flex: 1, paddingBottom: '0.5rem', minWidth: '200px' }}>
               <p style={{ fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, opacity: 0.7, marginBottom: '0.25rem' }}>Perfil de Usuario</p>
-              <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 900, lineHeight: 1, margin: 0, letterSpacing: '-0.03em' }}>Mi Cuenta</h1>
+              <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 900, lineHeight: 1, margin: 0, letterSpacing: '-0.03em' }}>{profile?.full_name || 'Mi Cuenta'}</h1>
             </div>
             
             <button 

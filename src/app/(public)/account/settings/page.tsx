@@ -2,6 +2,8 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
+import ImageUpload from "@/components/admin/ImageUpload";
+
 export default async function AccountSettingsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -17,12 +19,15 @@ export default async function AccountSettingsPage() {
     if (!user) return;
 
     const full_name = formData.get("full_name") as string;
+    const avatar_url = formData.get("avatar_url") as string;
     
     await supabaseServer.from("profiles").upsert({ 
       id: user.id, 
       full_name,
-      email: user.email 
+      email: user.email,
+      avatar_url
     });
+    revalidatePath("/account");
     revalidatePath("/account/settings");
   }
 
@@ -33,6 +38,15 @@ export default async function AccountSettingsPage() {
 
       <div style={{ maxWidth: '600px', backgroundColor: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
         <form action={updateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div>
+            <ImageUpload 
+              bucket="events" 
+              name="avatar_url"
+              defaultImage={profile?.avatar_url || ""}
+              label="Foto de Perfil (Opcional)"
+            />
+          </div>
+          
           <div>
             <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600, opacity: 0.7 }}>Correo Electrónico (No modificable)</label>
             <input
