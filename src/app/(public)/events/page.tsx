@@ -11,11 +11,16 @@ export const metadata = {
 export default async function EventsPage() {
   const supabase = await createClient();
   
-  // Fetch only published events that have not ended yet (or just all published for now)
+  // Fecha de ayer para mantener el evento visible durante el mismo día que ocurre
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  // Fetch only published events that have not ended yet
   const { data: events } = await supabase
     .from("events")
     .select("*, ticket_tiers(*)")
     .eq("status", "published")
+    .gte("start_date", yesterday.toISOString())
     .order("start_date", { ascending: true });
 
   return (
