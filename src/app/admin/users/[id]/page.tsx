@@ -24,10 +24,15 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
     );
   }
 
-  // Fetch Ticket Orders
+  // Fetch Tickets instead of Orders
   const { data: ticketOrders, error: ticketError } = await supabase
-    .from("orders")
-    .select("*")
+    .from("tickets")
+    .select(`
+      id,
+      created_at,
+      status,
+      ticket_tiers ( name, events ( title ) )
+    `)
     .eq("user_id", id)
     .order("created_at", { ascending: false });
 
@@ -149,15 +154,15 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
                   }}>
                     <div>
                       <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginBottom: "0.25rem" }}>
-                        Orden: {order.id.split('-')[0]}
+                        Boleta: {order.id.split('-')[0]}
                       </div>
                       <div style={{ fontWeight: 600, color: "white", fontSize: "0.875rem" }}>
-                        {new Date(order.created_at).toLocaleDateString()}
+                        {Array.isArray((order.ticket_tiers as any)?.events) ? (order.ticket_tiers as any).events[0]?.title : (order.ticket_tiers as any)?.events?.title || 'Evento General'}
                       </div>
                     </div>
                     <div style={{ textAlign: "right" }}>
-                      <div style={{ fontWeight: 700, color: "white" }}>{formatCurrency(order.total_amount)}</div>
-                      <div style={{ fontSize: "0.75rem", color: order.status === 'paid' ? '#22c55e' : '#f59e0b', textTransform: "uppercase", fontWeight: 600, marginTop: "0.25rem" }}>
+                      <div style={{ fontWeight: 700, color: "white" }}>{(order.ticket_tiers as any)?.name || 'General'}</div>
+                      <div style={{ fontSize: "0.75rem", color: order.status === 'valid' ? '#22c55e' : '#f59e0b', textTransform: "uppercase", fontWeight: 600, marginTop: "0.25rem" }}>
                         {order.status}
                       </div>
                     </div>
