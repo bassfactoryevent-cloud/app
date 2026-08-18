@@ -206,3 +206,10 @@ input::placeholder, textarea::placeholder {
   background-color: var(--color-magenta-hover);
   box-shadow: 0 0 12px var(--color-magenta-glow);
 }
+
+/* Fix iOS Safari zoom issue on inputs */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}

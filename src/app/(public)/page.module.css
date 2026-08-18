@@ -398,6 +398,15 @@
 }
 
 @media (max-width: 768px) {
+  .hero {
+    height: 60vh;
+    min-height: 400px;
+    padding: var(--space-3) var(--space-2);
+  }
+  .title {
+    font-size: 2.5rem;
+    margin-bottom: var(--space-1);
+  }
   .heroContent {
     padding: 0 var(--space-2);
   }

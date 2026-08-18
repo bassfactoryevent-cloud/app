@@ -8,7 +8,7 @@ export default async function AccountSettingsPage() {
 
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
 
   async function updateProfile(formData: FormData) {
     "use server";
@@ -18,7 +18,11 @@ export default async function AccountSettingsPage() {
 
     const full_name = formData.get("full_name") as string;
     
-    await supabaseServer.from("profiles").update({ full_name }).eq("id", user.id);
+    await supabaseServer.from("profiles").upsert({ 
+      id: user.id, 
+      full_name,
+      email: user.email 
+    });
     revalidatePath("/account/settings");
   }
 
