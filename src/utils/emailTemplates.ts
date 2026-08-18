@@ -18,13 +18,15 @@ const baseTemplate = (title: string, contentHtml: string) => `
       line-height: 1.6;
     }
     .wrapper {
-      width: 100%;
       background-color: #050505;
-      padding: 40px 0;
+      padding: 40px 10px; /* Reduced side padding so it fits well on mobile without horizontal scroll */
+      box-sizing: border-box;
     }
     .container {
+      width: 100%;
       max-width: 600px;
       margin: 0 auto;
+      box-sizing: border-box;
       background-color: #111111;
       border: 1px solid #222222;
       border-radius: 12px;
@@ -33,7 +35,7 @@ const baseTemplate = (title: string, contentHtml: string) => `
     .header {
       text-align: center;
       padding: 40px 20px 20px;
-      background: linear-gradient(180deg, rgba(236,72,153,0.1) 0%, rgba(17,17,17,1) 100%);
+      background: linear-gradient(180deg, rgba(217,4,22,0.1) 0%, rgba(17,17,17,1) 100%);
     }
     .header img {
       width: 180px;
@@ -48,6 +50,7 @@ const baseTemplate = (title: string, contentHtml: string) => `
       margin-top: 0;
       margin-bottom: 20px;
       letter-spacing: -0.5px;
+      color: #D90416;
     }
     p {
       font-size: 16px;
@@ -59,7 +62,7 @@ const baseTemplate = (title: string, contentHtml: string) => `
     }
     .button {
       display: inline-block;
-      background-color: #ec4899;
+      background-color: #D90416;
       color: #ffffff !important;
       font-weight: 600;
       text-decoration: none;
@@ -161,7 +164,7 @@ export const getPurchaseConfirmationEmail = (name: string, amount: string, order
     <p>${extraText}</p>
     
     <center>
-      <a href="${APP_URL}/account/orders" class="button">Ver mis compras</a>
+      <a href="${APP_URL}/account" class="button">Ver mi Panel y Compras</a>
     </center>
   `;
   return baseTemplate("Pago Confirmado - Bassfactory", content);
