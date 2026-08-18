@@ -15,13 +15,21 @@ export default async function EventsPage() {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
 
-  // Fetch published, postponed, and cancelled events that have not ended yet
-  const { data: events } = await supabase
+  // Fetch published, postponed, and cancelled events
+  const { data: rawEvents } = await supabase
     .from("events")
     .select("*, ticket_tiers(*)")
     .in("status", ["published", "postponed", "cancelled"])
-    .gte("start_date", yesterday.toISOString())
     .order("start_date", { ascending: true });
+
+  // Filter out past published events, but keep all postponed/cancelled ones visible
+  const events = rawEvents?.filter(e => {
+    if (e.status === "postponed" || e.status === "cancelled") return true;
+    if (e.status === "published" && e.start_date) {
+      return new Date(e.start_date) >= yesterday;
+    }
+    return false;
+  });
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '4rem 2rem' }}>
