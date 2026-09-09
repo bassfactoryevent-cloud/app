@@ -1,89 +1,112 @@
-import { createClient } from "@/utils/supabase/server";
-import { ListOrdered, Package, Truck } from "lucide-react";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { ListOrdered, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import MerchOrdersClient from "./MerchOrdersClient";
+
+export const dynamic = "force-dynamic";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tkbrnblnkmuopmffslzn.supabase.co";
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrYnJuYmxua211b3BtZmZzbHpuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTgyODI5MCwiZXhwIjoyMDk3NDA0MjkwfQ.Hrtb8b9vXue5iViHapphzb1kqkEu-DaDBp-D-uHmzKA";
+const adminDb = createAdminClient(supabaseUrl, supabaseServiceKey, {
+  auth: { persistSession: false, autoRefreshToken: false }
+});
 
 export default async function MerchOrdersPage() {
-  const supabase = await createClient();
-
-  // Muestra las órdenes más recientes
-  const { data: orders } = await supabase
+  // 1. Obtener todas las órdenes de merch con sus ítems detallados
+  const { data: rawOrders } = await adminDb
     .from("merch_orders")
     .select(`
-      *,
-      merch_order_items(product_name, variant_name, quantity, total_price)
+      id,
+      customer_name,
+      customer_email,
+      customer_phone,
+      shipping_address,
+      shipping_city,
+      shipping_country,
+      shipping_zip,
+      subtotal_amount,
+      shipping_cost,
+      total_amount,
+      status,
+      payment_provider,
+      tracking_number,
+      created_at,
+      user_id,
+      merch_order_items (
+        id,
+        product_name,
+        variant_name,
+        quantity,
+        unit_price,
+        total_price
+      )
     `)
     .order("created_at", { ascending: false });
 
+  // 2. Obtener IDs de órdenes que corresponden a boletas para excluirlas estrictamente
+  const { data: ticketOrders } = await adminDb
+    .from("tickets")
+    .select("order_id");
+
+  const ticketOrderIds = new Set((ticketOrders || []).map((t: any) => t.order_id).filter(Boolean));
+
+  // 3. DISCRIMINACIÓN ESTRICTA:
+  // Solo se consideran órdenes de Merch aquellas que tienen productos físicos en merch_order_items,
+  // NO son tickets electrónicos y su dirección NO es "Digital / Boleta Electrónica".
+  const merchOnlyOrders = (rawOrders || []).filter((order: any) => {
+    // Si la orden está en la tabla de tickets, es boletería
+    if (ticketOrderIds.has(order.id)) return false;
+
+    // Si la dirección dice digital o boleta electrónica, es boletería
+    if (order.shipping_address && order.shipping_address.toLowerCase().includes("digital")) return false;
+
+    // Si no tiene ítems de merch y no tiene dirección física, descartar
+    const hasMerchItems = order.merch_order_items && order.merch_order_items.length > 0;
+    return hasMerchItems;
+  });
+
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', paddingBottom: '4rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '2rem' }}>
-            <ListOrdered size={32} />
-            Órdenes de Compra
-          </h1>
-          <p style={{ opacity: 0.7, marginTop: '0.5rem' }}>Gestiona los pedidos de merch realizados por los clientes.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
+            <Link 
+              href="/admin/merch" 
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.06)', color: 'white', textDecoration: 'none' }}
+            >
+              <ArrowLeft size={18} />
+            </Link>
+            <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', fontSize: '2rem', fontWeight: 900, color: 'white', margin: 0, fontFamily: 'Outfit, sans-serif' }}>
+              <ListOrdered size={28} style={{ color: 'var(--color-magenta)' }} />
+              Pedidos de Tienda (Merchandise)
+            </h1>
+          </div>
+          <p style={{ opacity: 0.7, marginTop: '0.25rem', color: 'var(--color-text-secondary)', fontSize: '0.95rem' }}>
+            Panel logístico de despacho y seguimiento de pedidos físicos de ropa y accesorios.
+          </p>
         </div>
+
+        <Link
+          href="/admin/merch"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.65rem 1.25rem',
+            backgroundColor: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            borderRadius: '0.5rem',
+            color: 'white',
+            fontWeight: 600,
+            fontSize: '0.875rem',
+            textDecoration: 'none'
+          }}
+        >
+          Volver a Inventario
+        </Link>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        {orders?.map((order: any) => (
-          <div key={order.id} style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem', marginBottom: '1rem' }}>
-              <div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Pedido #{order.id.slice(0, 8).toUpperCase()}</h3>
-                <p style={{ opacity: 0.7, fontSize: '0.875rem' }}>{new Date(order.created_at).toLocaleString()}</p>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <span style={{ 
-                  display: 'inline-block', padding: '0.25rem 0.75rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 700, 
-                  backgroundColor: order.status === 'paid' ? '#22c55e' : order.status === 'shipped' ? '#3b82f6' : '#f59e0b',
-                  color: 'white'
-                }}>
-                  {order.status.toUpperCase()}
-                </span>
-                <p style={{ fontWeight: 800, fontSize: '1.25rem', marginTop: '0.5rem', color: 'var(--color-magenta)' }}>
-                  ${parseFloat(order.total_amount).toLocaleString('es-CO')}
-                </p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '2rem' }}>
-              <div style={{ flex: 1 }}>
-                <h4 style={{ fontSize: '0.875rem', opacity: 0.7, marginBottom: '0.5rem' }}>Cliente</h4>
-                <p style={{ fontWeight: 600 }}>{order.customer_name}</p>
-                <p style={{ fontSize: '0.875rem' }}>{order.customer_email}</p>
-                <p style={{ fontSize: '0.875rem' }}>{order.customer_phone}</p>
-              </div>
-              <div style={{ flex: 1 }}>
-                <h4 style={{ fontSize: '0.875rem', opacity: 0.7, marginBottom: '0.5rem' }}>Envío</h4>
-                <p style={{ fontSize: '0.875rem' }}>{order.shipping_address}</p>
-                <p style={{ fontSize: '0.875rem' }}>{order.shipping_city}, {order.shipping_country}</p>
-                {order.tracking_number && <p style={{ fontSize: '0.875rem', color: 'var(--color-magenta)' }}><Truck size={14} style={{ display: 'inline', marginRight: '4px' }} /> Guía: {order.tracking_number}</p>}
-              </div>
-              <div style={{ flex: 2 }}>
-                <h4 style={{ fontSize: '0.875rem', opacity: 0.7, marginBottom: '0.5rem' }}>Artículos</h4>
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.875rem' }}>
-                  {order.merch_order_items.map((item: any, i: number) => (
-                    <li key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                      <span>{item.quantity}x {item.product_name} {item.variant_name && `(${item.variant_name})`}</span>
-                      <span style={{ fontWeight: 600 }}>${parseFloat(item.total_price).toLocaleString('es-CO')}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {(!orders || orders.length === 0) && (
-          <div style={{ padding: '4rem', textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '1rem', border: '1px dashed rgba(255,255,255,0.1)' }}>
-            <Package size={48} style={{ opacity: 0.3, marginBottom: '1rem' }} />
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>No hay pedidos aún</h3>
-            <p style={{ opacity: 0.7 }}>Las compras de tus clientes aparecerán aquí.</p>
-          </div>
-        )}
-      </div>
+      <MerchOrdersClient initialOrders={merchOnlyOrders} />
     </div>
   );
 }

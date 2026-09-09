@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { LayoutDashboard, FileText, Calendar, Music, ShoppingCart, Settings, Briefcase, Megaphone, LogOut, MonitorPlay, Users } from "lucide-react";
+import { LayoutDashboard, FileText, Calendar, Music, ShoppingCart, Settings, Briefcase, Megaphone, LogOut, MonitorPlay, Users, DollarSign } from "lucide-react";
 import styles from "./AdminLayout.module.css";
 import logo from "../../../public/bassfactorylogo1.png";
 import { signOut } from "../(auth)/actions";
@@ -17,6 +17,7 @@ export function AdminSidebar({ profile }: { profile: any }) {
       title: "Resumen",
       items: [
         { name: "Dashboard B2B", href: "/admin", icon: <LayoutDashboard size={20} /> },
+        { name: "Finanzas Globales", href: "/admin/finances", icon: <DollarSign size={20} /> },
       ]
     },
     {
