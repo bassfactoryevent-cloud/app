@@ -1,6 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import { Package, Truck, CheckCircle, Ticket, Clock, ShieldCheck, AlertCircle } from "lucide-react";
+import { Package, Truck, CheckCircle, Ticket, Clock, ShieldCheck, AlertCircle, FileText } from "lucide-react";
 import Link from "next/link";
 
 export default async function AccountOrdersPage() {
@@ -145,8 +145,15 @@ export default async function AccountOrdersPage() {
                     <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginBottom: '0.25rem' }}>
                       Fecha: {new Date(order.created_at).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </div>
-                    <div style={{ fontSize: '0.875rem', fontFamily: 'monospace', fontWeight: 700, color: 'white' }}>
-                      Orden: #{order.id.slice(0, 8).toUpperCase()}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                      <div style={{ fontSize: '0.875rem', fontFamily: 'monospace', fontWeight: 700, color: 'white' }}>
+                        Orden: #{order.id.slice(0, 8).toUpperCase()}
+                      </div>
+                      {order.payment_id && order.payment_id.startsWith("BF-FAC-") && (
+                        <div style={{ fontSize: '0.875rem', fontFamily: 'monospace', fontWeight: 800, color: '#00F0FF' }}>
+                          • Factura: {order.payment_id}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -234,9 +241,28 @@ export default async function AccountOrdersPage() {
                     </div>
                   )}
 
-                  {/* Enlace rápido a Ver Boletas */}
-                  {tickets.length > 0 && (
-                    <div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+                  {/* Enlaces de Acción: Ver Factura y Boletas */}
+                  <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    <Link
+                      href={`/orders/${order.id}/invoice`}
+                      style={{
+                        fontSize: '0.85rem',
+                        fontWeight: 700,
+                        color: '#00F0FF',
+                        textDecoration: 'none',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        padding: '0.4rem 0.85rem',
+                        borderRadius: '0.375rem',
+                        backgroundColor: 'rgba(0, 240, 255, 0.08)',
+                        border: '1px solid rgba(0, 240, 255, 0.2)'
+                      }}
+                    >
+                      <FileText size={15} /> Ver Factura Oficial
+                    </Link>
+
+                    {tickets.length > 0 && (
                       <Link 
                         href="/account/tickets" 
                         style={{ 
@@ -251,8 +277,8 @@ export default async function AccountOrdersPage() {
                       >
                         Ir a Mis Boletas &rarr;
                       </Link>
-                    </div>
-                  )}
+                    )}
+                  </div>
 
                   {order.tracking_number && (
                     <div style={{ padding: '1rem', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '0.5rem', borderLeft: '4px solid var(--color-magenta)' }}>

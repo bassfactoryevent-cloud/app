@@ -148,19 +148,39 @@ export async function sendOrderConfirmationEmail(orderId: string, customEmail?: 
     const formattedAmount = Number(order.total_amount || 0).toLocaleString("es-CO");
     const shortId = order.id.substring(0, 8).toUpperCase();
 
+    // Ensure consecutive invoice number is assigned
+    let invoiceNumber = order.payment_id;
+    if (!invoiceNumber || !invoiceNumber.startsWith("BF-FAC-")) {
+      try {
+        invoiceNumber = await getOrAssignInvoiceNumber(orderId);
+      } catch (e) {
+        console.error("Could not assign invoice number in email dispatch:", e);
+      }
+    }
+
+    const shippingDetails = order.shipping_address ? {
+      address: order.shipping_address,
+      city: order.shipping_city,
+      country: order.shipping_country,
+      zip: order.shipping_zip
+    } : undefined;
+
     const emailHtml = getPurchaseConfirmationEmail(
       order.customer_name || "Cliente",
       formattedAmount,
       shortId,
       hasTickets,
       hasMerch,
-      purchasedItems
+      purchasedItems,
+      invoiceNumber || undefined,
+      shippingDetails,
+      order.id
     );
 
     await resend.emails.send({
       from: "Bassfactory Ventas <ventas@bassfactory.co>",
       to: recipientEmail,
-      subject: `Confirmación de Compra - Orden #${shortId}`,
+      subject: `Confirmación de Compra ${invoiceNumber ? `(${invoiceNumber})` : ''} - Orden #${shortId}`,
       html: emailHtml
     });
 
@@ -169,6 +189,53 @@ export async function sendOrderConfirmationEmail(orderId: string, customEmail?: 
   } catch (err) {
     console.error("Error in sendOrderConfirmationEmail:", err);
     return false;
+  }
+}
+
+/**
+ * Assigns or retrieves the sequential consecutive invoice number (e.g. BF-FAC-0001)
+ */
+export async function getOrAssignInvoiceNumber(orderId: string): Promise<string> {
+  try {
+    const { data: order } = await supabase
+      .from("merch_orders")
+      .select("id, payment_id")
+      .eq("id", orderId)
+      .single();
+
+    if (order?.payment_id && order.payment_id.startsWith("BF-FAC-")) {
+      return order.payment_id;
+    }
+
+    // Find highest invoice number in database
+    const { data: existingInvoices } = await supabase
+      .from("merch_orders")
+      .select("payment_id")
+      .ilike("payment_id", "BF-FAC-%");
+
+    let maxNum = 0;
+    if (existingInvoices && existingInvoices.length > 0) {
+      for (const row of existingInvoices) {
+        const match = row.payment_id?.match(/BF-FAC-(\d+)/);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (num > maxNum) maxNum = num;
+        }
+      }
+    }
+
+    const nextNum = maxNum + 1;
+    const invoiceNumber = `BF-FAC-${String(nextNum).padStart(4, "0")}`;
+
+    await supabase
+      .from("merch_orders")
+      .update({ payment_id: invoiceNumber })
+      .eq("id", orderId);
+
+    return invoiceNumber;
+  } catch (err) {
+    console.error("Error generating invoice number:", err);
+    return `BF-FAC-${orderId.slice(0, 6).toUpperCase()}`;
   }
 }
 
@@ -184,6 +251,9 @@ export async function fulfillOrder(orderId: string) {
     console.error("Order fetch failed:", orderError);
     throw new Error("Order not found");
   }
+
+  // Ensure consecutive invoice number is assigned
+  await getOrAssignInvoiceNumber(orderId);
 
   // Avoid duplicate fulfillment if already paid
   if (order.status === "paid") {

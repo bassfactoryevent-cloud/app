@@ -145,14 +145,27 @@ export interface PurchasedItem {
   ticketCodes?: string[];
 }
 
+export interface ShippingDetails {
+  address: string;
+  city: string;
+  country?: string;
+  zip?: string;
+}
+
 export const getPurchaseConfirmationEmail = (
   name: string, 
   amount: string, 
   orderId: string, 
   hasTickets: boolean, 
   hasMerch: boolean,
-  items: PurchasedItem[] = []
+  items: PurchasedItem[] = [],
+  invoiceNumber?: string,
+  shipping?: ShippingDetails,
+  fullOrderId?: string
 ) => {
+  const invoiceId = fullOrderId || orderId;
+  const invoiceUrl = `${APP_URL}/orders/${invoiceId}/invoice`;
+
   let noticeHtml = "";
   if (hasTickets && hasMerch) {
     noticeHtml = `
@@ -160,7 +173,7 @@ export const getPurchaseConfirmationEmail = (
         <p style="margin: 0; font-weight: bold; color: #ff4d4d; font-size: 15px;">🛡️ Información sobre tus Boletas y Merch:</p>
         <p style="margin: 8px 0 0 0; font-size: 14px; color: #e4e4e7; line-height: 1.5;">
           • <strong>Boletas:</strong> Tus entradas están 100% aseguradas. Por protocolos de seguridad y prevención de clonación en taquilla, <strong>tu código QR oficial se generará y enviará a este correo exactamente 1 día antes del evento</strong>.<br>
-          • <strong>Merch:</strong> Tu pedido de mercancía física está siendo preparado y te notificaremos cuando sea despachado.
+          • <strong>Merch:</strong> Tu pedido de mercancía física está siendo preparado y te notificaremos con la guía cuando sea despachado.
         </p>
       </div>
     `;
@@ -175,9 +188,28 @@ export const getPurchaseConfirmationEmail = (
     `;
   } else if (hasMerch) {
     noticeHtml = `
-      <p style="color: #a1a1aa; font-size: 14px;">Tu pedido de mercancía está siendo procesado en nuestro almacén. Te notificaremos con el número de seguimiento apenas esté en camino.</p>
+      <div style="background-color: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.25); border-radius: 8px; padding: 15px; margin: 20px 0; text-align: left;">
+        <p style="margin: 0; font-weight: bold; color: #00F0FF; font-size: 15px;">📦 Despacho de Mercancía Oficial:</p>
+        <p style="margin: 8px 0 0 0; font-size: 14px; color: #e4e4e7; line-height: 1.5;">
+          Tu pedido está en proceso de alistamiento en nuestro centro de distribución. Te notificaremos vía correo en cuanto tu guía de transporte sea generada.
+        </p>
+      </div>
     `;
   }
+
+  const shippingHtml = shipping && hasMerch ? `
+    <div style="background-color: #0c0c0e; border: 1px solid #27272a; border-radius: 10px; padding: 16px; margin: 20px 0; text-align: left;">
+      <h4 style="color: #a1a1aa; font-size: 12px; font-weight: 800; text-transform: uppercase; margin: 0 0 8px 0; letter-spacing: 0.05em;">
+        📍 Dirección de Envío Registrada
+      </h4>
+      <p style="margin: 0; color: #ffffff; font-size: 14px; font-weight: 600;">
+        ${shipping.address}
+      </p>
+      <p style="margin: 4px 0 0 0; color: #a1a1aa; font-size: 13px;">
+        ${shipping.city}${shipping.country ? `, ${shipping.country}` : ''}${shipping.zip ? ` (CP: ${shipping.zip})` : ''}
+      </p>
+    </div>
+  ` : '';
 
   const itemsHtml = items && items.length > 0 ? `
     <div style="background-color: #0c0c0e; border: 1px solid #27272a; border-radius: 10px; padding: 20px; margin: 20px 0;">
@@ -211,22 +243,57 @@ export const getPurchaseConfirmationEmail = (
     </div>
   ` : '';
 
+  // Action buttons depending on item types
+  let buttonsHtml = "";
+  if (hasTickets && hasMerch) {
+    buttonsHtml = `
+      <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 25px;">
+        <a href="${APP_URL}/account/tickets" class="button" style="margin: 5px;">Ver Mis Boletas</a>
+        <a href="${APP_URL}/account/orders" class="button" style="background-color: #27272a; margin: 5px;">Ver Mis Pedidos</a>
+      </div>
+    `;
+  } else if (hasMerch) {
+    buttonsHtml = `
+      <div style="margin-top: 25px;">
+        <a href="${APP_URL}/account/orders" class="button">Ver Mis Pedidos en Bassfactory</a>
+      </div>
+    `;
+  } else {
+    buttonsHtml = `
+      <div style="margin-top: 25px;">
+        <a href="${APP_URL}/account/tickets" class="button">Ver Mis Boletas en Bassfactory</a>
+      </div>
+    `;
+  }
+
   const content = `
     <h1>¡Pago Confirmado con Éxito!</h1>
     <p>Hola <strong>${name}</strong>,</p>
-    <p>Hemos recibido y validado el pago de tu orden en Bassfactory. A continuación encuentras el detalle de los artículos adquiridos:</p>
+    <p>Hemos recibido y validado tu pago en Bassfactory. A continuación encuentras el comprobante detallado de tu transacción:</p>
     
     ${itemsHtml}
 
     <div class="details-box">
+      ${invoiceNumber ? `
+        <div class="details-row">
+          <span class="details-label">Factura / Consecutivo N°</span>
+          <span class="details-value" style="color: #00F0FF; font-family: monospace;">${invoiceNumber}</span>
+        </div>
+        <hr />
+      ` : ''}
       <div class="details-row">
-        <span class="details-label">Número de Orden</span>
+        <span class="details-label">Referencia de Orden</span>
         <span class="details-value">#${orderId}</span>
       </div>
       <hr />
       <div class="details-row">
-        <span class="details-label">Estado de la Compra</span>
+        <span class="details-label">Estado de la Transacción</span>
         <span class="details-value" style="color: #22c55e;">Aprobado / Pagado</span>
+      </div>
+      <hr />
+      <div class="details-row">
+        <span class="details-label">Medio de Pago</span>
+        <span class="details-value">Bold Pasarela de Pagos</span>
       </div>
       <hr />
       <div class="details-row">
@@ -235,10 +302,18 @@ export const getPurchaseConfirmationEmail = (
       </div>
     </div>
 
+    ${shippingHtml}
+
     ${noticeHtml}
     
-    <center style="margin-top: 25px;">
-      <a href="${APP_URL}/account/tickets" class="button">Ver Mis Boletas en Bassfactory</a>
+    <div style="text-align: center; margin-top: 20px;">
+      <a href="${invoiceUrl}" style="color: #00F0FF; font-size: 14px; text-decoration: underline; font-weight: 600;">
+        📄 Ver / Descargar Factura Oficial en Línea
+      </a>
+    </div>
+
+    <center>
+      ${buttonsHtml}
     </center>
   `;
   return baseTemplate("Pago Confirmado - Bassfactory", content);
