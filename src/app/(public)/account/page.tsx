@@ -1,7 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Ticket, ShoppingBag, Bell } from "lucide-react";
+import { Ticket, ShoppingBag, Bell, ShieldCheck, Clock, CheckCircle2, ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 
 export default async function AccountDashboardPage() {
@@ -17,6 +17,14 @@ export default async function AccountDashboardPage() {
   const { count: ticketsCount } = await supabase.from("tickets").select("*", { count: 'exact', head: true }).eq("user_id", user.id);
   const { count: ordersCount } = await supabase.from("merch_orders").select("*", { count: 'exact', head: true }).eq("user_id", user.id);
   const { count: notificationsCount } = await supabase.from("notifications").select("*", { count: 'exact', head: true }).eq("user_id", user.id).eq("is_read", false);
+
+  // Compras recientes del usuario
+  const { data: recentOrders } = await supabase
+    .from("merch_orders")
+    .select("id, total_amount, status, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(3);
 
   return (
     <div style={{ paddingBottom: '4rem', display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
@@ -42,7 +50,29 @@ export default async function AccountDashboardPage() {
         </div>
       </div>
 
-      {/* Grid de Estadísticas con Nuevo Diseño */}
+      {/* Banner Informativo de Boletas y Seguridad */}
+      <div style={{
+        backgroundColor: 'rgba(229, 9, 20, 0.08)',
+        border: '1px solid rgba(229, 9, 20, 0.25)',
+        borderRadius: 'var(--radius-lg)',
+        padding: '1.25rem 1.5rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+      }}>
+        <ShieldCheck size={28} style={{ color: 'var(--color-magenta)', flexShrink: 0 }} />
+        <div style={{ flex: 1 }}>
+          <div style={{ color: 'white', fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.2rem' }}>
+            Aviso de Taquilla y Entradas Oficiales
+          </div>
+          <p style={{ color: 'rgba(255, 255, 255, 0.75)', margin: 0, fontSize: '0.875rem', lineHeight: 1.4 }}>
+            Tus compras de boletas están aseguradas. Por protocolo de seguridad y prevención de fraudes, <strong>el código QR de acceso a taquilla se habilitará exactamente 1 día antes del evento</strong>.
+          </p>
+        </div>
+      </div>
+
+      {/* Grid de Estadísticas */}
       <div>
         <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-secondary)' }}>
           Resumen de Actividad
@@ -73,8 +103,8 @@ export default async function AccountDashboardPage() {
                 <span style={{ fontSize: '3rem', fontWeight: 900, lineHeight: 1, color: 'white', textShadow: '0 0 20px rgba(0, 240, 255, 0.5)' }}>{ordersCount || 0}</span>
               </div>
               <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'white', marginBottom: '0.25rem' }}>Compras de Merch</h3>
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem' }}>Historial de ropa y accesorios</p>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'white', marginBottom: '0.25rem' }}>Compras y Pedidos</h3>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem' }}>Historial y estado de tus compras</p>
               </div>
             </Card>
           </Link>
@@ -98,6 +128,70 @@ export default async function AccountDashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* Sección: Estado de tus Compras Recientes */}
+      {recentOrders && recentOrders.length > 0 && (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-secondary)', margin: 0 }}>
+              Tus Compras Recientes
+            </h3>
+            <Link href="/account/orders" style={{ color: 'var(--color-magenta)', fontSize: '0.875rem', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              Ver todas ({ordersCount}) <ArrowRight size={14} />
+            </Link>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {recentOrders.map((ord: any) => {
+              const isPaid = ord.status === 'paid';
+              return (
+                <div 
+                  key={ord.id} 
+                  style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                    border: '1px solid rgba(255, 255, 255, 0.07)',
+                    borderRadius: '0.75rem',
+                    padding: '1.25rem 1.5rem',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '1rem'
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                      {new Date(ord.created_at).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </div>
+                    <div style={{ fontSize: '1rem', fontWeight: 700, color: 'white', marginTop: '0.2rem' }}>
+                      Orden #{ord.id.slice(0, 8).toUpperCase()}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    {isPaid ? (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 700, color: '#22c55e', backgroundColor: 'rgba(34,197,94,0.15)', padding: '0.4rem 0.9rem', borderRadius: '2rem' }}>
+                        <CheckCircle2 size={14} /> Aprobado y Confirmado
+                      </span>
+                    ) : (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 700, color: '#eab308', backgroundColor: 'rgba(234,179,8,0.15)', padding: '0.4rem 0.9rem', borderRadius: '2rem' }}>
+                        <Clock size={14} /> Pendiente
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Total</div>
+                    <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'white' }}>
+                      ${Number(ord.total_amount).toLocaleString('es-CO')} COP
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Banner de Acción (Call to action) */}
       <div style={{ 

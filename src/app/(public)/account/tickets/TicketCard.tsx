@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Image from "next/image";
-import { Calendar, MapPin, QrCode, Send, X, Lock } from "lucide-react";
+import { Calendar, MapPin, QrCode, Send, X, Lock, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { initiateTransfer, cancelTransfer } from "./actions";
 import { toast } from "sonner";
@@ -156,15 +156,52 @@ export default function TicketCard({ ticket, eventDate }: { ticket: any; eventDa
             <div style={{ fontSize: '0.65rem', marginTop: '0.5rem' }}>QR Oculto temporalmente</div>
           </div>
         ) : ticket.status === 'valid' ? (
-          <>
-            <div style={{ width: '130px', height: '130px', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', borderRadius: '0.5rem', padding: '10px' }}>
-              <QrCode size={110} color="black" />
-            </div>
-            <div style={{ fontSize: '0.75rem', opacity: 0.5, fontFamily: 'monospace', letterSpacing: '0.05em' }}>
-              #{ticket.qr_hash.substring(0, 10).toUpperCase()}
-            </div>
-            <div style={{ marginTop: '0.5rem', color: '#00F0FF', fontWeight: 800, fontSize: '0.9rem', letterSpacing: '0.1em' }}>VÁLIDO</div>
-          </>
+          (() => {
+            const eventStartDate = event?.start_time || event?.start_date ? new Date(event.start_time || event.start_date) : null;
+            const isWithin24Hours = eventStartDate ? (eventStartDate.getTime() - Date.now()) <= 24 * 60 * 60 * 1000 : false;
+
+            if (!isWithin24Hours) {
+              return (
+                <div style={{ textAlign: 'center', padding: '0.5rem' }}>
+                  <div style={{ 
+                    width: '64px', 
+                    height: '64px', 
+                    borderRadius: '50%', 
+                    backgroundColor: 'rgba(229, 9, 20, 0.1)', 
+                    border: '1px solid rgba(229, 9, 20, 0.3)',
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    margin: '0 auto 0.75rem',
+                    color: 'var(--color-magenta)'
+                  }}>
+                    <ShieldCheck size={36} />
+                  </div>
+                  <div style={{ color: '#22c55e', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.05em' }}>
+                    ENTRADA CONFIRMADA
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#f59e0b', marginTop: '0.4rem', fontWeight: 600, lineHeight: 1.3 }}>
+                    El código QR se habilitará 1 día antes del evento
+                  </div>
+                  <div style={{ fontSize: '0.65rem', opacity: 0.4, fontFamily: 'monospace', marginTop: '0.5rem' }}>
+                    ID: #{ticket.id.slice(0, 8).toUpperCase()}
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <>
+                <div style={{ width: '130px', height: '130px', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.75rem', borderRadius: '0.5rem', padding: '10px' }}>
+                  <QrCode size={110} color="black" />
+                </div>
+                <div style={{ fontSize: '0.75rem', opacity: 0.5, fontFamily: 'monospace', letterSpacing: '0.05em' }}>
+                  #{ticket.qr_hash.substring(0, 10).toUpperCase()}
+                </div>
+                <div style={{ marginTop: '0.25rem', color: '#00F0FF', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.1em' }}>QR ACTIVO</div>
+              </>
+            );
+          })()
         ) : (
           <div style={{ color: '#E50914', fontWeight: 800, fontSize: '1.2rem', letterSpacing: '0.1em' }}>{ticket.status.toUpperCase()}</div>
         )}

@@ -135,19 +135,36 @@ const baseTemplate = (title: string, contentHtml: string) => `
 `;
 
 export const getPurchaseConfirmationEmail = (name: string, amount: string, orderId: string, hasTickets: boolean, hasMerch: boolean) => {
-  let extraText = "";
+  let noticeHtml = "";
   if (hasTickets && hasMerch) {
-    extraText = "Tus boletas serán enviadas en correos separados y tu pedido de merchandising está siendo procesado.";
+    noticeHtml = `
+      <div style="background-color: rgba(229, 9, 20, 0.1); border: 1px solid rgba(229, 9, 20, 0.3); border-radius: 8px; padding: 15px; margin: 20px 0; text-align: left;">
+        <p style="margin: 0; font-weight: bold; color: #ff4d4d; font-size: 15px;">🛡️ Información sobre tus Boletas y Merch:</p>
+        <p style="margin: 8px 0 0 0; font-size: 14px; color: #e4e4e7; line-height: 1.5;">
+          • <strong>Boletas:</strong> Tus entradas están 100% aseguradas. Por protocolos de seguridad y prevención de clonación en taquilla, <strong>tu código QR oficial se generará y enviará a este correo exactamente 1 día antes del evento</strong>.<br>
+          • <strong>Merch:</strong> Tu pedido de mercancía física está siendo preparado y te notificaremos cuando sea despachado.
+        </p>
+      </div>
+    `;
   } else if (hasTickets) {
-    extraText = "En breve recibirás correos separados con tus boletas oficiales en PDF y sus respectivos códigos QR.";
+    noticeHtml = `
+      <div style="background-color: rgba(229, 9, 20, 0.1); border: 1px solid rgba(229, 9, 20, 0.3); border-radius: 8px; padding: 15px; margin: 20px 0; text-align: left;">
+        <p style="margin: 0; font-weight: bold; color: #ff4d4d; font-size: 15px;">🛡️ Protocolo de Seguridad en Taquilla:</p>
+        <p style="margin: 8px 0 0 0; font-size: 14px; color: #e4e4e7; line-height: 1.5;">
+          Tus entradas están confirmadas y aseguradas. Por motivos de seguridad y para evitar la clonación o reventa no autorizada, <strong>tu boleta oficial con código QR se generará y enviará a tu correo electrónico exactamente 1 día antes del evento</strong>.
+        </p>
+      </div>
+    `;
   } else if (hasMerch) {
-    extraText = "Tu pedido está siendo procesado y te notificaremos cuando esté en camino.";
+    noticeHtml = `
+      <p style="color: #a1a1aa; font-size: 14px;">Tu pedido de mercancía está siendo procesado en nuestro almacén. Te notificaremos con el número de seguimiento apenas esté en camino.</p>
+    `;
   }
 
   const content = `
-    <h1>Pago Confirmado</h1>
+    <h1>¡Pago Confirmado con Éxito!</h1>
     <p>Hola <strong>${name}</strong>,</p>
-    <p>Hemos recibido el pago de tu orden en Bassfactory de manera exitosa. Muchas gracias por tu compra.</p>
+    <p>Hemos recibido y validado el pago de tu orden en Bassfactory. ¡Gracias por ser parte de nuestra comunidad underground!</p>
     
     <div class="details-box">
       <div class="details-row">
@@ -156,15 +173,20 @@ export const getPurchaseConfirmationEmail = (name: string, amount: string, order
       </div>
       <hr />
       <div class="details-row">
+        <span class="details-label">Estado de la Compra</span>
+        <span class="details-value" style="color: #22c55e;">Aprobado / Pagado</span>
+      </div>
+      <hr />
+      <div class="details-row">
         <span class="details-label">Total Pagado</span>
-        <span class="details-value">$${amount}</span>
+        <span class="details-value">$${amount} COP</span>
       </div>
     </div>
 
-    <p>${extraText}</p>
+    ${noticeHtml}
     
-    <center>
-      <a href="${APP_URL}/account" class="button">Ver mi Panel y Compras</a>
+    <center style="margin-top: 25px;">
+      <a href="${APP_URL}/account" class="button">Ver mi Panel y Estado de Compras</a>
     </center>
   `;
   return baseTemplate("Pago Confirmado - Bassfactory", content);

@@ -143,16 +143,8 @@ export async function fulfillOrder(orderId: string) {
     }
   }
 
-  // 7. Dispatch each individual ticket PDF email with QR code
-  if (tickets && tickets.length > 0) {
-    for (const ticket of tickets) {
-      try {
-        await sendTicketEmail(ticket.id);
-      } catch (ticketEmailErr) {
-        console.error(`Error sending ticket email for ticket ${ticket.id}:`, ticketEmailErr);
-      }
-    }
-  }
+  // 7. Las boletas oficiales con código QR no se envían de inmediato por seguridad:
+  // Se despachan automáticamente 1 día antes del evento a través del cron job (/api/cron/dispatch-tickets).
 
   return true;
 }
