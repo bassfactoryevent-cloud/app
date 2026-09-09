@@ -13,6 +13,7 @@ export default function CheckoutClient({ user }: { user: any }) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [paymentData, setPaymentData] = useState<any>(null);
+  const scriptContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -20,6 +21,24 @@ export default function CheckoutClient({ user }: { user: any }) {
       router.push("/");
     }
   }, [items, router, paymentData]);
+
+  useEffect(() => {
+    if (paymentData && scriptContainerRef.current) {
+      scriptContainerRef.current.innerHTML = "";
+      const script = document.createElement("script");
+      script.src = "https://checkout.bold.co/library/boldPaymentButton.js";
+      script.setAttribute("data-bold-button", "dark-L");
+      script.setAttribute("data-api-key", "7yYOobYR-iHyqMGT6_Se_i6Wak2dtiMTwW2R8BX6NXU");
+      script.setAttribute("data-amount", Math.round(paymentData.amount).toString());
+      script.setAttribute("data-currency", "COP");
+      script.setAttribute("data-order-id", paymentData.orderId);
+      script.setAttribute("data-integrity-signature", paymentData.hash);
+      script.setAttribute("data-redirection-url", `${window.location.origin}/checkout/success?order_id=${paymentData.orderId}`);
+      
+      script.async = true;
+      scriptContainerRef.current.appendChild(script);
+    }
+  }, [paymentData]);
 
   if (!mounted || (items.length === 0 && !paymentData)) return null;
 
@@ -48,26 +67,6 @@ export default function CheckoutClient({ user }: { user: any }) {
       setLoading(false);
     }
   };
-
-  const scriptContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (paymentData && scriptContainerRef.current) {
-      scriptContainerRef.current.innerHTML = "";
-      const script = document.createElement("script");
-      script.src = "https://checkout.bold.co/library/boldPaymentButton.js";
-      script.setAttribute("data-bold-button", "dark-L");
-      script.setAttribute("data-api-key", "7yYOobYR-iHyqMGT6_Se_i6Wak2dtiMTwW2R8BX6NXU");
-      script.setAttribute("data-amount", paymentData.amount.toString());
-      script.setAttribute("data-currency", "COP");
-      script.setAttribute("data-order-id", paymentData.orderId);
-      script.setAttribute("data-integrity-signature", paymentData.hash);
-      script.setAttribute("data-redirection-url", `${window.location.origin}/checkout/success?order_id=${paymentData.orderId}`);
-      
-      script.async = true;
-      scriptContainerRef.current.appendChild(script);
-    }
-  }, [paymentData]);
 
   if (paymentData) {
     return (
