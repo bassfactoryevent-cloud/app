@@ -2,7 +2,7 @@
 
 import { useCartStore } from "@/store/cartStore";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { Package, Lock, Truck, Ticket } from "lucide-react";
 import { processCheckout } from "./actions";
@@ -12,15 +12,16 @@ export default function CheckoutClient({ user }: { user: any }) {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const [paymentData, setPaymentData] = useState<any>(null);
 
   useEffect(() => {
     setMounted(true);
-    if (items.length === 0) {
+    if (items.length === 0 && !paymentData) {
       router.push("/");
     }
-  }, [items, router]);
+  }, [items, router, paymentData]);
 
-  if (!mounted || items.length === 0) return null;
+  if (!mounted || (items.length === 0 && !paymentData)) return null;
 
   const hasMerch = items.some(item => item.itemType === 'merch');
   const subtotal = getTotalPrice();
@@ -36,14 +37,49 @@ export default function CheckoutClient({ user }: { user: any }) {
     formData.set("user_id", user.id);
     
     try {
-      await processCheckout(formData);
-      clearCart(); // Limpiar el carrito después de compra exitosa
+      const data = await processCheckout(formData);
+      if (data && data.success) {
+        setPaymentData(data);
+        clearCart();
+      }
     } catch (err: any) {
       console.error(err);
       alert("Hubo un error procesando tu orden: " + err.message);
       setLoading(false);
     }
   };
+
+  const scriptContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (paymentData && scriptContainerRef.current) {
+      scriptContainerRef.current.innerHTML = "";
+      const script = document.createElement("script");
+      script.src = "https://checkout.bold.co/library/boldPaymentButton.js";
+      script.setAttribute("data-bold-button", "dark-L");
+      script.setAttribute("data-api-key", "7yYOobYR-iHyqMGT6_Se_i6Wak2dtiMTwW2R8BX6NXU");
+      script.setAttribute("data-amount", paymentData.amount.toString());
+      script.setAttribute("data-currency", "COP");
+      script.setAttribute("data-order-id", paymentData.orderId);
+      script.setAttribute("data-integrity-signature", paymentData.hash);
+      script.setAttribute("data-redirection-url", `${window.location.origin}/checkout/success?order_id=${paymentData.orderId}`);
+      
+      script.async = true;
+      scriptContainerRef.current.appendChild(script);
+    }
+  }, [paymentData]);
+
+  if (paymentData) {
+    return (
+      <div style={{ maxWidth: '600px', margin: '4rem auto', textAlign: 'center', padding: '2rem', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '1rem' }}>¡Casi listo!</h2>
+        <p style={{ color: 'var(--color-text-secondary)', marginBottom: '2rem' }}>
+          Tu orden <b>#{paymentData.orderId.substring(0,8).toUpperCase()}</b> ha sido generada. Haz clic en el botón de abajo para pagar de forma segura con Bold (PSE, Tarjeta de Crédito, etc).
+        </p>
+        <div ref={scriptContainerRef} id="bold-script-container" style={{ minHeight: '60px', display: 'flex', justifyContent: 'center' }}></div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '4rem 1rem' }}>

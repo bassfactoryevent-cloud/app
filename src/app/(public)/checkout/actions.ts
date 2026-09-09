@@ -44,7 +44,7 @@ export async function processCheckout(formData: FormData) {
   
   const total_amount = subtotal_amount + shipping_cost;
 
-  // Insertar la orden global (Usamos merch_orders como tabla general de órdenes por ahora)
+  // Insertar la orden global (Usamos merch_orders como tabla general de órdenes)
   const { data: order, error: orderError } = await supabase.from("merch_orders").insert([{
     customer_name,
     customer_email,
@@ -56,8 +56,8 @@ export async function processCheckout(formData: FormData) {
     subtotal_amount,
     shipping_cost,
     total_amount,
-    status: "paid", // Temporalmente 'paid' para simular éxito
-    payment_provider: "simulated",
+    status: "pending", // Cambiado a 'pending' para la pasarela de pagos
+    payment_provider: "bold",
     user_id
   }]).select("id").single();
 
@@ -88,7 +88,7 @@ export async function processCheckout(formData: FormData) {
     }
   }
 
-  // Procesar Merch
+  // Procesar Merch (Solo insertar los items, sin reducir stock todavía)
   if (merchItems.length > 0) {
     const orderItemsToInsert = merchItems.map((item: any) => ({
       order_id: order.id,
@@ -103,22 +103,9 @@ export async function processCheckout(formData: FormData) {
 
     const { error: itemsError } = await supabase.from("merch_order_items").insert(orderItemsToInsert);
     if (itemsError) throw new Error(itemsError.message);
-
-    // Restar stock de merch
-    for (const item of merchItems) {
-      if (item.variant_id) {
-        const { data: variant } = await supabase.from("merch_product_variants").select("stock_quantity").eq("id", item.variant_id).single();
-        if (variant) {
-          await supabase.from("merch_product_variants").update({
-            stock_quantity: Math.max(0, variant.stock_quantity - item.quantity)
-          }).eq("id", item.variant_id);
-        }
-      }
-    }
   }
 
-  // Procesar Tickets
-  let insertedTickets: any[] | null = null;
+  // Procesar Tickets (Crear boletas como 'void' temporalmente hasta el pago)
   if (ticketItems.length > 0) {
     const ticketsToInsert: any[] = [];
     
@@ -132,64 +119,27 @@ export async function processCheckout(formData: FormData) {
           order_id: order.id,
           tier_id: item.ticket_tier_id,
           qr_hash: qrHash,
-          status: 'valid',
+          status: 'void', // Serán activadas por el webhook
           user_id
         });
       }
     }
 
-    const { data, error: ticketsError } = await supabase.from("tickets").insert(ticketsToInsert).select("id");
-    if (ticketsError) {
-      console.error("Tickets error", ticketsError);
-      throw new Error("Error generando las entradas: " + ticketsError.message);
-    }
-    insertedTickets = data;
-
-    // Restar stock de tickets
-    for (const item of ticketItems) {
-      if (item.ticket_tier_id) {
-        const { data: tier } = await supabase.from("ticket_tiers").select("quantity_available").eq("id", item.ticket_tier_id).single();
-        if (tier) {
-          await supabase.from("ticket_tiers").update({
-            quantity_available: Math.max(0, tier.quantity_available - item.quantity)
-          }).eq("id", item.ticket_tier_id);
-        }
-      }
-    }
+    const { error: ticketsError } = await supabase.from("tickets").insert(ticketsToInsert);
+    if (ticketsError) throw new Error(ticketsError.message);
   }
 
-  // Enviar correo de confirmación básico usando Resend
-  try {
-    if (process.env.RESEND_API_KEY) {
-      const htmlContent = getPurchaseConfirmationEmail(
-        customer_name, 
-        total_amount.toLocaleString('es-CO'), 
-        order.id.substring(0, 8).toUpperCase(),
-        ticketItems.length > 0,
-        merchItems.length > 0
-      );
-      
-      await resend.emails.send({
-        from: "Bassfactory Ventas <ventas@bassfactory.co>",
-        to: customer_email,
-        subject: `Confirmación de Compra - Orden #${order.id.substring(0, 8).toUpperCase()}`,
-        html: htmlContent
-      });
-    }
-  } catch (emailError) {
-    console.error("Error sending confirmation email", emailError);
-    // No bloqueamos la compra si falla el correo
-  }
+  // Generar el Integrity Hash de Bold
+  const secretKey = process.env.BOLD_SECRET_KEY || "w3ZCw7yuoQc0Ztc4EDaDPg";
+  const currency = "COP";
+  // Bold format: order_id + amount + currency + secret_key
+  const hashString = `${order.id}${total_amount}${currency}${secretKey}`;
+  const integrityHash = crypto.createHash('sha256').update(hashString).digest('hex');
 
-  // Despachar tickets inmediatamente (en background, no bloqueamos el redirect)
-  if (ticketItems.length > 0 && insertedTickets) {
-    import("@/utils/sendTicketEmail").then(({ sendTicketEmail }) => {
-      insertedTickets.forEach((t: any) => {
-        sendTicketEmail(t.id).catch(console.error);
-      });
-    });
-  }
-
-  // Redirigir al success
-  redirect(`/checkout/success?order_id=${order.id}`);
+  return { 
+    success: true, 
+    orderId: order.id, 
+    amount: total_amount, 
+    hash: integrityHash 
+  };
 }
