@@ -20,7 +20,7 @@ export async function initiateTransfer(ticketId: string, name: string, email: st
   const { data: ticket } = await supabase.from("tickets").select(`
     id, 
     user_id, 
-    ticket_tiers!inner(events!inner(title, image_url))
+    ticket_tiers!inner(events!inner(title, cover_image))
   `).eq("id", ticketId).single();
   
   if (!ticket || ticket.user_id !== user.id) {

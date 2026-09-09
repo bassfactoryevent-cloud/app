@@ -28,9 +28,9 @@ export default async function TransferAcceptPage({ params }: { params: { id: str
           name,
           events (
             title,
-            start_time,
+            start_date,
             location_name,
-            image_url
+            cover_image
           )
         )
       ),
@@ -124,8 +124,8 @@ export default async function TransferAcceptPage({ params }: { params: { id: str
           </p>
 
           <div style={{ backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '1rem', padding: '1.5rem', textAlign: 'left', marginBottom: '2rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            {event.image_url && (
-              <Image src={event.image_url} alt={event.title} width={80} height={80} style={{ borderRadius: '0.5rem', objectFit: 'cover' }} />
+            {(event.cover_image || event.image_url) && (
+              <Image src={event.cover_image || event.image_url} alt={event.title} width={80} height={80} style={{ borderRadius: '0.5rem', objectFit: 'cover' }} />
             )}
             <div>
               <div style={{ color: 'var(--color-magenta)', fontWeight: 800, fontSize: '0.75rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
@@ -133,7 +133,7 @@ export default async function TransferAcceptPage({ params }: { params: { id: str
               </div>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '0.25rem 0' }}>{event.title}</h3>
               <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>
-                {new Date(event.start_time).toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                {new Date(event.start_date || event.start_time).toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </div>
             </div>
           </div>
