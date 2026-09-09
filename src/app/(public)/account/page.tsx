@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Ticket, ShoppingBag, Bell, ShieldCheck, Clock, CheckCircle2, ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { getUserNotifications } from "@/utils/notifications";
 
 export default async function AccountDashboardPage() {
   const supabase = await createClient();
@@ -16,7 +17,13 @@ export default async function AccountDashboardPage() {
 
   const { count: ticketsCount } = await supabase.from("tickets").select("*", { count: 'exact', head: true }).eq("user_id", user.id);
   const { count: ordersCount } = await supabase.from("merch_orders").select("*", { count: 'exact', head: true }).eq("user_id", user.id);
-  const { count: notificationsCount } = await supabase.from("notifications").select("*", { count: 'exact', head: true }).eq("user_id", user.id).eq("is_read", false);
+
+  const notifications = await getUserNotifications({
+    id: user.id,
+    email: user.email,
+    role: profile?.role
+  });
+  const notificationsCount = notifications.length;
 
   // Compras recientes del usuario
   const { data: recentOrders } = await supabase
