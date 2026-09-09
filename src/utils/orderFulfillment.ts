@@ -1,42 +1,55 @@
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { getPurchaseConfirmationEmail } from "@/utils/emailTemplates";
+import { sendTicketEmail } from "@/utils/sendTicketEmail";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Use service role to bypass RLS in the webhook
+// Use service role if available, fallback to anon key
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; // Make sure to add this to .env
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function fulfillOrder(orderId: string) {
-  // 1. Mark order as paid
+  // 1. Fetch current order
   const { data: order, error: orderError } = await supabase
     .from("merch_orders")
-    .update({ status: "paid" })
+    .select("*")
     .eq("id", orderId)
-    .select()
     .single();
 
   if (orderError || !order) {
-    console.error("Order update failed:", orderError);
-    throw new Error("Order not found or update failed");
+    console.error("Order fetch failed:", orderError);
+    throw new Error("Order not found");
   }
 
-  // 2. Validate and activate tickets (change from 'void' to 'valid')
+  // Avoid duplicate fulfillment if already paid
+  if (order.status === "paid") {
+    console.log(`Order ${orderId} already marked as paid.`);
+    return true;
+  }
+
+  // 2. Mark order as paid
+  await supabase
+    .from("merch_orders")
+    .update({ status: "paid", updated_at: new Date().toISOString() })
+    .eq("id", orderId);
+
+  // 3. Validate and activate tickets (change from 'void' to 'valid')
   const { data: tickets, error: ticketsError } = await supabase
     .from("tickets")
     .update({ status: "valid" })
     .eq("order_id", orderId)
-    .eq("status", "void")
     .select(`
       id,
       qr_hash,
+      tier_id,
       ticket_tiers (
+        id,
         name,
         events (
           title,
-          start_time,
+          start_date,
           location_name
         )
       )
@@ -46,7 +59,35 @@ export async function fulfillOrder(orderId: string) {
     console.error("Tickets activation failed:", ticketsError);
   }
 
-  // 3. Process Merch stock reduction (if any)
+  // 4. Reduce stock for ticket tiers
+  if (tickets && tickets.length > 0) {
+    // Group counts by tier_id
+    const tierCounts: Record<string, number> = {};
+    for (const t of tickets) {
+      if (t.tier_id) {
+        tierCounts[t.tier_id] = (tierCounts[t.tier_id] || 0) + 1;
+      }
+    }
+
+    for (const [tierId, count] of Object.entries(tierCounts)) {
+      const { data: tier } = await supabase
+        .from("ticket_tiers")
+        .select("quantity_available")
+        .eq("id", tierId)
+        .single();
+
+      if (tier && typeof tier.quantity_available === "number") {
+        await supabase
+          .from("ticket_tiers")
+          .update({
+            quantity_available: Math.max(0, tier.quantity_available - count)
+          })
+          .eq("id", tierId);
+      }
+    }
+  }
+
+  // 5. Process Merch stock reduction
   const { data: items } = await supabase
     .from("merch_order_items")
     .select("variant_id, quantity")
@@ -61,7 +102,7 @@ export async function fulfillOrder(orderId: string) {
           .eq("id", item.variant_id)
           .single();
           
-        if (variant) {
+        if (variant && typeof variant.stock_quantity === "number") {
           await supabase
             .from("merch_product_variants")
             .update({
@@ -73,32 +114,42 @@ export async function fulfillOrder(orderId: string) {
     }
   }
 
-  // 4. Send Confirmation Email
-  if (process.env.RESEND_API_KEY) {
-    let ticketDetails = "";
-    if (tickets && tickets.length > 0) {
-      ticketDetails = tickets.map((t: any) => {
-        const event = Array.isArray(t.ticket_tiers?.events) ? t.ticket_tiers.events[0] : t.ticket_tiers?.events;
-        return `- ${t.ticket_tiers?.name} para ${event?.title || 'Evento'}`;
-      }).join("<br>");
-    }
+  const hasTickets = !!(tickets && tickets.length > 0);
+  const hasMerch = !!(items && items.length > 0);
 
-    let merchDetails = "";
-    if (items && items.length > 0) {
-      merchDetails = items.map((item: any) => `- ${item.quantity}x Merch Item`).join("<br>"); // Simplified
-    }
+  // 6. Send General Confirmation Email
+  if (process.env.RESEND_API_KEY && order.customer_email) {
+    try {
+      const formattedAmount = Number(order.total_amount || 0).toLocaleString("es-CO");
+      const shortId = order.id.substring(0, 8).toUpperCase();
+      const emailHtml = getPurchaseConfirmationEmail(
+        order.customer_name || "Cliente",
+        formattedAmount,
+        shortId,
+        hasTickets,
+        hasMerch
+      );
 
-    await resend.emails.send({
-      from: "Bassfactory Ventas <ventas@bassfactory.co>",
-      to: order.customer_email,
-      subject: `Confirmación de Compra - Orden #${order.id.slice(0, 8)}`,
-      html: getPurchaseConfirmationEmail({
-        customerName: order.customer_name,
-        orderId: order.id,
-        amount: order.total_amount,
-        itemsList: `${ticketDetails}<br>${merchDetails}`
-      })
-    });
+      await resend.emails.send({
+        from: "Bassfactory Ventas <ventas@bassfactory.co>",
+        to: order.customer_email,
+        subject: `Confirmación de Compra - Orden #${shortId}`,
+        html: emailHtml
+      });
+    } catch (emailErr) {
+      console.error("Error sending purchase confirmation email:", emailErr);
+    }
+  }
+
+  // 7. Dispatch each individual ticket PDF email with QR code
+  if (tickets && tickets.length > 0) {
+    for (const ticket of tickets) {
+      try {
+        await sendTicketEmail(ticket.id);
+      } catch (ticketEmailErr) {
+        console.error(`Error sending ticket email for ticket ${ticket.id}:`, ticketEmailErr);
+      }
+    }
   }
 
   return true;
