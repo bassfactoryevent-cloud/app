@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 import { getTransferInitiatedEmail } from "@/utils/emailTemplates";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY || "re_dummy_fallback");
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://bassfactory.co";
 
 export async function initiateTransfer(ticketId: string, name: string, email: string) {
