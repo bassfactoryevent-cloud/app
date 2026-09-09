@@ -4,7 +4,8 @@ import { useCartStore } from "@/store/cartStore";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
-import { Package, Lock, Truck, Ticket } from "lucide-react";
+import { Package, Lock, Truck, Ticket, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 import { processCheckout } from "./actions";
 
 export default function CheckoutClient({ user }: { user: any }) {
@@ -53,29 +54,55 @@ export default function CheckoutClient({ user }: { user: any }) {
     const formData = new FormData(e.currentTarget);
     formData.set("items", JSON.stringify(items));
     formData.set("hasMerch", hasMerch.toString());
-    formData.set("user_id", user.id);
+    formData.set("user_id", user?.id || "");
     
     try {
       const data = await processCheckout(formData);
-      if (data && data.success) {
-        setPaymentData(data);
-        clearCart();
+      if (!data || !data.success) {
+        toast.error(data?.error || "Error procesando tu orden");
+        setLoading(false);
+        return;
       }
+      
+      toast.success("¡Orden generada! Procede con el pago en Bold.");
+      setPaymentData(data);
+      clearCart();
     } catch (err: any) {
       console.error(err);
-      alert("Hubo un error procesando tu orden: " + err.message);
+      toast.error(err?.message || "Error al conectar con el servidor");
       setLoading(false);
     }
   };
 
   if (paymentData) {
     return (
-      <div style={{ maxWidth: '600px', margin: '4rem auto', textAlign: 'center', padding: '2rem', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+      <div style={{ maxWidth: '600px', margin: '4rem auto', textAlign: 'center', padding: '2.5rem 2rem', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
         <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '1rem' }}>¡Casi listo!</h2>
-        <p style={{ color: 'var(--color-text-secondary)', marginBottom: '2rem' }}>
-          Tu orden <b>#{paymentData.orderId.substring(0,8).toUpperCase()}</b> ha sido generada. Haz clic en el botón de abajo para pagar de forma segura con Bold (PSE, Tarjeta de Crédito, etc).
+        <p style={{ color: 'var(--color-text-secondary)', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+          Tu orden <b style={{ color: 'white' }}>#{paymentData.orderId.substring(0,8).toUpperCase()}</b> ha sido generada exitosamente por un total de <b style={{ color: '#22c55e' }}>${Number(paymentData.amount).toLocaleString('es-CO')} COP</b>.
         </p>
-        <div ref={scriptContainerRef} id="bold-script-container" style={{ minHeight: '60px', display: 'flex', justifyContent: 'center' }}></div>
+        <p style={{ fontSize: '0.875rem', opacity: 0.7, marginBottom: '2rem' }}>
+          Haz clic en el botón de abajo para abrir la pasarela segura de Bold (PSE, Tarjetas de Crédito/Débito, etc).
+        </p>
+        
+        <div ref={scriptContainerRef} id="bold-script-container" style={{ minHeight: '60px', display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}></div>
+
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'rgba(255,255,255,0.6)',
+            cursor: 'pointer',
+            fontSize: '0.875rem',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}
+        >
+          <ArrowLeft size={16} /> Volver al formulario de compra
+        </button>
       </div>
     );
   }
