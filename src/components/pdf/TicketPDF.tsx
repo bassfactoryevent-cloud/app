@@ -199,7 +199,9 @@ export const TicketPDF = ({
               <Svg viewBox="0 0 24 24" style={styles.infoIcon} fill="none" stroke="#D90416" strokeWidth={2}>
                 <Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </Svg>
-              <Text style={styles.infoTextInline}>{eventDescription}</Text>
+              <Text style={styles.infoTextInline}>
+                {eventDescription.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()}
+              </Text>
             </View>
           )}
 

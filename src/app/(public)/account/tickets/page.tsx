@@ -39,7 +39,8 @@ export default async function AccountTicketsPage() {
       id,
       to_email,
       to_name,
-      status
+      status,
+      created_at
     )
   `);
 
@@ -90,15 +91,33 @@ export default async function AccountTicketsPage() {
     }
   }
 
+  // 4. Group tickets by Event
+  const groupedMap = new Map<string, { event: any; tickets: any[] }>();
+  for (const t of tickets) {
+    const tier = Array.isArray(t.ticket_tiers) ? t.ticket_tiers[0] : t.ticket_tiers;
+    const event = Array.isArray(tier?.events) ? tier.events[0] : tier?.events;
+    const eventId = event?.id || "general-event";
+
+    if (!groupedMap.has(eventId)) {
+      groupedMap.set(eventId, {
+        event: event || { title: "Evento Bassfactory" },
+        tickets: []
+      });
+    }
+    groupedMap.get(eventId)!.tickets.push(t);
+  }
+
+  const eventGroups = Array.from(groupedMap.values());
+
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', paddingBottom: '3rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+    <div style={{ maxWidth: '1080px', margin: '0 auto', paddingBottom: '4rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.75rem' }}>
         <div>
-          <h1 style={{ fontSize: 'clamp(2rem, 3vw, 2.5rem)', fontWeight: 900, marginBottom: '0.4rem', fontFamily: 'Outfit, sans-serif', color: 'white', letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontSize: 'clamp(2rem, 3.5vw, 2.75rem)', fontWeight: 900, marginBottom: '0.4rem', fontFamily: 'Outfit, sans-serif', color: 'white', letterSpacing: '-0.02em' }}>
             Mis Boletas
           </h1>
           <p style={{ color: 'var(--color-text-secondary)', margin: 0, fontSize: '1rem' }}>
-            Tus entradas oficiales para los próximos eventos de Bassfactory.
+            Tus entradas oficiales para los próximos festivales y eventos de Bassfactory.
           </p>
         </div>
 
@@ -109,14 +128,14 @@ export default async function AccountTicketsPage() {
             gap: '8px',
             backgroundColor: 'rgba(34, 197, 94, 0.12)',
             border: '1px solid rgba(34, 197, 94, 0.3)',
-            padding: '0.4rem 0.9rem',
+            padding: '0.45rem 1rem',
             borderRadius: '999px',
-            fontSize: '0.825rem',
+            fontSize: '0.85rem',
             fontWeight: 700,
             color: '#22c55e'
           }}>
             <Sparkles size={16} />
-            {tickets.length} {tickets.length === 1 ? 'Entrada Adquirida' : 'Entradas Adquiridas'}
+            {tickets.length} {tickets.length === 1 ? 'Entrada Adquirida en Total' : 'Entradas Adquiridas en Total'}
           </div>
         )}
       </div>
@@ -135,10 +154,10 @@ export default async function AccountTicketsPage() {
         <ShieldCheck size={26} style={{ color: 'var(--color-magenta)', flexShrink: 0, marginTop: '2px' }} />
         <div>
           <h4 style={{ color: 'white', fontWeight: 800, margin: '0 0 0.25rem 0', fontSize: '0.95rem', letterSpacing: '0.02em' }}>
-            Protocolo de Seguridad y Activación de QR para Taquilla
+            Protocolo de Seguridad y Activación Antifraude
           </h4>
-          <p style={{ color: 'rgba(255, 255, 255, 0.82)', margin: 0, fontSize: '0.875rem', lineHeight: 1.55 }}>
-            Tus entradas están confirmadas y aseguradas en el sistema. Para garantizar la seguridad del evento y evitar duplicados o clonación, <strong>el código QR oficial de acceso se activará en tu perfil y se enviará a tu correo 1 día antes del evento a las 00:00h</strong>.
+          <p style={{ color: 'rgba(255, 255, 255, 0.85)', margin: 0, fontSize: '0.875rem', lineHeight: 1.55 }}>
+            Tus boletas están aseguradas. Para garantizar la seguridad del evento y evitar la reventa y clonación no autorizada, <strong>los botones de descarga en PDF y el código QR de acceso oficial permanecen bloqueados y se habilitarán exactamente 1 día antes del evento a las 00:00h</strong> en tu perfil y correo registrado.
           </p>
         </div>
       </div>
@@ -167,17 +186,27 @@ export default async function AccountTicketsPage() {
           </a>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          {tickets.map((ticket: any) => {
-            const tier = Array.isArray(ticket.ticket_tiers) ? ticket.ticket_tiers[0] : ticket.ticket_tiers;
-            const event = Array.isArray(tier?.events) ? tier.events[0] : tier?.events;
-            const rawDate = event?.start_date;
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+          {eventGroups.map((group) => {
+            const rawDate = group.event?.start_date;
             const eventDate = rawDate 
-              ? new Date(rawDate).toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+              ? new Date(rawDate).toLocaleDateString('es-CO', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric', 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })
               : 'Fecha por confirmar';
             
             return (
-              <TicketCard key={ticket.id} ticket={ticket} eventDate={eventDate} />
+              <TicketCard 
+                key={group.event?.id || "default-event"} 
+                event={group.event} 
+                tickets={group.tickets} 
+                eventDate={eventDate} 
+              />
             );
           })}
         </div>

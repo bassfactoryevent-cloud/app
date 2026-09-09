@@ -5,6 +5,7 @@ import { renderToStream } from "@react-pdf/renderer";
 import { TicketPDF } from "@/components/pdf/TicketPDF";
 import QRCode from "qrcode";
 import React from "react";
+import sharp from "sharp";
 
 export const dynamic = "force-dynamic";
 
@@ -58,17 +59,12 @@ export async function GET(
     const ticket = rawTicket as any;
 
     // Check ownership or admin
-    if (ticket.user_id !== user.id) {
-      const { data: roleData } = await adminSupabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .single();
+    const isAdmin = user.email === "admin@admin.com" || (
+      (await adminSupabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").single()).data !== null
+    );
 
-      if (!roleData) {
-        return NextResponse.json({ error: "No tienes permiso para descargar esta boleta" }, { status: 403 });
-      }
+    if (ticket.user_id !== user.id && !isAdmin) {
+      return NextResponse.json({ error: "No tienes permiso para descargar esta boleta" }, { status: 403 });
     }
 
     if (ticket.status !== "valid" && ticket.status !== "scanned") {
@@ -103,6 +99,20 @@ export async function GET(
         tier = tierData;
         event = Array.isArray(tierData.events) ? tierData.events[0] : tierData.events;
       }
+    }
+
+    // Check 24-hour activation rule:
+    const eventStartDate = event?.start_date ? new Date(event.start_date) : null;
+    const isWithin24Hours = eventStartDate 
+      ? (eventStartDate.getTime() - Date.now()) <= 24 * 60 * 60 * 1000 
+      : false;
+    const isEnabled = isWithin24Hours || ticket.qr_dispatched;
+
+    // Strict antifraud rule: Only allowed if within 24h OR dispatched OR user is admin testing
+    if (!isEnabled && !isAdmin) {
+      return NextResponse.json({
+        error: "Por seguridad antifraude, la boleta oficial en PDF y el código QR de acceso solo están disponibles 1 día antes del evento."
+      }, { status: 403 });
     }
 
     // Fetch order details if available
@@ -144,6 +154,26 @@ export async function GET(
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bassfactory.co";
 
+    // Pre-process cover image to ensure @react-pdf/renderer supports it (converting WebP/JPEG with sharp to base64 Data URI)
+    let coverImageDataUri: string | undefined = undefined;
+    if (event?.cover_image) {
+      try {
+        const imgRes = await fetch(event.cover_image);
+        if (imgRes.ok) {
+          const imgBuffer = Buffer.from(await imgRes.arrayBuffer());
+          const convertedJpeg = await sharp(imgBuffer)
+            .resize(800, 350, { fit: "cover" })
+            .jpeg({ quality: 90 })
+            .toBuffer();
+          coverImageDataUri = `data:image/jpeg;base64,${convertedJpeg.toString("base64")}`;
+        }
+      } catch (imgErr) {
+        console.error("Error converting cover_image for PDF:", imgErr);
+        // Fallback to raw URL
+        coverImageDataUri = event.cover_image;
+      }
+    }
+
     // Generate PDF stream using TicketPDF
     const pdfStream = await renderToStream(
       React.createElement(TicketPDF, {
@@ -154,7 +184,7 @@ export async function GET(
         customerName: customerName,
         qrDataUri: qrDataUri,
         eventDescription: event?.description || "",
-        coverImageUrl: event?.cover_image,
+        coverImageUrl: coverImageDataUri,
         logoUrl: `${appUrl}/Bass-Factory-Blanco-Sin-Letras.png`,
         orderId: String(orderId),
       }) as any
