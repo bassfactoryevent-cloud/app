@@ -9,7 +9,7 @@ export default async function AccountTicketsPage() {
 
   if (!user) redirect("/login");
 
-  // Load user tickets with event details
+  // Load user tickets with transfers
   const { data: rawTickets, error: ticketsError } = await supabase
     .from("tickets")
     .select(`
@@ -22,20 +22,6 @@ export default async function AccountTicketsPage() {
       assigned_email,
       qr_dispatched,
       created_at,
-      ticket_tiers (
-        id,
-        name,
-        price,
-        events (
-          id,
-          title,
-          start_date,
-          location_name,
-          location_address,
-          cover_image,
-          description
-        )
-      ),
       ticket_transfers (
         id,
         to_email,
@@ -50,11 +36,10 @@ export default async function AccountTicketsPage() {
     console.error("Error fetching tickets for user:", ticketsError);
   }
 
-  let tickets: any[] = rawTickets || [];
+  let tickets: any[] = [];
 
-  // Fallback to fetch tiers and events separately if nested join wasn't populated
-  if (tickets.length > 0 && (!tickets[0].ticket_tiers || !tickets[0].ticket_tiers?.events)) {
-    const tierIds = tickets.map((t: any) => t.tier_id).filter(Boolean);
+  if (rawTickets && rawTickets.length > 0) {
+    const tierIds = Array.from(new Set(rawTickets.map((t: any) => t.tier_id).filter(Boolean)));
     if (tierIds.length > 0) {
       const { data: tiersData } = await supabase
         .from("ticket_tiers")
@@ -74,15 +59,15 @@ export default async function AccountTicketsPage() {
         `)
         .in("id", tierIds);
 
-      if (tiersData) {
-        tickets = tickets.map((t: any) => {
-          const tier = tiersData.find((tr: any) => tr.id === t.tier_id);
-          return {
-            ...t,
-            ticket_tiers: tier || t.ticket_tiers
-          };
-        });
-      }
+      tickets = rawTickets.map((t: any) => {
+        const tier = tiersData?.find((tr: any) => tr.id === t.tier_id);
+        return {
+          ...t,
+          ticket_tiers: tier || null
+        };
+      });
+    } else {
+      tickets = rawTickets;
     }
   }
 

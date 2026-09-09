@@ -134,7 +134,25 @@ const baseTemplate = (title: string, contentHtml: string) => `
 </html>
 `;
 
-export const getPurchaseConfirmationEmail = (name: string, amount: string, orderId: string, hasTickets: boolean, hasMerch: boolean) => {
+export interface PurchasedItem {
+  type: "ticket" | "merch";
+  title: string;
+  tierOrVariant?: string;
+  eventDate?: string;
+  eventLocation?: string;
+  quantity: number;
+  priceFormatted?: string;
+  ticketCodes?: string[];
+}
+
+export const getPurchaseConfirmationEmail = (
+  name: string, 
+  amount: string, 
+  orderId: string, 
+  hasTickets: boolean, 
+  hasMerch: boolean,
+  items: PurchasedItem[] = []
+) => {
   let noticeHtml = "";
   if (hasTickets && hasMerch) {
     noticeHtml = `
@@ -161,11 +179,45 @@ export const getPurchaseConfirmationEmail = (name: string, amount: string, order
     `;
   }
 
+  const itemsHtml = items && items.length > 0 ? `
+    <div style="background-color: #0c0c0e; border: 1px solid #27272a; border-radius: 10px; padding: 20px; margin: 20px 0;">
+      <h3 style="color: #ffffff; font-size: 14px; font-weight: 800; margin-top: 0; margin-bottom: 16px; border-bottom: 1px solid #1f1f23; padding-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em;">
+        🛒 Artículos Adquiridos
+      </h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tbody>
+          ${items.map(item => `
+            <tr style="border-bottom: 1px solid #1a1a1f;">
+              <td style="padding: 12px 0; vertical-align: top;">
+                <div style="color: #ffffff; font-weight: 700; font-size: 15px; line-height: 1.3;">
+                  ${item.type === 'ticket' ? '🎟️' : '👕'} ${item.title}
+                </div>
+                ${item.tierOrVariant ? `<div style="color: #00F0FF; font-size: 13px; font-weight: 600; margin-top: 4px;">${item.tierOrVariant}</div>` : ''}
+                ${item.eventDate ? `<div style="color: #a1a1aa; font-size: 12px; margin-top: 3px;">📅 ${item.eventDate}${item.eventLocation ? ` • 📍 ${item.eventLocation}` : ''}</div>` : ''}
+                ${item.ticketCodes && item.ticketCodes.length > 0 ? `
+                  <div style="color: #71717a; font-size: 11px; font-family: monospace; margin-top: 5px;">
+                    Boleta(s): <strong style="color: #ffffff;">${item.ticketCodes.join(', ')}</strong>
+                  </div>
+                ` : ''}
+              </td>
+              <td style="padding: 12px 0 12px 12px; text-align: right; vertical-align: top; white-space: nowrap;">
+                <div style="color: #ffffff; font-weight: 700; font-size: 14px;">Cant: ${item.quantity}</div>
+                ${item.priceFormatted ? `<div style="color: #a1a1aa; font-size: 13px; margin-top: 3px;">${item.priceFormatted}</div>` : ''}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  ` : '';
+
   const content = `
     <h1>¡Pago Confirmado con Éxito!</h1>
     <p>Hola <strong>${name}</strong>,</p>
-    <p>Hemos recibido y validado el pago de tu orden en Bassfactory. ¡Gracias por ser parte de nuestra comunidad underground!</p>
+    <p>Hemos recibido y validado el pago de tu orden en Bassfactory. A continuación encuentras el detalle de los artículos adquiridos:</p>
     
+    ${itemsHtml}
+
     <div class="details-box">
       <div class="details-row">
         <span class="details-label">Número de Orden</span>
@@ -179,14 +231,14 @@ export const getPurchaseConfirmationEmail = (name: string, amount: string, order
       <hr />
       <div class="details-row">
         <span class="details-label">Total Pagado</span>
-        <span class="details-value">$${amount} COP</span>
+        <span class="details-value" style="color: #ffffff; font-size: 16px;">$${amount} COP</span>
       </div>
     </div>
 
     ${noticeHtml}
     
     <center style="margin-top: 25px;">
-      <a href="${APP_URL}/account" class="button">Ver mi Panel y Estado de Compras</a>
+      <a href="${APP_URL}/account/tickets" class="button">Ver Mis Boletas en Bassfactory</a>
     </center>
   `;
   return baseTemplate("Pago Confirmado - Bassfactory", content);

@@ -63,7 +63,7 @@ export default async function CheckoutSuccessPage({
       
       <p style={{ fontSize: '1.1rem', opacity: 0.8, marginBottom: '2rem' }}>
         {isPaid ? (
-          "Tu pedido ha sido procesado y confirmado con éxito. Las boletas oficiales con código QR y el comprobante de compra han sido enviados a tu correo."
+          "Tu pedido ha sido procesado y confirmado con éxito. Hemos enviado el recibo detallado a tu correo. Por seguridad antifraude, las boletas oficiales con código QR se habilitarán 1 día antes del evento."
         ) : (
           "Tu transacción está siendo verificada por Bold. Si acabas de pagar, tus boletas quedarán activadas en unos segundos."
         )}

@@ -1,7 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
-import { getPurchaseConfirmationEmail } from "@/utils/emailTemplates";
-import { sendTicketEmail } from "@/utils/sendTicketEmail";
+import { getPurchaseConfirmationEmail, PurchasedItem } from "@/utils/emailTemplates";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -11,6 +10,167 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1Ni
 const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: { persistSession: false, autoRefreshToken: false }
 });
+
+export async function sendOrderConfirmationEmail(orderId: string, customEmail?: string) {
+  try {
+    // 1. Fetch order details
+    const { data: order, error: orderError } = await supabase
+      .from("merch_orders")
+      .select("*")
+      .eq("id", orderId)
+      .single();
+
+    if (orderError || !order) {
+      console.error("Order fetch failed in sendOrderConfirmationEmail:", orderError);
+      return false;
+    }
+
+    const recipientEmail = customEmail || order.customer_email;
+    if (!recipientEmail || !process.env.RESEND_API_KEY) {
+      return false;
+    }
+
+    // 2. Fetch tickets associated with this order (without broken foreign key join)
+    const { data: rawTickets } = await supabase
+      .from("tickets")
+      .select("id, qr_hash, tier_id")
+      .eq("order_id", orderId);
+
+    let ticketsWithTiers: any[] = [];
+    if (rawTickets && rawTickets.length > 0) {
+      const tierIds = Array.from(new Set(rawTickets.map((t: any) => t.tier_id).filter(Boolean)));
+      if (tierIds.length > 0) {
+        const { data: tiersData } = await supabase
+          .from("ticket_tiers")
+          .select(`
+            id,
+            name,
+            price,
+            events (
+              title,
+              start_date,
+              location_name
+            )
+          `)
+          .in("id", tierIds);
+
+        ticketsWithTiers = rawTickets.map((t: any) => ({
+          ...t,
+          ticket_tiers: tiersData?.find((tr: any) => tr.id === t.tier_id) || null
+        }));
+      } else {
+        ticketsWithTiers = rawTickets;
+      }
+    }
+
+    // 3. Fetch merchandise items
+    const { data: items } = await supabase
+      .from("merch_order_items")
+      .select("product_name, variant_name, quantity, unit_price, total_price")
+      .eq("order_id", orderId);
+
+    const purchasedItems: PurchasedItem[] = [];
+
+    // Map tickets grouped by tier
+    if (ticketsWithTiers && ticketsWithTiers.length > 0) {
+      const ticketsByTier: Record<string, {
+        tierName: string;
+        eventTitle: string;
+        eventDate: string;
+        eventLocation: string;
+        count: number;
+        ticketCodes: string[];
+        unitPrice: number;
+      }> = {};
+
+      for (const t of ticketsWithTiers) {
+        const tier = Array.isArray(t.ticket_tiers) ? t.ticket_tiers[0] : t.ticket_tiers;
+        const event = Array.isArray(tier?.events) ? tier.events[0] : tier?.events;
+        const tierId = t.tier_id || 'general';
+
+        if (!ticketsByTier[tierId]) {
+          const formattedDate = event?.start_date
+            ? new Date(event.start_date).toLocaleDateString('es-CO', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })
+            : '';
+
+          ticketsByTier[tierId] = {
+            tierName: tier?.name || 'General',
+            eventTitle: event?.title || 'Evento Bassfactory',
+            eventDate: formattedDate,
+            eventLocation: event?.location_name || 'Bogotá, Colombia',
+            count: 0,
+            ticketCodes: [],
+            unitPrice: Number(tier?.price || 0)
+          };
+        }
+
+        ticketsByTier[tierId].count += 1;
+        ticketsByTier[tierId].ticketCodes.push(`#${t.id.slice(0, 8).toUpperCase()}`);
+      }
+
+      for (const group of Object.values(ticketsByTier)) {
+        purchasedItems.push({
+          type: 'ticket',
+          title: `Entrada Oficial: ${group.eventTitle}`,
+          tierOrVariant: `Localidad: ${group.tierName}`,
+          eventDate: group.eventDate,
+          eventLocation: group.eventLocation,
+          quantity: group.count,
+          priceFormatted: group.unitPrice > 0 ? `$${(group.unitPrice * group.count).toLocaleString('es-CO')} COP` : undefined,
+          ticketCodes: group.ticketCodes
+        });
+      }
+    }
+
+    // Map merchandise items
+    if (items && items.length > 0) {
+      for (const item of items) {
+        const totalPrice = item.total_price || (item.unit_price * item.quantity);
+        purchasedItems.push({
+          type: 'merch',
+          title: item.product_name,
+          tierOrVariant: item.variant_name ? `Variante: ${item.variant_name}` : undefined,
+          quantity: item.quantity,
+          priceFormatted: totalPrice ? `$${Number(totalPrice).toLocaleString('es-CO')} COP` : undefined
+        });
+      }
+    }
+
+    const hasTickets = !!(ticketsWithTiers && ticketsWithTiers.length > 0);
+    const hasMerch = !!(items && items.length > 0);
+    const formattedAmount = Number(order.total_amount || 0).toLocaleString("es-CO");
+    const shortId = order.id.substring(0, 8).toUpperCase();
+
+    const emailHtml = getPurchaseConfirmationEmail(
+      order.customer_name || "Cliente",
+      formattedAmount,
+      shortId,
+      hasTickets,
+      hasMerch,
+      purchasedItems
+    );
+
+    await resend.emails.send({
+      from: "Bassfactory Ventas <ventas@bassfactory.co>",
+      to: recipientEmail,
+      subject: `Confirmación de Compra - Orden #${shortId}`,
+      html: emailHtml
+    });
+
+    console.log(`Purchase confirmation email with ${purchasedItems.length} items sent to ${recipientEmail}`);
+    return true;
+  } catch (err) {
+    console.error("Error in sendOrderConfirmationEmail:", err);
+    return false;
+  }
+}
 
 export async function fulfillOrder(orderId: string) {
   // 1. Fetch current order
@@ -42,20 +202,7 @@ export async function fulfillOrder(orderId: string) {
     .from("tickets")
     .update({ status: "valid" })
     .eq("order_id", orderId)
-    .select(`
-      id,
-      qr_hash,
-      tier_id,
-      ticket_tiers (
-        id,
-        name,
-        events (
-          title,
-          start_date,
-          location_name
-        )
-      )
-    `);
+    .select("id, qr_hash, tier_id");
 
   if (ticketsError) {
     console.error("Tickets activation failed:", ticketsError);
@@ -63,7 +210,6 @@ export async function fulfillOrder(orderId: string) {
 
   // 4. Reduce stock for ticket tiers
   if (tickets && tickets.length > 0) {
-    // Group counts by tier_id
     const tierCounts: Record<string, number> = {};
     for (const t of tickets) {
       if (t.tier_id) {
@@ -116,35 +262,10 @@ export async function fulfillOrder(orderId: string) {
     }
   }
 
-  const hasTickets = !!(tickets && tickets.length > 0);
-  const hasMerch = !!(items && items.length > 0);
+  // 6. Send General Confirmation Email with purchased items list
+  await sendOrderConfirmationEmail(orderId);
 
-  // 6. Send General Confirmation Email
-  if (process.env.RESEND_API_KEY && order.customer_email) {
-    try {
-      const formattedAmount = Number(order.total_amount || 0).toLocaleString("es-CO");
-      const shortId = order.id.substring(0, 8).toUpperCase();
-      const emailHtml = getPurchaseConfirmationEmail(
-        order.customer_name || "Cliente",
-        formattedAmount,
-        shortId,
-        hasTickets,
-        hasMerch
-      );
-
-      await resend.emails.send({
-        from: "Bassfactory Ventas <ventas@bassfactory.co>",
-        to: order.customer_email,
-        subject: `Confirmación de Compra - Orden #${shortId}`,
-        html: emailHtml
-      });
-    } catch (emailErr) {
-      console.error("Error sending purchase confirmation email:", emailErr);
-    }
-  }
-
-  // 7. Las boletas oficiales con código QR no se envían de inmediato por seguridad:
-  // Se despachan automáticamente 1 día antes del evento a través del cron job (/api/cron/dispatch-tickets).
+  // 7. Las boletas oficiales con código QR se despachan automáticamente 1 día antes del evento a través del cron job (/api/cron/dispatch-tickets).
 
   return true;
 }
