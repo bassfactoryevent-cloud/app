@@ -75,7 +75,11 @@ export default function TicketCard({ event, tickets, eventDate }: TicketCardProp
 
     startTransition(async () => {
       try {
-        await initiateTransfer(selectedTicketForTransfer.id, name, email);
+        const res = await initiateTransfer(selectedTicketForTransfer.id, name, email);
+        if (!res.success) {
+          toast.error(res.error || "Hubo un error al iniciar la transferencia.");
+          return;
+        }
         toast.success(`Transferencia iniciada para ${name}. Se envió la invitación a ${email}.`);
         setSelectedTicketForTransfer(null);
       } catch (err: any) {
@@ -87,7 +91,11 @@ export default function TicketCard({ event, tickets, eventDate }: TicketCardProp
   const handleCancelTransfer = (transferId: string, shortId: string) => {
     startTransition(async () => {
       try {
-        await cancelTransfer(transferId);
+        const res = await cancelTransfer(transferId);
+        if (!res.success) {
+          toast.error(res.error || "Error al cancelar la transferencia.");
+          return;
+        }
         toast.success(`Transferencia cancelada. La boleta #${shortId} regresó a tu posesión.`);
       } catch (err: any) {
         toast.error(err.message || "Error al cancelar la transferencia.");

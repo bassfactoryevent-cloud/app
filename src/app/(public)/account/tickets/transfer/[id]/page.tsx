@@ -1,10 +1,17 @@
 import { createClient } from "@/utils/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { Ticket, CheckCircle2, XCircle, Clock } from "lucide-react";
 import Image from "next/image";
 
 export const dynamic = "force-dynamic";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tkbrnblnkmuopmffslzn.supabase.co";
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrYnJuYmxua211b3BtZmZzbHpuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTgyODI5MCwiZXhwIjoyMDk3NDA0MjkwfQ.Hrtb8b9vXue5iViHapphzb1kqkEu-DaDBp-D-uHmzKA";
+const adminDb = createAdminClient(supabaseUrl, supabaseServiceKey, {
+  auth: { persistSession: false, autoRefreshToken: false }
+});
 
 export default async function TransferAcceptPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
   const resolvedParams = await params;
@@ -18,33 +25,10 @@ export default async function TransferAcceptPage({ params }: { params: Promise<{
     redirect(`/login?redirect=/account/tickets/transfer/${transferId}`);
   }
 
-  // 2. Fetch Transfer
-  const { data: rawTransfer } = await supabase
+  // 2. Fetch Transfer via adminDb
+  const { data: rawTransfer } = await adminDb
     .from("ticket_transfers")
-    .select(`
-      id,
-      status,
-      to_email,
-      to_name,
-      created_at,
-      tickets (
-        id,
-        qr_hash,
-        ticket_tiers (
-          name,
-          events (
-            title,
-            start_date,
-            location_name,
-            cover_image
-          )
-        )
-      ),
-      users!ticket_transfers_from_user_id_fkey (
-        raw_user_meta_data,
-        email
-      )
-    `)
+    .select("id, status, ticket_id, from_user_id, to_email, to_name, created_at")
     .eq("id", transferId)
     .single();
 
@@ -66,44 +50,79 @@ export default async function TransferAcceptPage({ params }: { params: Promise<{
   );
 
   if (isExpired) {
-    await supabase.from("ticket_transfers").update({ status: 'expired' }).eq("id", transfer.id);
+    await adminDb.from("ticket_transfers").update({ status: 'expired' }).eq("id", transfer.id);
     transfer = { ...transfer, status: 'expired' };
   }
 
-  const usersData = Array.isArray(transfer.users) ? transfer.users[0] : transfer.users;
-  const senderName = (usersData as any)?.raw_user_meta_data?.name || (usersData as any)?.raw_user_meta_data?.full_name || "Un usuario de Bassfactory";
-  const senderEmail = (usersData as any)?.email;
-  const t = transfer.tickets as any;
-  const tier = Array.isArray(t?.ticket_tiers) ? t.ticket_tiers[0] : t?.ticket_tiers;
-  const event = Array.isArray(tier?.events) ? tier.events[0] : tier?.events;
+  // 4. Fetch Ticket, Tier, and Event data cleanly
+  const { data: ticketData } = await adminDb
+    .from("tickets")
+    .select("id, qr_hash, tier_id")
+    .eq("id", transfer.ticket_id)
+    .single();
+
+  let tier: any = null;
+  let event: any = null;
+
+  if (ticketData?.tier_id) {
+    const { data: tierData } = await adminDb
+      .from("ticket_tiers")
+      .select("id, name, event_id")
+      .eq("id", ticketData.tier_id)
+      .single();
+    if (tierData) {
+      tier = tierData;
+      if (tierData.event_id) {
+        const { data: eventData } = await adminDb
+          .from("events")
+          .select("id, title, start_date, location_name, cover_image")
+          .eq("id", tierData.event_id)
+          .single();
+        if (eventData) {
+          event = eventData;
+        }
+      }
+    }
+  }
+
+  // 5. Fetch sender user details cleanly
+  let senderName = "Un usuario de Bassfactory";
+  let senderEmail = "";
+  if (transfer.from_user_id) {
+    const { data: senderUser } = await adminDb.auth.admin.getUserById(transfer.from_user_id);
+    if (senderUser?.user) {
+      senderName = senderUser.user.user_metadata?.name || senderUser.user.user_metadata?.full_name || senderUser.user.email || "Un usuario de Bassfactory";
+      senderEmail = senderUser.user.email || "";
+    }
+  }
 
   // Acciones (Server Actions Inlined)
   async function acceptTransfer() {
     "use server";
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user || !rawTransfer) return;
+    const supabaseAuth = await createClient();
+    const { data: { user: currentUser } } = await supabaseAuth.auth.getUser();
+    if (!currentUser || !rawTransfer) return;
 
-    // 1. Marcar transfer como aceptado
-    await supabase.from("ticket_transfers").update({ status: 'accepted', updated_at: new Date().toISOString() }).eq("id", rawTransfer.id);
+    // 1. Marcar transfer como aceptado con adminDb
+    await adminDb.from("ticket_transfers").update({ status: 'accepted', updated_at: new Date().toISOString() }).eq("id", rawTransfer.id);
 
     // 2. Cambiar dueño del ticket y resetear qr_dispatched
-    await supabase.from("tickets").update({ 
-      user_id: user.id,
-      assigned_name: user.user_metadata?.name || user.user_metadata?.full_name || rawTransfer.to_name,
-      assigned_email: user.email || rawTransfer.to_email,
+    await adminDb.from("tickets").update({ 
+      user_id: currentUser.id,
+      assigned_name: currentUser.user_metadata?.name || currentUser.user_metadata?.full_name || rawTransfer.to_name,
+      assigned_email: currentUser.email || rawTransfer.to_email,
       transferred_at: new Date().toISOString(),
       qr_dispatched: false
-    }).eq("id", t.id);
+    }).eq("id", rawTransfer.ticket_id);
 
     // 3. Notificar al dueño original que la boleta fue aceptada
-    const receiverName = user.user_metadata?.name || user.user_metadata?.full_name || rawTransfer.to_name || "Tu amigo";
+    const receiverName = currentUser.user_metadata?.name || currentUser.user_metadata?.full_name || rawTransfer.to_name || "Tu amigo";
     if (senderEmail && process.env.RESEND_API_KEY) {
       import("resend").then(async ({ Resend }) => {
-        const resend = new Resend(process.env.RESEND_API_KEY);
+        const resendClient = new Resend(process.env.RESEND_API_KEY);
         const { getTransferAcceptedEmail } = await import("@/utils/emailTemplates");
         
-        await resend.emails.send({
+        await resendClient.emails.send({
           from: "Bassfactory Tickets <tickets@bassfactory.co>",
           to: senderEmail,
           subject: `¡Boleta aceptada por ${receiverName}!`,
@@ -119,17 +138,17 @@ export default async function TransferAcceptPage({ params }: { params: Promise<{
   async function rejectTransfer() {
     "use server";
     if (!rawTransfer) return;
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const supabaseAuth = await createClient();
+    const { data: { user: currentUser } } = await supabaseAuth.auth.getUser();
 
-    await supabase.from("ticket_transfers").update({ status: 'rejected', updated_at: new Date().toISOString() }).eq("id", rawTransfer.id);
+    await adminDb.from("ticket_transfers").update({ status: 'rejected', updated_at: new Date().toISOString() }).eq("id", rawTransfer.id);
 
     // Notificar al dueño que la boleta fue devuelta
-    const receiverName = user?.user_metadata?.name || rawTransfer.to_name || "El destinatario";
+    const receiverName = currentUser?.user_metadata?.name || rawTransfer.to_name || "El destinatario";
     if (senderEmail && process.env.RESEND_API_KEY) {
       import("resend").then(async ({ Resend }) => {
-        const resend = new Resend(process.env.RESEND_API_KEY);
-        await resend.emails.send({
+        const resendClient = new Resend(process.env.RESEND_API_KEY);
+        await resendClient.emails.send({
           from: "Bassfactory Tickets <tickets@bassfactory.co>",
           to: senderEmail,
           subject: `Boleta devuelta por ${receiverName}`,
