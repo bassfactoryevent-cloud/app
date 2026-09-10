@@ -109,76 +109,6 @@ export default async function DjEPKPage({ params }: { params: Promise<{ slug: st
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '4rem 1rem', display: 'flex', flexDirection: 'column', gap: '4rem' }}>
         
-        {/* UPCOMING EVENTS (SLIDER AL ESTILO HOME) */}
-        {allBookings.length > 0 && (
-          <section>
-            <h2 style={{ fontWeight: 900, textTransform: 'uppercase', marginBottom: '1.5rem', letterSpacing: '-0.02em' }}>
-              Tour Dates & Events
-            </h2>
-            <HorizontalScroll title="" viewAllLink="">
-              {allBookings.map((booking: any, idx: number) => {
-                const CardComponent = booking.type === 'internal' ? Link : 'a';
-                const hrefProps = booking.type === 'internal' 
-                  ? { href: `/events/${booking.slug}` }
-                  : { href: booking.url || '#', target: booking.url ? '_blank' : undefined, rel: booking.url ? 'noreferrer' : undefined };
-                
-                const fallbackImage = dj.photo_url || "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?q=80&w=400";
-                
-                return (
-                  <CardComponent 
-                    key={idx} 
-                    {...hrefProps} 
-                    style={{ 
-                      textDecoration: 'none', 
-                      color: 'inherit', 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      backgroundColor: 'rgba(255,255,255,0.03)', 
-                      borderRadius: '1rem', 
-                      overflow: 'hidden', 
-                      border: '1px solid rgba(255,255,255,0.05)', 
-                      transition: 'transform 0.2s, borderColor 0.2s',
-                      minWidth: '280px',
-                      maxWidth: '350px'
-                    }} 
-                    className="hover-card-transform"
-                  >
-                    <div style={{ height: '200px', position: 'relative', backgroundColor: '#111' }}>
-                      <img 
-                        src={booking.cover_image || fallbackImage} 
-                        alt={booking.title} 
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                      />
-                      <div style={{ position: 'absolute', top: '1rem', left: '1rem', backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', padding: '0.5rem 1rem', borderRadius: '0.5rem', textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
-                        <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-magenta)', fontWeight: 700 }}>
-                          {booking.date.toLocaleDateString('es-ES', { month: 'short' })}
-                        </div>
-                        <div style={{ fontSize: '1.25rem', fontWeight: 900 }}>
-                          {booking.date.getDate()}
-                        </div>
-                      </div>
-                      {booking.type === 'external' && (
-                        <div style={{ position: 'absolute', top: '1rem', right: '1rem', backgroundColor: 'var(--color-magenta)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>
-                          Externo
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                      <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1rem', lineHeight: 1.2 }}>{booking.title}</h3>
-                      
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: 0.7, marginBottom: '0.5rem', fontSize: '0.875rem' }}>
-                        <MapPin size={16} />
-                        <span>{booking.location}</span>
-                      </div>
-                    </div>
-                  </CardComponent>
-                )
-              })}
-            </HorizontalScroll>
-          </section>
-        )}
-
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '4rem' }}>
           
           {/* COLUMNA IZQUIERDA: BIO & FOTOS */}
@@ -286,6 +216,76 @@ export default async function DjEPKPage({ params }: { params: Promise<{ slug: st
             
           </div>
         </div>
+
+        {/* UPCOMING EVENTS (TOUR DATES & EVENTS - COLOCADO DEBAJO DE BIOGRAPHY Y BOOKING) */}
+        {allBookings.length > 0 && (
+          <section style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '3rem' }}>
+            <h2 style={{ fontWeight: 900, textTransform: 'uppercase', marginBottom: '1.5rem', letterSpacing: '-0.02em', fontSize: '1.75rem' }}>
+              Tour Dates & Events
+            </h2>
+            <HorizontalScroll title="" viewAllLink="">
+              {allBookings.map((booking: any, idx: number) => {
+                const CardComponent = booking.type === 'internal' ? Link : 'a';
+                const hrefProps = booking.type === 'internal' 
+                  ? { href: `/events/${booking.slug}` }
+                  : { href: booking.url || '#', target: booking.url ? '_blank' : undefined, rel: booking.url ? 'noreferrer' : undefined };
+                
+                const fallbackImage = dj.photo_url || "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?q=80&w=400";
+                
+                return (
+                  <CardComponent 
+                    key={idx} 
+                    {...hrefProps} 
+                    style={{ 
+                      textDecoration: 'none', 
+                      color: 'inherit', 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      backgroundColor: 'rgba(255,255,255,0.03)', 
+                      borderRadius: '1rem', 
+                      overflow: 'hidden', 
+                      border: '1px solid rgba(255,255,255,0.05)', 
+                      transition: 'transform 0.2s, borderColor 0.2s',
+                      minWidth: '280px',
+                      maxWidth: '350px'
+                    }} 
+                    className="hover-card-transform"
+                  >
+                    <div style={{ height: '200px', position: 'relative', backgroundColor: '#111' }}>
+                      <img 
+                        src={booking.cover_image || fallbackImage} 
+                        alt={booking.title} 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                      />
+                      <div style={{ position: 'absolute', top: '1rem', left: '1rem', backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', padding: '0.5rem 1rem', borderRadius: '0.5rem', textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-magenta)', fontWeight: 700 }}>
+                          {booking.date.toLocaleDateString('es-ES', { month: 'short' })}
+                        </div>
+                        <div style={{ fontSize: '1.25rem', fontWeight: 900 }}>
+                          {booking.date.getDate()}
+                        </div>
+                      </div>
+                      {booking.type === 'external' && (
+                        <div style={{ position: 'absolute', top: '1rem', right: '1rem', backgroundColor: 'var(--color-magenta)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>
+                          Externo
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1rem', lineHeight: 1.2 }}>{booking.title}</h3>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: 0.7, marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                        <MapPin size={16} />
+                        <span>{booking.location}</span>
+                      </div>
+                    </div>
+                  </CardComponent>
+                )
+              })}
+            </HorizontalScroll>
+          </section>
+        )}
       </div>
       <style dangerouslySetInnerHTML={{__html: `
         .hover-bg-light:hover {
