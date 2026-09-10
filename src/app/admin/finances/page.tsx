@@ -13,9 +13,9 @@ const adminDb = createAdminClient(supabaseUrl, supabaseServiceKey, {
 export default async function AdminFinancesPage() {
   // 1. Obtener eventos y sus localidades
   const [{ data: events }, { data: tiers }, { data: tickets }, { data: allOrders }] = await Promise.all([
-    adminDb.from("events").select("id, title, start_date, location_name, cover_image").order("start_date", { ascending: false }),
-    adminDb.from("ticket_tiers").select("id, event_id, name, price"),
-    adminDb.from("tickets").select("id, tier_id, order_id, status, is_scanned, created_at"),
+    adminDb.from("events").select("id, title, start_date, location_name, cover_image, total_capacity").order("start_date", { ascending: false }),
+    adminDb.from("ticket_tiers").select("id, event_id, name, price, quantity_available"),
+    adminDb.from("tickets").select("id, tier_id, order_id, status, scanned_at, created_at"),
     adminDb.from("merch_orders").select(`
       id, customer_name, customer_email, total_amount, status, created_at, shipping_address,
       merch_order_items (
@@ -31,9 +31,13 @@ export default async function AdminFinancesPage() {
   const ticketOrderIds = new Set((tickets || []).map((t: any) => t.order_id).filter(Boolean));
 
   // 2. Calcular métricas por Evento
-  const eventStatsMap = new Map<string, { id: string; title: string; start_date: string; location_name: string; cover_image: string; ticketsSold: number; scannedCount: number; totalRevenue: number }>();
+  const eventStatsMap = new Map<string, { id: string; title: string; start_date: string; location_name: string; cover_image: string; ticketsSold: number; scannedCount: number; totalCapacity: number; totalRevenue: number }>();
 
   (events || []).forEach((ev: any) => {
+    const eventTiers = (tiers || []).filter((t: any) => t.event_id === ev.id);
+    const tiersCapacity = eventTiers.reduce((sum: number, t: any) => sum + (Number(t.quantity_available) || 0), 0);
+    const totalCapacity = Number(ev.total_capacity) || tiersCapacity;
+
     eventStatsMap.set(ev.id, {
       id: ev.id,
       title: ev.title,
@@ -42,6 +46,7 @@ export default async function AdminFinancesPage() {
       cover_image: ev.cover_image,
       ticketsSold: 0,
       scannedCount: 0,
+      totalCapacity,
       totalRevenue: 0
     });
   });
@@ -51,7 +56,7 @@ export default async function AdminFinancesPage() {
     if (tier && tier.event_id && eventStatsMap.has(tier.event_id)) {
       const stat = eventStatsMap.get(tier.event_id)!;
       stat.ticketsSold += 1;
-      if (ticket.status === "scanned" || ticket.is_scanned) {
+      if (ticket.status === "scanned" || Boolean(ticket.scanned_at)) {
         stat.scannedCount += 1;
       }
       if (ticket.status === "valid" || ticket.status === "scanned") {

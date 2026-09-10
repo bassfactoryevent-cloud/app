@@ -228,7 +228,7 @@ export default function FinancesClient({
                         {ev.ticketsSold}
                       </td>
                       <td style={{ padding: "1rem", textAlign: "center", color: "var(--color-accent, #00f0ff)", fontWeight: 700 }}>
-                        {ev.scannedCount}
+                        {ev.scannedCount} <span style={{ fontSize: "0.75rem", opacity: 0.6, color: "var(--color-text-secondary)" }}>/ {ev.totalCapacity > 0 ? ev.totalCapacity : ev.ticketsSold}</span>
                       </td>
                       <td style={{ padding: "1rem", textAlign: "right", fontWeight: 800, color: ev.totalRevenue > 0 ? "#22c55e" : "rgba(255,255,255,0.4)", fontSize: "1rem", fontFamily: "monospace" }}>
                         {formatCOP(ev.totalRevenue)}

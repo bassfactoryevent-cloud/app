@@ -16,7 +16,7 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
   // 1. Obtener detalles del evento
   const { data: event, error: eventError } = await adminDb
     .from("events")
-    .select("id, title, start_date, location_name")
+    .select("id, title, start_date, location_name, total_capacity")
     .eq("id", id)
     .single();
 
@@ -34,6 +34,12 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
   const tiers = ticketTiers || [];
   const tierIds = tiers.map((t: any) => t.id);
 
+  // Calcular aforo configurado si total_capacity no fue especificado manualmente
+  const configuredCapacity = tiers.reduce((sum: number, t: any) => sum + (Number(t.quantity_available) || 0), 0);
+  if (!event.total_capacity || event.total_capacity === 0) {
+    event.total_capacity = configuredCapacity;
+  }
+
   let eventTickets: any[] = [];
   let eventOrders: any[] = [];
   let transfers: any[] = [];
@@ -42,7 +48,7 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
     // 3. Obtener boletas emitidas ÚNICAMENTE para las localidades de este evento
     const { data: rawTickets } = await adminDb
       .from("tickets")
-      .select("id, tier_id, order_id, status, assigned_name, assigned_email, is_scanned, created_at")
+      .select("id, tier_id, order_id, status, assigned_name, assigned_email, scanned_at, created_at")
       .in("tier_id", tierIds);
 
     eventTickets = rawTickets || [];

@@ -22,68 +22,52 @@ export default function EventDashboardClient({ event, initialTiers, initialOrder
   
   // Realtime subscription
   useEffect(() => {
-    // Escuchar nuevas órdenes
-    const ordersChannel = supabase
-      .channel('schema-db-changes-orders')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'orders',
-          filter: `event_id=eq.${event.id}`
-        },
-        (payload) => {
-          const newOrder = payload.new;
-          if (newOrder.status === 'paid') {
-            setOrders((prev) => [newOrder, ...prev]);
-            toast.success(`¡Nueva venta! ${newOrder.customer_name} compró boletas.`);
-          }
-        }
-      )
-      .subscribe();
-
-    // Escuchar actualizaciones de boletas escaneadas
+    // Escuchar actualizaciones de boletas escaneadas o creadas
     const ticketsChannel = supabase
       .channel('schema-db-changes-tickets')
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: 'tickets'
         },
         (payload) => {
-          const updatedTicket = payload.new;
+          const updatedTicket = payload.new as any;
+          if (!updatedTicket) return;
+          setTickets((prev) => {
+            const exists = prev.some(t => t.id === updatedTicket.id);
+            if (exists) {
+              return prev.map(t => t.id === updatedTicket.id ? updatedTicket : t);
+            }
+            return [updatedTicket, ...prev];
+          });
           if (updatedTicket.status === 'scanned') {
-            setTickets((prev) => {
-              const newTickets = [...prev];
-              const idx = newTickets.findIndex(t => t.id === updatedTicket.id);
-              if (idx !== -1) {
-                newTickets[idx] = updatedTicket;
-              } else {
-                newTickets.push(updatedTicket);
-              }
-              return newTickets;
-            });
-            // Opcional: toast para cuando escanean
-            // toast.info("Nueva boleta escaneada en puerta");
+            toast.info("Boleta escaneada en puerta");
           }
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(ordersChannel);
       supabase.removeChannel(ticketsChannel);
     };
   }, [event.id, supabase]);
 
   // Derived calculations
-  const totalRevenue = orders.reduce((sum, o) => sum + Number(o.total_amount), 0);
+  const totalTiersCapacity = initialTiers.reduce((sum, t) => sum + (Number(t.quantity_available) || 0), 0);
+  const totalAforo = Number(event.total_capacity) || totalTiersCapacity;
+
+  // Calculo de ingresos: suma de ordenes asociadas o suma del valor de las boletas vendidas
+  const ordersTotal = orders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+  const ticketsValueTotal = tickets.reduce((sum, t) => {
+    const tier = initialTiers.find(ti => ti.id === t.tier_id || ti.id === t.ticket_tier_id);
+    return sum + (tier ? Number(tier.price || 0) : 0);
+  }, 0);
+  const totalRevenue = Math.max(ordersTotal, ticketsValueTotal);
+
   const totalTicketsSold = tickets.length;
-  // Acepta is_scanned (viejo) o status === 'scanned' (nuevo)
-  const totalScanned = tickets.filter(t => t.is_scanned || t.status === 'scanned').length;
+  const totalScanned = tickets.filter(t => t.status === 'scanned' || Boolean(t.scanned_at)).length;
 
   const formatCurrency = (val: number) => `$${val.toLocaleString('es-CO')}`;
 
@@ -146,7 +130,7 @@ export default function EventDashboardClient({ event, initialTiers, initialOrder
             <h3 style={{ fontSize: "0.875rem", fontWeight: 600, textTransform: "uppercase", margin: 0 }}>Aforo Ingresado (Escaneado)</h3>
           </div>
           <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "white" }}>
-            {totalScanned} <span style={{ fontSize: "1rem", opacity: 0.5, fontWeight: 500 }}>/ {totalTicketsSold}</span>
+            {totalScanned} <span style={{ fontSize: "1rem", opacity: 0.5, fontWeight: 500 }}>/ {totalAforo > 0 ? totalAforo : totalTicketsSold}</span>
           </div>
         </div>
       </div>
@@ -161,15 +145,15 @@ export default function EventDashboardClient({ event, initialTiers, initialOrder
           <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
             {initialTiers.map(tier => {
               const soldInTier = tickets.filter(t => t.tier_id === tier.id || t.ticket_tier_id === tier.id).length;
-              const totalCapacity = tier.quantity_available + soldInTier; // Simple approximation if quantity_available means remaining. If it means total initially, then soldInTier / quantity_available.
-              // Let's assume quantity_available is the CURRENT stock. Total stock was quantity_available + soldInTier.
-              const percentage = totalCapacity > 0 ? (soldInTier / totalCapacity) * 100 : 0;
+              const tierCapacity = Number(tier.quantity_available) || 0;
+              const remaining = Math.max(0, tierCapacity - soldInTier);
+              const percentage = tierCapacity > 0 ? Math.min(100, (soldInTier / tierCapacity) * 100) : 0;
               
               return (
                 <div key={tier.id}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "0.875rem" }}>
                     <span style={{ fontWeight: 600, color: "white" }}>{tier.name}</span>
-                    <span style={{ color: "var(--color-text-secondary)" }}>{soldInTier} / {totalCapacity} vendidas</span>
+                    <span style={{ color: "var(--color-text-secondary)" }}>{soldInTier} / {tierCapacity} vendidas</span>
                   </div>
                   <div style={{ width: "100%", height: "8px", backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "4px", overflow: "hidden" }}>
                     <div style={{ 
@@ -180,7 +164,7 @@ export default function EventDashboardClient({ event, initialTiers, initialOrder
                     }} />
                   </div>
                   <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginTop: "0.25rem", textAlign: "right" }}>
-                    Quedan: <span style={{ color: "white", fontWeight: 600 }}>{tier.quantity_available}</span>
+                    Quedan: <span style={{ color: "white", fontWeight: 600 }}>{remaining}</span>
                   </div>
                 </div>
               );

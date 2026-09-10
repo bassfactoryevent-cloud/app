@@ -1,7 +1,14 @@
 import { createClient } from "@/utils/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { Package, Truck, CheckCircle, Ticket, Clock, ShieldCheck, AlertCircle, FileText } from "lucide-react";
 import Link from "next/link";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tkbrnblnkmuopmffslzn.supabase.co";
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrYnJuYmxua211b3BtZmZzbHpuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTgyODI5MCwiZXhwIjoyMDk3NDA0MjkwfQ.Hrtb8b9vXue5iViHapphzb1kqkEu-DaDBp-D-uHmzKA";
+const adminDb = createAdminClient(supabaseUrl, supabaseServiceKey, {
+  auth: { persistSession: false, autoRefreshToken: false }
+});
 
 export default async function AccountOrdersPage() {
   const supabase = await createClient();
@@ -9,8 +16,8 @@ export default async function AccountOrdersPage() {
 
   if (!user) redirect("/login");
 
-  // Load user merch orders with items and tickets
-  const { data: orders } = await supabase
+  // Load user merch orders with items and tickets (matching user_id or customer_email)
+  const { data: orders } = await adminDb
     .from("merch_orders")
     .select(`
       *,
@@ -23,36 +30,42 @@ export default async function AccountOrdersPage() {
         total_price
       )
     `)
-    .eq("user_id", user.id)
+    .or(`user_id.eq.${user.id},customer_email.ilike.${user.email}`)
     .order("created_at", { ascending: false });
 
   // Fetch tickets for all orders
   let orderTicketsMap: Record<string, any[]> = {};
   if (orders && orders.length > 0) {
     const orderIds = orders.map((o: any) => o.id);
-    const { data: tickets } = await supabase
+    const { data: tickets } = await adminDb
       .from("tickets")
-      .select(`
-        id,
-        order_id,
-        status,
-        ticket_tiers (
+      .select("id, order_id, status, tier_id")
+      .in("order_id", orderIds);
+
+    if (tickets && tickets.length > 0) {
+      const tierIds = Array.from(new Set(tickets.map((t: any) => t.tier_id).filter(Boolean)));
+      const { data: tiers } = await adminDb
+        .from("ticket_tiers")
+        .select(`
+          id,
           name,
           events (
             title,
             start_date,
             location_name
           )
-        )
-      `)
-      .in("order_id", orderIds);
+        `)
+        .in("id", tierIds);
 
-    if (tickets) {
+      const tierMap = new Map((tiers || []).map((t: any) => [t.id, t]));
       for (const t of tickets) {
         if (!orderTicketsMap[t.order_id]) {
           orderTicketsMap[t.order_id] = [];
         }
-        orderTicketsMap[t.order_id].push(t);
+        orderTicketsMap[t.order_id].push({
+          ...t,
+          ticket_tiers: tierMap.get(t.tier_id)
+        });
       }
     }
   }
