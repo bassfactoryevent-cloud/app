@@ -63,16 +63,17 @@ export default async function AdBanner({ placementName, className = "" }: AdBann
   const ad = validAds[0];
   const isVideo = ad.image_url.toLowerCase().endsWith('.mp4') || ad.image_url.toLowerCase().endsWith('.webm');
 
-  // Determine if it's the thin placement
+  // Determine if it's thin or vertical placement
   const isThin = placementName.includes("thin");
-  const containerHeight = isThin ? 'auto' : '250px';
+  const isVertical = placementName.includes("vertical") || placementName.includes("skyscraper");
+  const containerHeight = isThin ? 'auto' : isVertical ? '600px' : '250px';
 
   const content = (
     <div className={className} style={{ position: 'relative', width: '100%', height: containerHeight, backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '0.5rem', overflow: 'hidden', display: 'flex', justifyContent: 'center' }}>
       {isVideo ? (
-        <video src={ad.image_url} autoPlay loop muted playsInline style={{ width: '100%', height: isThin ? 'auto' : '100%', objectFit: 'contain', display: 'block' }} />
+        <video src={ad.image_url} autoPlay loop muted playsInline style={{ width: '100%', height: isThin ? 'auto' : '100%', objectFit: isVertical ? 'cover' : 'contain', display: 'block' }} />
       ) : (
-        <img src={ad.image_url} alt="Ad Banner" style={{ width: '100%', height: isThin ? 'auto' : '100%', objectFit: 'contain', display: 'block' }} />
+        <img src={ad.image_url} alt="Ad Banner" style={{ width: '100%', height: isThin ? 'auto' : '100%', objectFit: isVertical ? 'cover' : 'contain', display: 'block' }} />
       )}
       <span style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', backgroundColor: 'rgba(0,0,0,0.5)', color: 'white', fontSize: '0.65rem', padding: '0.2rem 0.4rem', borderRadius: '0.25rem', textTransform: 'uppercase' }}>
         Ad

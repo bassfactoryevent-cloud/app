@@ -15,6 +15,8 @@ const ALL_PLACEMENTS = [
   { id: 'blog_in_content', label: 'Blog - Banner Medio (En el texto)' },
   { id: 'event_horizontal', label: 'Eventos - Horizontal' },
   { id: 'events_sidebar', label: 'Eventos - Sidebar' },
+  { id: 'events_vertical_left', label: 'Eventos - Lateral Izquierdo (Vertical)' },
+  { id: 'events_vertical_right', label: 'Eventos - Lateral Derecho (Vertical)' },
   { id: 'djs_banner', label: 'DJs - Banner' },
 ];
 

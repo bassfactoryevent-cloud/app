@@ -88,6 +88,8 @@ export default async function CampaignDetailsPage({ params, searchParams }: { pa
                       <option value="blog_in_content">Blog - Banner Medio (En el texto)</option>
                       <option value="event_horizontal">Eventos - Banner en Evento (Horizontal)</option>
                       <option value="events_sidebar">Eventos - Sidebar (Vertical)</option>
+                      <option value="events_vertical_left">Eventos - Lateral Izquierdo (Vertical)</option>
+                      <option value="events_vertical_right">Eventos - Lateral Derecho (Vertical)</option>
                       <option value="djs_banner">DJs - Banner Principal (Horizontal)</option>
                     </select>
                     <p style={{ fontSize: '0.75rem', opacity: 0.5, marginTop: '0.25rem' }}>El lugar donde aparecerá el anuncio en la web.</p>
