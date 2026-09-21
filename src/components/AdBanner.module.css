@@ -1,0 +1,78 @@
+.adWrapper {
+  position: relative;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.02);
+  border-radius: 0.85rem;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.thin {
+  height: auto;
+}
+
+.standard {
+  height: 250px;
+}
+
+.vertical {
+  height: 600px;
+}
+
+.media {
+  width: 100%;
+  display: block;
+}
+
+.cover {
+  height: 100%;
+  object-fit: cover;
+}
+
+.contain {
+  height: 100%;
+  object-fit: contain;
+}
+
+.autoHeight {
+  height: auto;
+}
+
+.adBadge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.2rem 0.45rem;
+  border-radius: 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  z-index: 2;
+}
+
+/* RESPONSIVE MOBILE OVERRIDES */
+@media (max-width: 960px) {
+  .vertical {
+    height: 180px;
+  }
+
+  .standard {
+    height: 160px;
+  }
+}
+
+@media (max-width: 480px) {
+  .vertical {
+    height: 140px;
+  }
+
+  .standard {
+    height: 120px;
+  }
+}

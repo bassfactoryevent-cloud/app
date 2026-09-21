@@ -110,11 +110,19 @@ export default async function EventsPage() {
 
         {/* COLUMNA CENTRAL: CARTELERA DE EVENTOS */}
         <main className={styles.eventsCol}>
+          {/* BANNER MOBILE SUPERIOR (SOLO VISIBLE EN MÓVIL / PANTALLAS PEQUEÑAS) */}
+          <div className={styles.mobileAdSlot}>
+            <VerticalAdSlot 
+              placementName="events_vertical_left" 
+              label="Pauta Oficial" 
+            />
+          </div>
+
           {(!events || events.length === 0) ? (
-            <div style={{ textAlign: 'center', padding: '5rem 2rem', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '1.25rem', border: '1px dashed rgba(255,255,255,0.1)' }}>
-              <Calendar size={56} opacity={0.25} style={{ margin: '0 auto 1.5rem', color: 'var(--color-magenta)' }} />
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem', color: 'white' }}>No hay eventos programados en este momento</h3>
-              <p style={{ opacity: 0.6, maxWidth: '450px', margin: '0 auto' }}>Estamos preparando las próximas fechas. Síguenos en nuestras redes oficiales para los anuncios en primicia.</p>
+            <div className={styles.emptyState}>
+              <Calendar size={48} opacity={0.3} style={{ margin: '0 auto 1.25rem', color: 'var(--color-magenta)' }} />
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '0.5rem', color: 'white' }}>No hay eventos programados en este momento</h3>
+              <p style={{ opacity: 0.6, maxWidth: '420px', margin: '0 auto', fontSize: '0.9rem', lineHeight: 1.5 }}>Estamos preparando las próximas fechas. Síguenos en nuestras redes oficiales para los anuncios en primicia.</p>
             </div>
           ) : (
             <div className={styles.eventsGrid}>
@@ -194,6 +202,14 @@ export default async function EventsPage() {
               })}
             </div>
           )}
+
+          {/* BANNER MOBILE INFERIOR (SOLO VISIBLE EN MÓVIL / PANTALLAS PEQUEÑAS) */}
+          <div className={styles.mobileAdSlot} style={{ marginTop: '1.75rem' }}>
+            <VerticalAdSlot 
+              placementName="events_vertical_right" 
+              label="Pauta Oficial" 
+            />
+          </div>
         </main>
 
         {/* COLUMNA DERECHA: BANNER VERTICAL */}
@@ -241,7 +257,7 @@ export default async function EventsPage() {
                   </div>
 
                   <div className={styles.merchBody}>
-                    <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <span className={styles.merchCategory}>
                       {product.merch_categories?.name || 'Tienda'}
                     </span>
                     <h4 className={styles.merchTitle}>{product.title}</h4>
@@ -260,7 +276,7 @@ export default async function EventsPage() {
       {sponsors.length > 0 && (
         <section className={styles.sponsorsSection}>
           <div className={styles.sponsorsHeader}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--color-magenta)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
+            <div className={styles.sponsorsBadge}>
               <Sparkles size={13} />
               Alianzas Oficiales
             </div>

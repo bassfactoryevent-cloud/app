@@ -1,6 +1,8 @@
 import { createClient } from "@/utils/supabase/server";
 import AdSliderClient from "./AdSliderClient";
 
+import styles from "./AdBanner.module.css";
+
 interface AdBannerProps {
   placementName: string;
   className?: string;
@@ -66,16 +68,28 @@ export default async function AdBanner({ placementName, className = "" }: AdBann
   // Determine if it's thin or vertical placement
   const isThin = placementName.includes("thin");
   const isVertical = placementName.includes("vertical") || placementName.includes("skyscraper");
-  const containerHeight = isThin ? 'auto' : isVertical ? '600px' : '250px';
+  const heightClass = isThin ? styles.thin : isVertical ? styles.vertical : styles.standard;
+  const fitClass = isThin ? styles.autoHeight : isVertical ? styles.cover : styles.contain;
 
   const content = (
-    <div className={className} style={{ position: 'relative', width: '100%', height: containerHeight, backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '0.5rem', overflow: 'hidden', display: 'flex', justifyContent: 'center' }}>
+    <div className={`${styles.adWrapper} ${heightClass} ${className}`}>
       {isVideo ? (
-        <video src={ad.image_url} autoPlay loop muted playsInline style={{ width: '100%', height: isThin ? 'auto' : '100%', objectFit: isVertical ? 'cover' : 'contain', display: 'block' }} />
+        <video 
+          src={ad.image_url} 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          className={`${styles.media} ${fitClass}`} 
+        />
       ) : (
-        <img src={ad.image_url} alt="Ad Banner" style={{ width: '100%', height: isThin ? 'auto' : '100%', objectFit: isVertical ? 'cover' : 'contain', display: 'block' }} />
+        <img 
+          src={ad.image_url} 
+          alt="Ad Banner" 
+          className={`${styles.media} ${fitClass}`} 
+        />
       )}
-      <span style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', backgroundColor: 'rgba(0,0,0,0.5)', color: 'white', fontSize: '0.65rem', padding: '0.2rem 0.4rem', borderRadius: '0.25rem', textTransform: 'uppercase' }}>
+      <span className={styles.adBadge}>
         Ad
       </span>
     </div>

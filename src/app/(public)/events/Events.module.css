@@ -2,6 +2,14 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 3rem 1.5rem 6rem 1.5rem;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .eventsContainer {
+    padding: 1.25rem 1rem 4rem 1rem;
+    overflow-x: hidden;
+  }
 }
 
 /* HERO ACTIVATION */
@@ -10,6 +18,13 @@
   margin-bottom: 3.5rem;
   position: relative;
   padding: 2rem 1rem;
+}
+
+@media (max-width: 768px) {
+  .heroSection {
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0 1rem 0;
+  }
 }
 
 .heroBadge {
@@ -28,14 +43,29 @@
   margin-bottom: 1.25rem;
 }
 
+@media (max-width: 768px) {
+  .heroBadge {
+    font-size: 0.7rem;
+    padding: 0.35rem 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
 .heroTitle {
-  font-size: clamp(2.2rem, 5vw, 3.75rem);
+  font-size: clamp(1.85rem, 6vw, 3.75rem);
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: -0.03em;
   color: #ffffff;
   margin: 0 0 1rem 0;
-  line-height: 1.05;
+  line-height: 1.1;
+}
+
+@media (max-width: 768px) {
+  .heroTitle {
+    font-size: clamp(1.75rem, 7.5vw, 2.5rem);
+    margin: 0 0 0.75rem 0;
+  }
 }
 
 .heroTitleGradient {
@@ -50,6 +80,14 @@
   max-width: 680px;
   margin: 0 auto 1.75rem auto;
   line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .heroSubtitle {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin: 0 auto 1.25rem auto;
+  }
 }
 
 .guaranteesBar {
@@ -72,6 +110,32 @@
   color: #10b981;
 }
 
+@media (max-width: 640px) {
+  .guaranteesBar {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    padding: 0.25rem 0.15rem 0.5rem 0.15rem;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .guaranteesBar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .guaranteeItem {
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.72rem;
+  }
+}
+
 /* 3-COLUMN MAIN LAYOUT */
 .mainGrid {
   display: grid;
@@ -90,8 +154,10 @@
 
 @media (max-width: 960px) {
   .mainGrid {
-    grid-template-columns: 1fr;
-    gap: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
   }
 }
 
@@ -101,7 +167,20 @@
 
 @media (max-width: 960px) {
   .sidebarCol {
-    display: none; /* Collapses neatly on smaller mobile screens */
+    display: none; /* Hidden on mobile sidebars; replaced by mobile ad slots */
+  }
+}
+
+/* MOBILE AD SLOTS */
+.mobileAdSlot {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  .mobileAdSlot {
+    display: block;
+    width: 100%;
+    margin-bottom: 1.25rem;
   }
 }
 
@@ -112,13 +191,28 @@
 
 .eventsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.75rem;
 }
 
 @media (max-width: 640px) {
   .eventsGrid {
     grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
+
+.emptyState {
+  text-align: center;
+  padding: 5rem 2rem;
+  background-color: rgba(255, 255, 255, 0.02);
+  border-radius: 1.25rem;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 640px) {
+  .emptyState {
+    padding: 3rem 1.25rem;
   }
 }
 
@@ -149,6 +243,12 @@
   overflow: hidden;
 }
 
+@media (max-width: 640px) {
+  .imageWrapper {
+    height: 195px;
+  }
+}
+
 .coverImage {
   width: 100%;
   height: 100%;
@@ -171,6 +271,16 @@
   text-align: center;
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  z-index: 2;
+}
+
+@media (max-width: 640px) {
+  .dateBadge {
+    top: 0.75rem;
+    left: 0.75rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 0.5rem;
+  }
 }
 
 .dateMonth {
@@ -181,11 +291,23 @@
   letter-spacing: 0.05em;
 }
 
+@media (max-width: 640px) {
+  .dateMonth {
+    font-size: 0.65rem;
+  }
+}
+
 .dateDay {
   font-size: 1.4rem;
   font-weight: 900;
   color: #ffffff;
   line-height: 1.1;
+}
+
+@media (max-width: 640px) {
+  .dateDay {
+    font-size: 1.15rem;
+  }
 }
 
 .statusBadge {
@@ -199,6 +321,16 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   backdrop-filter: blur(8px);
+  z-index: 2;
+}
+
+@media (max-width: 640px) {
+  .statusBadge {
+    top: 0.75rem;
+    right: 0.75rem;
+    font-size: 0.65rem;
+    padding: 0.25rem 0.6rem;
+  }
 }
 
 .statusPostponed {
@@ -218,12 +350,25 @@
   flex: 1;
 }
 
+@media (max-width: 640px) {
+  .cardBody {
+    padding: 1.15rem 1rem;
+  }
+}
+
 .eventTitle {
   font-size: 1.35rem;
   font-weight: 800;
   margin-bottom: 0.75rem;
   line-height: 1.25;
   color: #ffffff;
+}
+
+@media (max-width: 640px) {
+  .eventTitle {
+    font-size: 1.15rem;
+    margin-bottom: 0.5rem;
+  }
 }
 
 .locationRow {
@@ -235,6 +380,13 @@
   margin-bottom: 1.25rem;
 }
 
+@media (max-width: 640px) {
+  .locationRow {
+    font-size: 0.8rem;
+    margin-bottom: 0.85rem;
+  }
+}
+
 .cardFooter {
   margin-top: auto;
   padding-top: 1.25rem;
@@ -244,10 +396,22 @@
   justify-content: space-between;
 }
 
+@media (max-width: 640px) {
+  .cardFooter {
+    padding-top: 0.85rem;
+  }
+}
+
 .priceTag {
   font-weight: 800;
   font-size: 1.05rem;
   color: #ffffff;
+}
+
+@media (max-width: 640px) {
+  .priceTag {
+    font-size: 0.95rem;
+  }
 }
 
 .priceFree {
@@ -277,8 +441,16 @@
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+@media (max-width: 768px) {
+  .merchSection {
+    margin-top: 1.5rem;
+    margin-bottom: 3.5rem;
+    padding-top: 2rem;
+  }
+}
+
 .merchCard {
-  width: 250px;
+  width: 240px;
   flex-shrink: 0;
   text-decoration: none;
   color: inherit;
@@ -297,11 +469,24 @@
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
 }
 
+@media (max-width: 640px) {
+  .merchCard {
+    width: 175px;
+    border-radius: 0.85rem;
+  }
+}
+
 .merchImgWrap {
   height: 220px;
   background-color: rgba(0, 0, 0, 0.5);
   position: relative;
   overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .merchImgWrap {
+    height: 160px;
+  }
 }
 
 .merchBadge {
@@ -317,11 +502,40 @@
   border-radius: 4px;
 }
 
+@media (max-width: 640px) {
+  .merchBadge {
+    top: 0.5rem;
+    left: 0.5rem;
+    font-size: 0.6rem;
+    padding: 0.15rem 0.4rem;
+  }
+}
+
 .merchBody {
   padding: 1rem 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+}
+
+@media (max-width: 640px) {
+  .merchBody {
+    padding: 0.75rem 0.85rem;
+    gap: 0.2rem;
+  }
+}
+
+.merchCategory {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 640px) {
+  .merchCategory {
+    font-size: 0.65rem;
+  }
 }
 
 .merchTitle {
@@ -333,10 +547,22 @@
   text-overflow: ellipsis;
 }
 
+@media (max-width: 640px) {
+  .merchTitle {
+    font-size: 0.85rem;
+  }
+}
+
 .merchPrice {
   font-size: 1rem;
   font-weight: 800;
   color: var(--color-magenta, #e50914);
+}
+
+@media (max-width: 640px) {
+  .merchPrice {
+    font-size: 0.875rem;
+  }
 }
 
 /* SPONSORS SECTION */
@@ -349,9 +575,35 @@
   margin-top: 2rem;
 }
 
+@media (max-width: 768px) {
+  .sponsorsSection {
+    padding: 1.75rem 1rem;
+    border-radius: 1rem;
+    margin-top: 1.5rem;
+  }
+}
+
 .sponsorsHeader {
   max-width: 600px;
   margin: 0 auto 2.5rem auto;
+}
+
+@media (max-width: 768px) {
+  .sponsorsHeader {
+    margin-bottom: 1.5rem;
+  }
+}
+
+.sponsorsBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--color-magenta, #e50914);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
 }
 
 .sponsorsTitle {
@@ -363,10 +615,23 @@
   margin: 0 0 0.5rem 0;
 }
 
+@media (max-width: 768px) {
+  .sponsorsTitle {
+    font-size: 1.15rem;
+  }
+}
+
 .sponsorsSubtitle {
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.5);
   margin: 0;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .sponsorsSubtitle {
+    font-size: 0.8rem;
+  }
 }
 
 .sponsorsGrid {
@@ -375,6 +640,14 @@
   justify-content: center;
   align-items: center;
   gap: 2rem;
+}
+
+@media (max-width: 640px) {
+  .sponsorsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.65rem;
+  }
 }
 
 .sponsorCard {
@@ -397,6 +670,16 @@
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
+@media (max-width: 640px) {
+  .sponsorCard {
+    min-width: 0;
+    width: 100%;
+    height: 60px;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.75rem;
+  }
+}
+
 .sponsorLogo {
   max-height: 45px;
   max-width: 140px;
@@ -409,8 +692,22 @@
   filter: brightness(1.1);
 }
 
+@media (max-width: 640px) {
+  .sponsorLogo {
+    max-height: 32px;
+    max-width: 100px;
+  }
+}
+
 .sponsorNameFallback {
   font-weight: 700;
   font-size: 0.95rem;
   color: rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 640px) {
+  .sponsorNameFallback {
+    font-size: 0.8rem;
+    text-align: center;
+  }
 }

@@ -2,6 +2,8 @@ import { createClient } from "@/utils/supabase/server";
 import AdBanner from "./AdBanner";
 import { Sparkles, Megaphone } from "lucide-react";
 
+import styles from "./VerticalAdSlot.module.css";
+
 interface VerticalAdSlotProps {
   placementName: string;
   label?: string;
@@ -31,7 +33,7 @@ export default async function VerticalAdSlot({ placementName, label = "Pauta Pub
 
   if (hasActiveAd) {
     return (
-      <div className={className} style={{ position: 'sticky', top: '6rem', width: '100%' }}>
+      <div className={`${styles.slotContainer} ${className}`}>
         <AdBanner placementName={placementName} />
       </div>
     );
@@ -39,89 +41,30 @@ export default async function VerticalAdSlot({ placementName, label = "Pauta Pub
 
   // Elegant fallback placeholder that encourages brand sponsorship
   return (
-    <div 
-      className={className} 
-      style={{ 
-        position: 'sticky', 
-        top: '6rem', 
-        width: '100%', 
-        minHeight: '480px', 
-        backgroundColor: 'rgba(255,255,255,0.02)', 
-        border: '1px dashed rgba(255,255,255,0.1)', 
-        borderRadius: '1rem', 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        padding: '2rem 1.25rem', 
-        textAlign: 'center',
-        backdropFilter: 'blur(8px)',
-        transition: 'all 0.3s ease'
-      }}
-    >
-      <div style={{ 
-        width: '44px', 
-        height: '44px', 
-        borderRadius: '50%', 
-        backgroundColor: 'rgba(229, 9, 20, 0.1)', 
-        border: '1px solid rgba(229, 9, 20, 0.25)', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        color: 'var(--color-magenta)',
-        marginBottom: '1rem'
-      }}>
+    <div className={`${styles.fallbackContainer} ${className}`}>
+      <div className={styles.iconWrap}>
         <Megaphone size={20} />
       </div>
 
-      <span style={{ 
-        fontSize: '0.7rem', 
-        textTransform: 'uppercase', 
-        letterSpacing: '0.1em', 
-        color: 'rgba(255,255,255,0.4)', 
-        fontWeight: 700 
-      }}>
-        Espacio Publicitario
-      </span>
+      <div className={styles.contentGroup}>
+        <span className={styles.eyebrow}>
+          Espacio Publicitario
+        </span>
 
-      <h4 style={{ 
-        fontSize: '1rem', 
-        fontWeight: 800, 
-        color: 'white', 
-        margin: '0.5rem 0',
-        lineHeight: 1.2 
-      }}>
-        {label}
-      </h4>
+        <h4 className={styles.title}>
+          {label}
+        </h4>
 
-      <p style={{ 
-        fontSize: '0.75rem', 
-        color: 'rgba(255,255,255,0.5)', 
-        lineHeight: 1.5, 
-        marginBottom: '1.5rem',
-        maxWidth: '180px'
-      }}>
-        Destaca tu festival, marca o lanzamiento frente a miles de ravers en Colombia.
-      </p>
+        <p className={styles.desc}>
+          Destaca tu festival, marca o lanzamiento frente a miles de ravers en Colombia.
+        </p>
+      </div>
 
       <a 
         href="https://wa.me/573192543690?text=Hola,%20me%20gustar%C3%ADa%20pautar%20en%20Bassfactory" 
         target="_blank" 
         rel="noopener noreferrer" 
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '0.4rem',
-          fontSize: '0.75rem',
-          fontWeight: 700,
-          color: 'white',
-          backgroundColor: 'rgba(229, 9, 20, 0.15)',
-          border: '1px solid rgba(229, 9, 20, 0.35)',
-          padding: '0.6rem 1rem',
-          borderRadius: '0.5rem',
-          textDecoration: 'none',
-          transition: 'all 0.2s ease'
-        }}
+        className={styles.ctaBtn}
       >
         <Sparkles size={13} style={{ color: 'var(--color-magenta)' }} />
         Pautar Aquí
