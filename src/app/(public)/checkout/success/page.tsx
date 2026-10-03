@@ -13,14 +13,9 @@ import {
   Calendar,
   ChevronRight
 } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
-import { fulfillOrder, getOrAssignInvoiceNumber } from "@/utils/orderFulfillment";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tkbrnblnkmuopmffslzn.supabase.co";
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrYnJuYmxua211b3BtZmZzbHpuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTgyODI5MCwiZXhwIjoyMDk3NDA0MjkwfQ.Hrtb8b9vXue5iViHapphzb1kqkEu-DaDBp-D-uHmzKA";
-const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: { persistSession: false, autoRefreshToken: false }
-});
+import { getAdminClient } from "@/utils/supabase/admin";
+import PaymentStatusPoller from "./PaymentStatusPoller";
+import { getOrAssignInvoiceNumber } from "@/utils/orderFulfillment";
 
 export default async function CheckoutSuccessPage({ 
   searchParams 
@@ -45,21 +40,7 @@ export default async function CheckoutSuccessPage({
     boldStatus.includes('reject') ||
     boldStatus.includes('fail');
 
-  const isExplicitApproved = 
-    boldStatus === 'approved' || 
-    boldStatus === 'successful' || 
-    boldStatus === 'paid' || 
-    boldStatus.includes('approv') ||
-    boldStatus.includes('success');
-
-  // Trigger fulfillment if arriving with an approved status
-  if (orderId && isExplicitApproved) {
-    try {
-      await fulfillOrder(orderId);
-    } catch (err) {
-      console.error("Fulfillment check error in success page:", err);
-    }
-  }
+  const supabase = getAdminClient();
 
   let order: any = null;
   let merchItems: any[] = [];
@@ -130,9 +111,9 @@ export default async function CheckoutSuccessPage({
     }
   }
 
-  const isPaid = order?.status === "paid" || (!isExplicitRejected && isExplicitApproved);
-  const isPending = !isPaid && !isExplicitRejected && (order?.status === "pending" || boldStatus.includes("pend") || boldStatus.includes("proc"));
-  const isRejected = isExplicitRejected || order?.status === "cancelled";
+  const isPaid = order?.status === "paid";
+  const isRejected = isExplicitRejected || order?.status === "cancelled" || order?.status === "fraud_detected";
+  const isPending = !isPaid && !isRejected;
 
   const hasMerch = merchItems.length > 0;
   const hasTickets = ticketsWithTiers.length > 0;
@@ -200,15 +181,22 @@ export default async function CheckoutSuccessPage({
           Pago en Verificación
         </h1>
         
-        <p style={{ fontSize: '1.05rem', color: '#a1a1aa', marginBottom: '2rem', lineHeight: 1.6 }}>
-          Tu entidad financiera está procesando la transacción a través de Bold (PSE / Bancos). Tan pronto se confirme el pago, recibirás tu factura oficial y la confirmación en tu correo.
+        <p style={{ fontSize: '1.05rem', color: '#a1a1aa', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+          Tu entidad financiera está procesando la transacción a través de Bold. Tan pronto el banco confirme la recepción del pago, recibirás tus entradas oficiales y la factura en tu correo electrónico.
         </p>
 
         {shortId && (
-          <div style={{ backgroundColor: 'rgba(0,0,0,0.4)', padding: '1.25rem', borderRadius: '0.75rem', marginBottom: '2rem', display: 'inline-flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ backgroundColor: 'rgba(0,0,0,0.4)', padding: '1.25rem', borderRadius: '0.75rem', marginBottom: '1.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.75rem' }}>
             <Package size={20} style={{ opacity: 0.5 }} />
             <span style={{ fontSize: '0.9rem', color: '#a1a1aa' }}>Orden Referencia:</span>
             <strong style={{ fontFamily: 'monospace', fontSize: '1.1rem', color: 'white' }}>#{shortId}</strong>
+          </div>
+        )}
+
+        {/* Poller de confirmación en tiempo real (consultas seguras al backend) */}
+        {orderId && (
+          <div style={{ marginBottom: '2rem' }}>
+            <PaymentStatusPoller orderId={orderId} />
           </div>
         )}
 

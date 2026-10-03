@@ -4,11 +4,9 @@ import { redirect } from "next/navigation";
 import { Package, Truck, CheckCircle, Ticket, Clock, ShieldCheck, AlertCircle, FileText } from "lucide-react";
 import Link from "next/link";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tkbrnblnkmuopmffslzn.supabase.co";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrYnJuYmxua211b3BtZmZzbHpuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTgyODI5MCwiZXhwIjoyMDk3NDA0MjkwfQ.Hrtb8b9vXue5iViHapphzb1kqkEu-DaDBp-D-uHmzKA";
-const adminDb = createAdminClient(supabaseUrl, supabaseServiceKey, {
-  auth: { persistSession: false, autoRefreshToken: false }
-});
+import { getAdminClient } from "@/utils/supabase/admin";
+
+const adminDb = getAdminClient();
 
 export default async function AccountOrdersPage() {
   const supabase = await createClient();

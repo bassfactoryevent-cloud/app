@@ -28,8 +28,14 @@ export default function CheckoutClient({ user }: { user: any }) {
       scriptContainerRef.current.innerHTML = "";
       const script = document.createElement("script");
       script.src = "https://checkout.bold.co/library/boldPaymentButton.js";
+      const apiKey = paymentData.boldApiKey || process.env.NEXT_PUBLIC_BOLD_API_KEY || "";
+      if (!apiKey) {
+        toast.error("Configuración de pasarela incompleta en el cliente");
+        return;
+      }
+
       script.setAttribute("data-bold-button", "dark-L");
-      script.setAttribute("data-api-key", "7yYOobYR-iHyqMGT6_Se_i6Wak2dtiMTwW2R8BX6NXU");
+      script.setAttribute("data-api-key", apiKey);
       script.setAttribute("data-amount", Math.round(paymentData.amount).toString());
       script.setAttribute("data-currency", "COP");
       script.setAttribute("data-order-id", paymentData.orderId);
