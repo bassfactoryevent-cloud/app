@@ -25,8 +25,13 @@ export default async function ScannerPortalPage() {
     .eq("id", user.id)
     .single();
 
-  const role = profile?.role || "customer";
-  const isSuperOrAdmin = role === "superadmin" || role === "admin" || user.email === "admin@admin.com";
+  const { data: authUserData } = await adminDb.auth.admin.getUserById(user.id);
+  const metaRole = authUserData?.user?.user_metadata?.role;
+  const effectiveRole = metaRole === "scanner" ? "scanner" : (profile?.role || "customer");
+
+  // ÚNICAMENTE los admin y el super admin pueden tener todas las puertas.
+  // El personal de puerta (scanner) sólo tiene acceso a las puertas que se le asignaron.
+  const isSuperOrAdmin = (effectiveRole === "superadmin" || effectiveRole === "admin" || user.email === "admin@admin.com") && effectiveRole !== "scanner";
 
   let assignedEvents: any[] = [];
 
@@ -72,11 +77,11 @@ export default async function ScannerPortalPage() {
       }}>
         <div style={{ marginBottom: "2rem" }}>
           <Image
-            src="/bassfactorylogo1.png"
+            src="/Bass-Factory-Blanco-Sin-Letras.png"
             alt="Bass Factory"
-            width={160}
+            width={140}
             height={50}
-            style={{ objectFit: "contain" }}
+            style={{ objectFit: "contain", width: "140px", height: "auto" }}
             priority
           />
         </div>
@@ -197,7 +202,7 @@ export default async function ScannerPortalPage() {
         id: user.id,
         email: user.email || "",
         full_name: profile?.full_name || "Personal de Puerta",
-        role,
+        role: effectiveRole,
       }}
       events={enrichedEvents}
     />

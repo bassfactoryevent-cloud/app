@@ -301,14 +301,14 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
         borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
         marginBottom: "1.25rem"
       }}>
-        {/* LOGO CORPORATIVO */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+        {/* LOGO CORPORATIVO (Mismo del Header) */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           <Image
-            src="/bassfactorylogo1.png"
+            src="/Bass-Factory-Blanco-Sin-Letras.png"
             alt="Bass Factory Logo"
-            width={125}
-            height={38}
-            style={{ objectFit: "contain" }}
+            width={140}
+            height={45}
+            style={{ objectFit: "contain", width: "130px", height: "auto" }}
             priority
           />
           <span style={{
@@ -419,12 +419,19 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
         </span>
       </div>
 
-      {/* SELECTOR SI TIENE MÚLTIPLES EVENTOS */}
-      {events.length > 1 && (
+      {/* SELECTOR O IDENTIFICADOR DE PUERTAS ASIGNADAS */}
+      {events.length > 1 ? (
         <div style={{ marginBottom: "1rem" }}>
-          <label style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", fontWeight: 700 }}>
-            Cambiar evento asignado:
-          </label>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.35rem" }}>
+            <label style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.7)", fontWeight: 700 }}>
+              {user.role === "superadmin" || user.role === "admin" 
+                ? "👑 Puertas disponibles (Vista Administrador):" 
+                : "🚪 Puertas asignadas a tu turno:"}
+            </label>
+            <span style={{ fontSize: "0.72rem", color: "#06b6d4", fontWeight: 800 }}>
+              {events.length} puertas autorizadas
+            </span>
+          </div>
           <select
             value={selectedEventId}
             onChange={(e) => {
@@ -433,22 +440,40 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
             }}
             style={{
               width: "100%",
-              marginTop: "0.25rem",
-              padding: "0.6rem 0.75rem",
-              backgroundColor: "rgba(255,255,255,0.08)",
-              border: "1px solid rgba(255,255,255,0.2)",
+              padding: "0.65rem 0.85rem",
+              backgroundColor: "rgba(6, 182, 212, 0.08)",
+              border: "1px solid rgba(6, 182, 212, 0.25)",
               borderRadius: "0.5rem",
               color: "white",
-              fontWeight: 700,
-              fontSize: "0.85rem"
+              fontWeight: 800,
+              fontSize: "0.85rem",
+              outline: "none"
             }}
           >
             {events.map((ev) => (
               <option key={ev.id} value={ev.id}>
-                {ev.title}
+                Puerta: {ev.title}
               </option>
             ))}
           </select>
+        </div>
+      ) : (
+        <div style={{
+          marginBottom: "1rem",
+          padding: "0.5rem 0.85rem",
+          borderRadius: "0.5rem",
+          backgroundColor: "rgba(255, 255, 255, 0.04)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}>
+          <span style={{ fontSize: "0.75rem", color: "rgba(255, 255, 255, 0.6)", fontWeight: 700 }}>
+            {user.role === "superadmin" || user.role === "admin" ? "👑 Acceso Admin (1 Puerta)" : "🚪 Puerta Única Asignada:"}
+          </span>
+          <span style={{ fontSize: "0.8rem", color: "#06b6d4", fontWeight: 800 }}>
+            {activeEvent?.title}
+          </span>
         </div>
       )}
 
