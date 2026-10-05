@@ -43,33 +43,45 @@ export async function POST(req: Request) {
       }, { status: 403 });
     }
 
-    // 3. Buscar la boleta por su hash QR único
-    const { data: ticket, error: ticketError } = await adminDb
+    // 3. Buscar la boleta por su hash QR único (o por ID como fallback)
+    const cleanHash = (qr_hash || "").trim();
+    let { data: ticket, error: ticketError } = await adminDb
       .from("tickets")
-      .select(`
-        id, 
-        status, 
-        tier_id,
-        assigned_name,
-        ticket_tiers!inner(event_id, name),
-        merch_orders!inner(customer_name)
-      `)
-      .eq("qr_hash", qr_hash)
-      .single();
+      .select("id, status, tier_id, order_id, assigned_name, scanned_at, created_at")
+      .eq("qr_hash", cleanHash)
+      .maybeSingle();
 
-    if (ticketError || !ticket) {
+    if (!ticket) {
+      const { data: ticketById } = await adminDb
+        .from("tickets")
+        .select("id, status, tier_id, order_id, assigned_name, scanned_at, created_at")
+        .eq("id", cleanHash)
+        .maybeSingle();
+
+      if (ticketById) {
+        ticket = ticketById;
+      }
+    }
+
+    if (!ticket) {
       return NextResponse.json({ error: "Boleta no encontrada o código QR no reconocido." }, { status: 404 });
     }
 
-    const t = ticket as any;
-    const tierEventId = Array.isArray(t.ticket_tiers) ? t.ticket_tiers[0]?.event_id : t.ticket_tiers?.event_id;
-    const tierName = Array.isArray(t.ticket_tiers) ? t.ticket_tiers[0]?.name : t.ticket_tiers?.name;
-    const orderCustomerName = Array.isArray(t.merch_orders) ? t.merch_orders[0]?.customer_name : t.merch_orders?.customer_name;
-    
-    const attendeeName = t.assigned_name || orderCustomerName || 'Asistente';
+    // 3.1 Obtener localidad y orden sin depender de foreign keys en el schema cache
+    const [{ data: tier }, { data: order }] = await Promise.all([
+      adminDb.from("ticket_tiers").select("id, event_id, name").eq("id", ticket.tier_id).maybeSingle(),
+      ticket.order_id 
+        ? adminDb.from("merch_orders").select("id, customer_name").eq("id", ticket.order_id).maybeSingle()
+        : Promise.resolve({ data: null })
+    ]);
+
+    const tierEventId = tier?.event_id;
+    const tierName = tier?.name || "Localidad Oficial";
+    const orderCustomerName = order?.customer_name;
+    const attendeeName = ticket.assigned_name || orderCustomerName || "Asistente";
 
     // 4. Validar que la boleta corresponda a este evento
-    if (tierEventId !== event_id) {
+    if (tierEventId && tierEventId !== event_id) {
       return NextResponse.json({ 
         success: false, 
         error: "Esta entrada corresponde a otro evento diferente." 
@@ -77,19 +89,24 @@ export async function POST(req: Request) {
     }
 
     // 5. Validar estrictamente el estado de la boleta
-    if (ticket.status === 'scanned') {
-      return NextResponse.json({ error: "¡ALERTA! Esta boleta YA fue utilizada previamente." }, { status: 400 });
+    if (ticket.status === "scanned") {
+      const scannedTime = ticket.scanned_at 
+        ? new Date(ticket.scanned_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })
+        : "";
+      return NextResponse.json({ 
+        error: `¡ALERTA! Esta boleta YA fue utilizada previamente${scannedTime ? ` a las ${scannedTime}` : ""}.` 
+      }, { status: 400 });
     }
 
-    if (ticket.status === 'void') {
+    if (ticket.status === "void") {
       return NextResponse.json({ error: "Boleta INVÁLIDA: El pago de esta orden no fue completado." }, { status: 400 });
     }
 
-    if (ticket.status === 'cancelled') {
+    if (ticket.status === "cancelled") {
       return NextResponse.json({ error: "Boleta CANCELADA por la organización." }, { status: 400 });
     }
 
-    if (ticket.status !== 'valid') {
+    if (ticket.status !== "valid") {
       return NextResponse.json({ error: `Boleta no apta para ingreso (Estado actual: ${ticket.status}).` }, { status: 400 });
     }
 
@@ -97,7 +114,7 @@ export async function POST(req: Request) {
     const { data: updated, error: updateError } = await adminDb
       .from("tickets")
       .update({ 
-        status: 'scanned', 
+        status: "scanned", 
         scanned_at: new Date().toISOString(),
         scanned_by: user.id
       })
