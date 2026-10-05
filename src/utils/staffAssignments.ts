@@ -113,9 +113,14 @@ export async function assignUserToEvent(eventId: string, userId: string, assigne
     all.push(newAssignment);
     await saveStaffAssignments(all);
 
-    // Also ensure user has at least 'scanner' role if currently customer
+    // Also ensure user has at least 'scanner' role in auth metadata & profile
     if (userProfile.role === "customer" || !userProfile.role) {
-      await adminDb.from("profiles").update({ role: "scanner" }).eq("id", userId);
+      try {
+        await adminDb.auth.admin.updateUserById(userId, { user_metadata: { role: "scanner" } });
+        await adminDb.from("profiles").update({ role: "scanner" }).eq("id", userId);
+      } catch {
+        // Safe fallback if enum restricts it
+      }
     }
 
     return { success: true };

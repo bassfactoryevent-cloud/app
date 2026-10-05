@@ -212,29 +212,38 @@ export default function StaffManagementClient({
           Asignar Nuevo Personal a la Puerta
         </h3>
         <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-          <select
-            value={selectedUserId}
-            onChange={(e) => setSelectedUserId(e.target.value)}
-            disabled={isPending}
-            style={{
-              flex: 1,
-              minWidth: "260px",
-              padding: "0.75rem 1rem",
-              backgroundColor: "rgba(0, 0, 0, 0.5)",
-              border: "1px solid rgba(255, 255, 255, 0.15)",
-              borderRadius: "0.5rem",
-              color: "white",
-              fontSize: "0.875rem",
-              outline: "none"
-            }}
-          >
-            <option value="">-- Seleccionar usuario registrado en Bassfactory --</option>
-            {availableUsers.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.full_name || "Sin nombre"} ({u.email || u.id.substring(0, 8)}) - Rol: {u.role || "cliente"}
-              </option>
-            ))}
-          </select>
+          {availableUsers && availableUsers.length > 0 ? (
+            <select
+              value={selectedUserId}
+              onChange={(e) => setSelectedUserId(e.target.value)}
+              disabled={isPending}
+              style={{
+                flex: 1,
+                minWidth: "260px",
+                padding: "0.75rem 1rem",
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                borderRadius: "0.5rem",
+                color: "white",
+                fontSize: "0.875rem",
+                outline: "none"
+              }}
+            >
+              <option value="">-- Seleccionar personal autorizado (Puerta o Admin) --</option>
+              {availableUsers.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.full_name || "Sin nombre"} ({u.email || u.id.substring(0, 8)}) — [Rol: {u.role === 'scanner' ? '🚪 Personal de Puerta' : u.role === 'superadmin' ? '👑 Super Admin' : u.role === 'admin' ? 'Admin' : u.role}]
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div style={{ flex: 1, padding: "0.6rem 0", color: "rgba(255,255,255,0.7)", fontSize: "0.85rem" }}>
+              No hay usuarios con rol de <strong>Puerta</strong> o <strong>Admin</strong> registrados. (Clientes comunes están excluidos).{" "}
+              <Link href="/admin/users" style={{ color: "#06b6d4", fontWeight: 700, textDecoration: "underline" }}>
+                + Crear o asignar rol en Usuarios &rarr;
+              </Link>
+            </div>
+          )}
 
           <button
             onClick={handleAssign}

@@ -494,30 +494,39 @@ export default function EventDashboardClient({
         <div style={{ padding: "1.25rem 1.5rem", backgroundColor: "rgba(255,255,255,0.015)", borderBottom: "1px solid var(--color-border, #333)", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "1rem" }}>
           <div style={{ flex: 1, minWidth: "260px" }}>
             <label style={{ display: "block", fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", fontWeight: 700, marginBottom: "0.35rem" }}>
-              Seleccionar usuario para asignar a la puerta de este evento:
+              Seleccionar personal autorizado para la puerta de este evento (Puerta / Admin):
             </label>
-            <select
-              value={selectedStaffUserId}
-              onChange={(e) => setSelectedStaffUserId(e.target.value)}
-              disabled={isStaffPending}
-              style={{
-                width: "100%",
-                padding: "0.6rem 0.85rem",
-                borderRadius: "0.5rem",
-                backgroundColor: "rgba(0,0,0,0.5)",
-                border: "1px solid rgba(255,255,255,0.15)",
-                color: "white",
-                fontSize: "0.85rem",
-                fontWeight: 600
-              }}
-            >
-              <option value="">-- Elige un usuario registrado --</option>
-              {availableUsers?.map((u: any) => (
-                <option key={u.id} value={u.id}>
-                  {u.full_name} ({u.email}) — Rol: {u.role}
-                </option>
-              ))}
-            </select>
+            {availableUsers && availableUsers.length > 0 ? (
+              <select
+                value={selectedStaffUserId}
+                onChange={(e) => setSelectedStaffUserId(e.target.value)}
+                disabled={isStaffPending}
+                style={{
+                  width: "100%",
+                  padding: "0.6rem 0.85rem",
+                  borderRadius: "0.5rem",
+                  backgroundColor: "rgba(0,0,0,0.5)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  color: "white",
+                  fontSize: "0.85rem",
+                  fontWeight: 600
+                }}
+              >
+                <option value="">-- Elige personal autorizado (Puerta o Admin) --</option>
+                {availableUsers.map((u: any) => (
+                  <option key={u.id} value={u.id}>
+                    {u.full_name} ({u.email}) — [Rol: {u.role === 'scanner' ? '🚪 Personal de Puerta' : u.role === 'superadmin' ? '👑 Super Admin' : u.role === 'admin' ? 'Admin' : u.role}]
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div style={{ padding: "0.5rem 0", fontSize: "0.85rem", color: "rgba(255,255,255,0.7)" }}>
+                No hay usuarios con rol de <strong>Puerta</strong> o <strong>Admin</strong> disponibles. (Los clientes comunes están excluidos por seguridad).{" "}
+                <Link href="/admin/users" style={{ color: "var(--color-magenta)", fontWeight: 700, textDecoration: "underline" }}>
+                  + Crear usuario o cambiar rol en Usuarios &rarr;
+                </Link>
+              </div>
+            )}
           </div>
 
           <button
