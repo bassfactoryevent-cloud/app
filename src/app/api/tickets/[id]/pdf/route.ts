@@ -11,13 +11,12 @@ import { getAdminClient } from "@/utils/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
-const adminSupabase = getAdminClient();
-
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    const adminSupabase = getAdminClient();
     const resolvedParams = await params;
     const ticketId = resolvedParams.id;
 

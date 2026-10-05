@@ -5,13 +5,12 @@ import Image from "next/image";
 import PrintInvoiceButton from "./PrintInvoiceButton";
 import { getOrAssignInvoiceNumber } from "@/utils/orderFulfillment";
 
-const supabase = getAdminClient();
-
 export default async function OrderInvoicePage({
   params
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const supabase = getAdminClient();
   const { id: orderId } = await params;
 
   // Auth check

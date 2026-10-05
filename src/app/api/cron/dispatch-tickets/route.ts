@@ -9,11 +9,10 @@ import { getAdminClient } from "@/utils/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
-const supabase = getAdminClient();
-const resend = new Resend(process.env.RESEND_API_KEY || "");
-
 export async function GET(req: Request) {
   try {
+    const supabase = getAdminClient();
+    const resend = new Resend(process.env.RESEND_API_KEY || "");
     // 0. Authorization check
     const authHeader = req.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET;
