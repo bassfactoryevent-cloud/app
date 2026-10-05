@@ -44,7 +44,27 @@ export async function POST(req: Request) {
     }
 
     // 3. Buscar la boleta por su hash QR único (o por ID como fallback)
-    const cleanHash = (qr_hash || "").trim();
+    let cleanHash = (qr_hash || "").trim();
+    if ((cleanHash.startsWith('"') && cleanHash.endsWith('"')) || (cleanHash.startsWith("'") && cleanHash.endsWith("'"))) {
+      cleanHash = cleanHash.slice(1, -1).trim();
+    }
+    if (cleanHash.includes("?") || cleanHash.includes("/")) {
+      try {
+        const urlStr = cleanHash.startsWith("http") ? cleanHash : `https://${cleanHash}`;
+        const parsed = new URL(urlStr);
+        const queryHash = parsed.searchParams.get("qr") || parsed.searchParams.get("hash") || parsed.searchParams.get("code");
+        if (queryHash) {
+          cleanHash = queryHash.trim();
+        } else {
+          const segments = parsed.pathname.split("/").filter(Boolean);
+          const lastSeg = segments[segments.length - 1];
+          if (lastSeg && lastSeg.length >= 16) {
+            cleanHash = lastSeg.trim();
+          }
+        }
+      } catch {}
+    }
+
     let { data: ticket, error: ticketError } = await adminDb
       .from("tickets")
       .select("id, status, tier_id, order_id, assigned_name, scanned_at, created_at")

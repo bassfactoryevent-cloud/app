@@ -51,6 +51,9 @@ export default async function AccountTicketsPage() {
     query = query.or(`user_id.eq.${user.id},assigned_email.ilike.${user.email}`);
   }
 
+  // Filtrar boletas canceladas/nulas sin pago
+  query = query.neq("status", "void");
+
   const { data: rawTickets, error: ticketsError } = await query.order("created_at", { ascending: false });
 
   if (ticketsError) {

@@ -102,7 +102,22 @@ export async function createEvent(formData: FormData) {
   const end_date = formData.get("end_date") ? new Date(formData.get("end_date") as string).toISOString() : null;
   
   const is_free = formData.get("is_free") === "on";
-  const total_capacity = formData.get("total_capacity") ? parseInt(formData.get("total_capacity") as string, 10) : null;
+  const raw_capacity = formData.get("total_capacity") as string;
+  let total_capacity: number | null = raw_capacity && !isNaN(parseInt(raw_capacity, 10))
+    ? parseInt(raw_capacity, 10)
+    : null;
+
+  const ticketsJson = formData.get("tickets_json") as string;
+  if (!total_capacity && ticketsJson) {
+    try {
+      const parsedTickets = JSON.parse(ticketsJson);
+      if (Array.isArray(parsedTickets)) {
+        const sumTiers = parsedTickets.reduce((acc: number, t: any) => acc + (parseInt(t.quantity, 10) || 0), 0);
+        if (sumTiers > 0) total_capacity = sumTiers;
+      }
+    } catch {}
+  }
+
   const status = formData.get("status") as string || "draft";
 
   const eventData = {

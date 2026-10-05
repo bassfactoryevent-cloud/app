@@ -409,10 +409,25 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
             </div>
             <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "#22c55e" }}>
               {scannedCounts[selectedEventId] || 0}{" "}
-              <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>
-                / {activeEvent.total_capacity || "Aforo Libre"}
+              <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>
+                / {activeEvent.total_capacity ? `${activeEvent.total_capacity} Asistentes` : "Aforo Libre"}
               </span>
             </div>
+            {activeEvent.total_capacity > 0 && (
+              <div style={{ marginTop: "0.35rem" }}>
+                <div style={{ width: "140px", height: "5px", backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "999px", overflow: "hidden" }}>
+                  <div style={{
+                    height: "100%",
+                    backgroundColor: "#22c55e",
+                    width: `${Math.min(100, Math.round(((scannedCounts[selectedEventId] || 0) / activeEvent.total_capacity) * 100))}%`,
+                    transition: "width 0.3s ease"
+                  }} />
+                </div>
+                <div style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
+                  {Math.round(((scannedCounts[selectedEventId] || 0) / activeEvent.total_capacity) * 100)}% capacidad
+                </div>
+              </div>
+            )}
           </div>
 
           <div style={{

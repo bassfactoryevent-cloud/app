@@ -134,6 +134,22 @@ export default function EventFormClient({ djs, sponsors, initialData }: { djs: a
                 </div>
               </div>
               <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+                  Aforo Total / Capacidad Máxima (Personas) *
+                </label>
+                <input 
+                  type="number" 
+                  name="total_capacity" 
+                  min="1" 
+                  defaultValue={initialData?.total_capacity || ""} 
+                  placeholder="Ej. 100, 250, 500..." 
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }} 
+                />
+                <p style={{ fontSize: '0.75rem', opacity: 0.6, marginTop: '0.35rem' }}>
+                  Capacidad máxima permitida en el recinto. El escáner de taquilla usará este número para contabilizar el aforo en vivo (ej. 45 / 100 Asistentes).
+                </p>
+              </div>
+              <div>
                 <input type="hidden" name="cover_image" value={coverImage} />
                 <ImageUpload 
                   bucket="events" 
