@@ -163,11 +163,16 @@ export default function EventDashboardClient({
         }}>
           <ArrowLeft size={20} />
         </Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
-          <Activity size={24} color="#3b82f6" />
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: 0, color: "white" }}>
-            Ventas: {event.title}
-          </h1>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Activity size={22} color="#3b82f6" />
+            <h1 style={{ fontSize: "1.65rem", fontWeight: 800, margin: 0, color: "white" }}>
+              Detalle del Evento: {event.title}
+            </h1>
+          </div>
+          <p style={{ color: "rgba(255,255,255,0.65)", margin: 0, fontSize: "0.85rem" }}>
+            Aforo y capacidad, lista de asistentes que han ingresado en vivo, personal de puerta asignado y ventas.
+          </p>
         </div>
         <Link href={`/admin/events/${event.id}/staff`} style={{
           display: 'flex', alignItems: 'center', gap: '0.5rem',

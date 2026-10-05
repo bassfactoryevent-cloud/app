@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Calendar, Plus, MapPin, Ticket, Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, Plus, MapPin, Ticket, Search, Filter, ChevronLeft, ChevronRight, Activity } from "lucide-react";
 import DeleteEventButton from "./DeleteEventButton";
 
 export default function EventsClient({ initialEvents, error }: { initialEvents: any[], error: any }) {
@@ -153,20 +153,80 @@ export default function EventsClient({ initialEvents, error }: { initialEvents: 
                   </span>
                 </div>
 
-                <div style={{ marginTop: 'auto', display: 'flex', gap: '0.4rem', borderTop: '1px solid rgba(128,128,128,0.1)', paddingTop: '1rem', flexWrap: 'wrap' }}>
-                  <Link href={`/admin/events/${event.id}/dashboard`} style={{ flex: 1, minWidth: '70px', textAlign: 'center', padding: '0.5rem', backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#3b82f6', borderRadius: 'var(--radius-md)', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 700 }}>
-                    Ventas
+                <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem', borderTop: '1px solid rgba(128,128,128,0.1)', paddingTop: '0.85rem' }}>
+                  <Link 
+                    href={`/admin/events/${event.id}/dashboard`} 
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      gap: '0.4rem', 
+                      padding: '0.6rem', 
+                      backgroundColor: 'rgba(59, 130, 246, 0.15)', 
+                      border: '1px solid rgba(59, 130, 246, 0.35)', 
+                      color: '#60a5fa', 
+                      borderRadius: 'var(--radius-md)', 
+                      textDecoration: 'none', 
+                      fontSize: '0.825rem', 
+                      fontWeight: 800 
+                    }}
+                  >
+                    <Activity size={15} /> Detalle: Asistentes y Ventas
                   </Link>
-                  <Link href={`/admin/events/${event.id}/staff`} style={{ flex: 1, minWidth: '70px', textAlign: 'center', padding: '0.5rem', backgroundColor: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4', borderRadius: 'var(--radius-md)', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 700 }}>
-                    🚪 Puerta
-                  </Link>
-                  <Link href={`/admin/events/${event.id}`} style={{ flex: 1, minWidth: '60px', textAlign: 'center', padding: '0.5rem', backgroundColor: 'rgba(128,128,128,0.1)', borderRadius: 'var(--radius-md)', textDecoration: 'none', color: 'inherit', fontSize: '0.8rem' }}>
-                    Editar
-                  </Link>
-                  <Link href={`/admin/events/${event.id}/scan`} style={{ flex: 1, minWidth: '65px', textAlign: 'center', padding: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', borderRadius: 'var(--radius-md)', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 600 }}>
-                    Escáner
-                  </Link>
-                  <DeleteEventButton id={event.id} eventName={event.title} />
+
+                  <div style={{ display: 'flex', gap: '0.35rem' }}>
+                    <Link 
+                      href={`/admin/events/${event.id}/staff`} 
+                      style={{ 
+                        flex: 1, 
+                        textAlign: 'center', 
+                        padding: '0.45rem 0.3rem', 
+                        backgroundColor: 'rgba(6, 182, 212, 0.12)', 
+                        border: '1px solid rgba(6, 182, 212, 0.25)', 
+                        color: '#06b6d4', 
+                        borderRadius: 'var(--radius-md)', 
+                        textDecoration: 'none', 
+                        fontSize: '0.78rem', 
+                        fontWeight: 700 
+                      }}
+                    >
+                      🚪 Puerta
+                    </Link>
+                    <Link 
+                      href={`/admin/events/${event.id}`} 
+                      style={{ 
+                        flex: 1, 
+                        textAlign: 'center', 
+                        padding: '0.45rem 0.3rem', 
+                        backgroundColor: 'rgba(255,255,255,0.06)', 
+                        border: '1px solid rgba(255,255,255,0.1)', 
+                        borderRadius: 'var(--radius-md)', 
+                        textDecoration: 'none', 
+                        color: 'white', 
+                        fontSize: '0.78rem', 
+                        fontWeight: 600 
+                      }}
+                    >
+                      Editar
+                    </Link>
+                    <Link 
+                      href={`/admin/events/${event.id}/scan`} 
+                      style={{ 
+                        flex: 1, 
+                        textAlign: 'center', 
+                        padding: '0.45rem 0.3rem', 
+                        backgroundColor: 'var(--color-magenta)', 
+                        color: 'white', 
+                        borderRadius: 'var(--radius-md)', 
+                        textDecoration: 'none', 
+                        fontSize: '0.78rem', 
+                        fontWeight: 700 
+                      }}
+                    >
+                      Escáner
+                    </Link>
+                    <DeleteEventButton id={event.id} eventName={event.title} />
+                  </div>
                 </div>
               </div>
             </div>
