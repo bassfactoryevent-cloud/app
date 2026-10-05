@@ -304,6 +304,24 @@ export default function TicketCard({ event, tickets, eventDate }: TicketCardProp
                         {tier?.name || 'Localidad General'}
                       </span>
 
+                      {ticket.status === 'scanned' && (
+                        <span style={{
+                          backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                          border: '1px solid rgba(34, 197, 94, 0.4)',
+                          color: '#22c55e',
+                          fontSize: '0.75rem',
+                          fontWeight: 900,
+                          padding: '0.2rem 0.65rem',
+                          borderRadius: '6px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          textTransform: 'uppercase'
+                        }}>
+                          <CheckCircle2 size={12} /> ACTIVO EN EL EVENTO
+                        </span>
+                      )}
+
                       <span style={{ fontSize: '0.78rem', fontFamily: 'monospace', color: 'rgba(255,255,255,0.7)', backgroundColor: 'rgba(255,255,255,0.06)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
                         Entrada #{index + 1} • {shortId}
                       </span>
@@ -317,7 +335,12 @@ export default function TicketCard({ event, tickets, eventDate }: TicketCardProp
 
                     {/* Status / Holder Row */}
                     <div style={{ fontSize: '0.85rem', marginTop: '2px' }}>
-                      {pendingTransfer ? (
+                      {ticket.status === 'scanned' ? (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#22c55e', fontWeight: 700 }}>
+                          <CheckCircle2 size={15} />
+                          <span>¡Ya estás dentro del evento! Ingreso confirmado{ticket.scanned_at ? ` a las ${new Date(ticket.scanned_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}` : ''}.</span>
+                        </div>
+                      ) : pendingTransfer ? (
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#f59e0b', fontWeight: 600 }}>
                           <Clock size={14} />
                           <span>En transferencia para: <strong>{pendingTransfer.to_name || pendingTransfer.to_email}</strong></span>
@@ -578,22 +601,93 @@ export default function TicketCard({ event, tickets, eventDate }: TicketCardProp
                   </div>
                 </div>
 
-                {/* QR Section */}
-                <div style={{ textAlign: 'center', padding: '1.25rem', backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '1.5rem' }}>
-                  <div style={{ width: '170px', height: '170px', backgroundColor: 'white', padding: '10px', borderRadius: '0.75rem', margin: '0 auto 0.75rem' }}>
-                    {generatedQrMap[selectedTicketForPass.id] ? (
-                      <img src={generatedQrMap[selectedTicketForPass.id]} alt="QR Oficial" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                    ) : (
-                      <div style={{ color: 'black', fontSize: '0.8rem', fontWeight: 700, paddingTop: '60px' }}>Generando QR...</div>
+                {/* QR / Attendance Section */}
+                {selectedTicketForPass.status === 'scanned' ? (
+                  <div style={{
+                    textAlign: 'center',
+                    padding: '1.75rem 1.25rem',
+                    backgroundColor: 'rgba(34, 197, 94, 0.08)',
+                    borderRadius: '1rem',
+                    border: '1px solid rgba(34, 197, 94, 0.35)',
+                    marginBottom: '1.5rem'
+                  }}>
+                    <div style={{
+                      width: '64px',
+                      height: '64px',
+                      backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 1rem',
+                      color: '#22c55e',
+                      boxShadow: '0 0 20px rgba(34, 197, 94, 0.3)'
+                    }}>
+                      <CheckCircle2 size={38} />
+                    </div>
+
+                    <div style={{
+                      color: '#22c55e',
+                      fontWeight: 900,
+                      fontSize: '1.2rem',
+                      letterSpacing: '-0.01em',
+                      textTransform: 'uppercase'
+                    }}>
+                      🎉 ¡Estás Activo en el Evento!
+                    </div>
+
+                    <div style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                      color: '#22c55e',
+                      padding: '0.3rem 0.8rem',
+                      borderRadius: '999px',
+                      fontSize: '0.8rem',
+                      fontWeight: 800,
+                      marginTop: '0.5rem',
+                      marginBottom: '0.75rem'
+                    }}>
+                      <span>●</span> INGRESO VERIFICADO
+                    </div>
+
+                    <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', margin: 0, fontWeight: 500 }}>
+                      Tu entrada fue validada en puerta con éxito. ¡Disfruta de la música y la experiencia Bassfactory!
+                    </p>
+
+                    {selectedTicketForPass.scanned_at && (
+                      <div style={{
+                        marginTop: '1rem',
+                        fontSize: '0.75rem',
+                        color: 'rgba(255,255,255,0.6)',
+                        fontFamily: 'monospace',
+                        backgroundColor: 'rgba(0,0,0,0.4)',
+                        padding: '0.4rem 0.8rem',
+                        borderRadius: '0.5rem',
+                        display: 'inline-block'
+                      }}>
+                        Hora de check-in: {new Date(selectedTicketForPass.scanned_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      </div>
                     )}
                   </div>
-                  <div style={{ color: '#00F0FF', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.05em' }}>
-                    QR ACTIVO PARA TAQUILLA
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '1.25rem', backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '1.5rem' }}>
+                    <div style={{ width: '170px', height: '170px', backgroundColor: 'white', padding: '10px', borderRadius: '0.75rem', margin: '0 auto 0.75rem' }}>
+                      {generatedQrMap[selectedTicketForPass.id] ? (
+                        <img src={generatedQrMap[selectedTicketForPass.id]} alt="QR Oficial" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      ) : (
+                        <div style={{ color: 'black', fontSize: '0.8rem', fontWeight: 700, paddingTop: '60px' }}>Generando QR...</div>
+                      )}
+                    </div>
+                    <div style={{ color: '#00F0FF', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.05em' }}>
+                      QR ACTIVO PARA TAQUILLA
+                    </div>
+                    <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', margin: '4px 0 0 0' }}>
+                      Presenta este código en taquilla o descarga el PDF oficial.
+                    </p>
                   </div>
-                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', margin: '4px 0 0 0' }}>
-                    Presenta este código en taquilla o descarga el PDF oficial.
-                  </p>
-                </div>
+                )}
 
                 {/* Modal Actions */}
                 <div style={{ display: 'flex', gap: '0.75rem' }}>

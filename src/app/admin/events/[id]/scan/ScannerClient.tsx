@@ -114,9 +114,25 @@ export default function ScannerClient({ eventId }: { eventId: string }) {
           
           {status === 'success' && (
             <>
-              <CheckCircle2 size={48} color="#22c55e" style={{ margin: '0 auto 1rem' }} />
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#22c55e', margin: 0 }}>¡Acceso Concedido!</h3>
-              <p style={{ marginTop: '0.5rem', opacity: 0.8 }}>{message}</p>
+              <CheckCircle2 size={56} color="#22c55e" style={{ margin: '0 auto 1rem' }} />
+              <h3 style={{ fontSize: '1.6rem', fontWeight: 900, color: '#22c55e', margin: 0 }}>
+                🎉 ¡BIENVENIDO A BASSFACTORY!
+              </h3>
+              <div style={{
+                display: 'inline-block',
+                marginTop: '0.6rem',
+                marginBottom: '0.6rem',
+                padding: '0.35rem 0.9rem',
+                backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                border: '1px solid rgba(34, 197, 94, 0.4)',
+                borderRadius: '999px',
+                color: '#22c55e',
+                fontWeight: 800,
+                fontSize: '0.85rem'
+              }}>
+                🟢 ACTIVO EN EL EVENTO
+              </div>
+              <p style={{ marginTop: '0.5rem', opacity: 0.9, fontSize: '1.05rem', fontWeight: 600 }}>{message}</p>
             </>
           )}
 

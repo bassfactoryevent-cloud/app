@@ -41,6 +41,9 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
     status: "idle" | "scanning" | "success" | "error";
     message: string;
     details?: string;
+    attendee_name?: string;
+    tier_name?: string;
+    scanned_time?: string;
   }>({ status: "idle", message: "" });
   
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -139,8 +142,11 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
                 playFeedback(true);
                 setScanResult({
                   status: "success",
-                  message: data.message || "¡ACCESO CONCEDIDO!",
-                  details: "Entrada válida • Aforo actualizado"
+                  message: "¡BIENVENIDO A BASSFACTORY!",
+                  details: "Acceso Concedido • Verificado en taquilla",
+                  attendee_name: data.attendee_name || "Asistente Oficial",
+                  tier_name: data.tier_name || "Localidad Oficial",
+                  scanned_time: data.scanned_time || new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })
                 });
                 setScannedCounts(prev => ({
                   ...prev,
@@ -163,13 +169,13 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
               });
             }
 
-            // Esperar 2.2 segundos y permitir el siguiente escaneo
+            // Esperar 3.5 segundos para que lean la bienvenida y permitir el siguiente escaneo
             setTimeout(() => {
               if (isMounted) {
                 setScanResult({ status: "idle", message: "" });
                 isProcessingRef.current = false;
               }
-            }, 2200);
+            }, 3500);
           },
           () => {
             // Ignorar frames sin código
@@ -549,24 +555,101 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
                 zIndex: 20,
                 transition: "background-color 0.2s"
               }}>
-                {scanResult.status === "success" && <CheckCircle2 size={80} color="#fff" />}
-                {scanResult.status === "error" && <XCircle size={80} color="#fff" />}
-                {scanResult.status === "scanning" && <RefreshCw size={50} color="#06b6d4" className="animate-spin" />}
+                {scanResult.status === "success" && (
+                  <>
+                    <div style={{
+                      width: "72px",
+                      height: "72px",
+                      borderRadius: "50%",
+                      backgroundColor: "rgba(255, 255, 255, 0.2)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: "0.75rem"
+                    }}>
+                      <CheckCircle2 size={52} color="#fff" />
+                    </div>
 
-                <h2 style={{
-                  fontSize: "1.6rem",
-                  fontWeight: 900,
-                  color: "#fff",
-                  marginTop: "1rem",
-                  marginBottom: "0.5rem",
-                  textTransform: "uppercase"
-                }}>
-                  {scanResult.message}
-                </h2>
-                {scanResult.details && (
-                  <p style={{ fontSize: "1rem", color: "rgba(255,255,255,0.9)", margin: 0, fontWeight: 700 }}>
-                    {scanResult.details}
-                  </p>
+                    <h2 style={{
+                      fontSize: "1.5rem",
+                      fontWeight: 900,
+                      color: "#fff",
+                      margin: 0,
+                      letterSpacing: "-0.01em"
+                    }}>
+                      🎉 ¡BIENVENIDO A BASSFACTORY!
+                    </h2>
+
+                    <div style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.4rem",
+                      backgroundColor: "#000",
+                      color: "#22c55e",
+                      padding: "0.35rem 0.85rem",
+                      borderRadius: "999px",
+                      fontWeight: 900,
+                      fontSize: "0.85rem",
+                      marginTop: "0.6rem",
+                      marginBottom: "0.6rem",
+                      textTransform: "uppercase"
+                    }}>
+                      <span style={{ width: "8px", height: "8px", backgroundColor: "#22c55e", borderRadius: "50%" }} />
+                      ACTIVO EN EL EVENTO
+                    </div>
+
+                    <div style={{
+                      backgroundColor: "rgba(0,0,0,0.35)",
+                      borderRadius: "0.75rem",
+                      padding: "0.75rem 1rem",
+                      width: "100%",
+                      maxWidth: "320px",
+                      marginTop: "0.25rem",
+                      border: "1px solid rgba(255,255,255,0.15)"
+                    }}>
+                      <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "white" }}>
+                        {scanResult.attendee_name || "Asistente Oficial"}
+                      </div>
+                      <div style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.85)", marginTop: "2px" }}>
+                        Localidad: <strong>{scanResult.tier_name || "General"}</strong>
+                      </div>
+                      {scanResult.scanned_time && (
+                        <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", marginTop: "4px" }}>
+                          Hora de ingreso: {scanResult.scanned_time}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {scanResult.status === "error" && (
+                  <>
+                    <XCircle size={80} color="#fff" />
+                    <h2 style={{
+                      fontSize: "1.5rem",
+                      fontWeight: 900,
+                      color: "#fff",
+                      marginTop: "1rem",
+                      marginBottom: "0.5rem",
+                      textTransform: "uppercase"
+                    }}>
+                      {scanResult.message}
+                    </h2>
+                    {scanResult.details && (
+                      <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.9)", margin: 0, fontWeight: 700 }}>
+                        {scanResult.details}
+                      </p>
+                    )}
+                  </>
+                )}
+
+                {scanResult.status === "scanning" && (
+                  <>
+                    <RefreshCw size={50} color="#06b6d4" className="animate-spin" />
+                    <h2 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#fff", marginTop: "1rem" }}>
+                      Verificando entrada...
+                    </h2>
+                  </>
                 )}
               </div>
             )}

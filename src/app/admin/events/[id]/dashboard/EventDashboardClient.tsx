@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, DollarSign, Ticket, Users, Activity, ScanLine } from "lucide-react";
+import { ArrowLeft, DollarSign, Ticket, Users, Activity, ScanLine, CheckCircle2, Clock, Search } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 
@@ -19,6 +19,8 @@ export default function EventDashboardClient({ event, initialTiers, initialOrder
   const [orders, setOrders] = useState(initialOrders);
   const [tickets, setTickets] = useState(initialTickets);
   const [transfers, setTransfers] = useState(initialTransfers);
+  const [attendeeFilter, setAttendeeFilter] = useState<"all" | "active" | "pending">("all");
+  const [attendeeSearch, setAttendeeSearch] = useState("");
   
   // Realtime subscription
   useEffect(() => {
@@ -241,6 +243,230 @@ export default function EventDashboardClient({ event, initialTiers, initialOrder
               </tbody>
             </table>
           </div>
+        </div>
+      {/* Live Door Check-in & Attendees Table */}
+      <div style={{ marginTop: "2.5rem", backgroundColor: "var(--color-surface, #111)", border: "1px solid var(--color-border, #333)", borderRadius: "var(--radius-lg)", overflow: "hidden" }}>
+        <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--color-border, #333)", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <span style={{ fontSize: "1.3rem" }}>🚪</span>
+              <h3 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0, color: "white" }}>
+                Control de Entrada / Asistentes (Check-in en Vivo)
+              </h3>
+            </div>
+            <p style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)", marginTop: "0.35rem", marginBottom: 0 }}>
+              Registro de boletas escaneadas en taquilla y verificación de asistentes activos en sala.
+            </p>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              backgroundColor: "rgba(34, 197, 94, 0.12)",
+              border: "1px solid rgba(34, 197, 94, 0.3)",
+              padding: "0.4rem 0.85rem",
+              borderRadius: "999px",
+              color: "#22c55e",
+              fontWeight: 800,
+              fontSize: "0.825rem"
+            }}>
+              <CheckCircle2 size={15} />
+              {totalScanned} / {totalAforo > 0 ? totalAforo : totalTicketsSold} Ingresados
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "#22c55e" }}>
+              <span style={{ width: "8px", height: "8px", backgroundColor: "#22c55e", borderRadius: "50%", display: "inline-block", boxShadow: "0 0 8px #22c55e" }} />
+              En Vivo
+            </div>
+          </div>
+        </div>
+
+        {/* Filter & Search Bar */}
+        <div style={{ padding: "1rem 1.5rem", backgroundColor: "rgba(255,255,255,0.015)", borderBottom: "1px solid var(--color-border, #333)", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button
+              onClick={() => setAttendeeFilter("all")}
+              style={{
+                padding: "0.4rem 0.85rem",
+                borderRadius: "0.5rem",
+                border: attendeeFilter === "all" ? "1px solid #3b82f6" : "1px solid rgba(255,255,255,0.1)",
+                backgroundColor: attendeeFilter === "all" ? "rgba(59, 130, 246, 0.2)" : "rgba(255,255,255,0.04)",
+                color: attendeeFilter === "all" ? "white" : "rgba(255,255,255,0.6)",
+                fontWeight: 700,
+                fontSize: "0.8rem",
+                cursor: "pointer"
+              }}
+            >
+              Todos ({tickets.length})
+            </button>
+            <button
+              onClick={() => setAttendeeFilter("active")}
+              style={{
+                padding: "0.4rem 0.85rem",
+                borderRadius: "0.5rem",
+                border: attendeeFilter === "active" ? "1px solid #22c55e" : "1px solid rgba(255,255,255,0.1)",
+                backgroundColor: attendeeFilter === "active" ? "rgba(34, 197, 94, 0.2)" : "rgba(255,255,255,0.04)",
+                color: attendeeFilter === "active" ? "#22c55e" : "rgba(255,255,255,0.6)",
+                fontWeight: 700,
+                fontSize: "0.8rem",
+                cursor: "pointer"
+              }}
+            >
+              🟢 Activos en el Evento ({totalScanned})
+            </button>
+            <button
+              onClick={() => setAttendeeFilter("pending")}
+              style={{
+                padding: "0.4rem 0.85rem",
+                borderRadius: "0.5rem",
+                border: attendeeFilter === "pending" ? "1px solid #f59e0b" : "1px solid rgba(255,255,255,0.1)",
+                backgroundColor: attendeeFilter === "pending" ? "rgba(245, 158, 11, 0.2)" : "rgba(255,255,255,0.04)",
+                color: attendeeFilter === "pending" ? "#f59e0b" : "rgba(255,255,255,0.6)",
+                fontWeight: 700,
+                fontSize: "0.8rem",
+                cursor: "pointer"
+              }}
+            >
+              🟡 Pendientes ({Math.max(0, tickets.length - totalScanned)})
+            </button>
+          </div>
+
+          <div style={{ position: "relative", minWidth: "260px" }}>
+            <Search size={15} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.4)" }} />
+            <input
+              type="text"
+              placeholder="Buscar por nombre, correo o #ticket..."
+              value={attendeeSearch}
+              onChange={(e) => setAttendeeSearch(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "0.45rem 0.75rem 0.45rem 2rem",
+                borderRadius: "0.5rem",
+                backgroundColor: "rgba(0,0,0,0.5)",
+                border: "1px solid rgba(255,255,255,0.15)",
+                color: "white",
+                fontSize: "0.825rem"
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Table of Attendees */}
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+            <thead>
+              <tr style={{ backgroundColor: "rgba(255,255,255,0.02)", borderBottom: "1px solid var(--color-border, #333)" }}>
+                <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.85rem" }}>Asistente</th>
+                <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.85rem" }}>Localidad</th>
+                <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.85rem" }}>Estado en Puerta</th>
+                <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.85rem" }}>Hora de Ingreso</th>
+                <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.85rem", textAlign: "right" }}>Ticket ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(() => {
+                const filtered = tickets.filter(t => {
+                  const isScanned = t.status === "scanned" || Boolean(t.scanned_at);
+                  if (attendeeFilter === "active" && !isScanned) return false;
+                  if (attendeeFilter === "pending" && isScanned) return false;
+
+                  if (attendeeSearch.trim()) {
+                    const q = attendeeSearch.toLowerCase().trim();
+                    const relatedOrder = orders.find(o => o.id === t.order_id);
+                    const name = (t.assigned_name || relatedOrder?.customer_name || "").toLowerCase();
+                    const email = (t.assigned_email || relatedOrder?.customer_email || "").toLowerCase();
+                    const shortId = t.id.slice(0, 8).toLowerCase();
+                    return name.includes(q) || email.includes(q) || shortId.includes(q);
+                  }
+                  return true;
+                });
+
+                if (filtered.length === 0) {
+                  return (
+                    <tr>
+                      <td colSpan={5} style={{ padding: "2.5rem", textAlign: "center", color: "var(--color-text-secondary)" }}>
+                        {attendeeSearch ? "No se encontraron asistentes con ese criterio." : "No hay boletas en esta categoría."}
+                      </td>
+                    </tr>
+                  );
+                }
+
+                return filtered.map((t) => {
+                  const isScanned = t.status === "scanned" || Boolean(t.scanned_at);
+                  const relatedOrder = orders.find(o => o.id === t.order_id);
+                  const attendeeName = t.assigned_name || relatedOrder?.customer_name || "Titular de Cuenta";
+                  const attendeeEmail = t.assigned_email || relatedOrder?.customer_email || "-";
+                  const tier = initialTiers.find(ti => ti.id === t.tier_id || ti.id === t.ticket_tier_id);
+
+                  return (
+                    <tr key={t.id} style={{
+                      borderBottom: "1px solid var(--color-border, #333)",
+                      backgroundColor: isScanned ? "rgba(34, 197, 94, 0.04)" : "transparent"
+                    }}>
+                      <td style={{ padding: "1rem" }}>
+                        <div style={{ fontWeight: 700, color: "white" }}>{attendeeName}</div>
+                        <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>{attendeeEmail}</div>
+                      </td>
+                      <td style={{ padding: "1rem" }}>
+                        <span style={{
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                          padding: "0.2rem 0.5rem",
+                          borderRadius: "4px",
+                          backgroundColor: "rgba(0, 240, 255, 0.1)",
+                          color: "#00f0ff",
+                          border: "1px solid rgba(0, 240, 255, 0.25)"
+                        }}>
+                          {tier?.name || "General"}
+                        </span>
+                      </td>
+                      <td style={{ padding: "1rem" }}>
+                        {isScanned ? (
+                          <span style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "5px",
+                            padding: "0.3rem 0.65rem",
+                            borderRadius: "999px",
+                            fontSize: "0.75rem",
+                            fontWeight: 800,
+                            backgroundColor: "rgba(34, 197, 94, 0.2)",
+                            color: "#22c55e",
+                            border: "1px solid rgba(34, 197, 94, 0.3)"
+                          }}>
+                            <CheckCircle2 size={13} /> ACTIVO EN EL EVENTO
+                          </span>
+                        ) : (
+                          <span style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "5px",
+                            padding: "0.3rem 0.65rem",
+                            borderRadius: "999px",
+                            fontSize: "0.75rem",
+                            fontWeight: 700,
+                            backgroundColor: "rgba(245, 158, 11, 0.15)",
+                            color: "#f59e0b",
+                            border: "1px solid rgba(245, 158, 11, 0.25)"
+                          }}>
+                            <Clock size={13} /> PENDIENTE
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: "1rem", color: isScanned ? "white" : "var(--color-text-secondary)", fontSize: "0.85rem", fontFamily: isScanned ? "monospace" : "inherit" }}>
+                        {t.scanned_at ? new Date(t.scanned_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Pendiente"}
+                      </td>
+                      <td style={{ padding: "1rem", textAlign: "right", fontFamily: "monospace", fontSize: "0.78rem", color: "var(--color-accent, #00f0ff)" }}>
+                        #{t.id.slice(0, 8).toUpperCase()}
+                      </td>
+                    </tr>
+                  );
+                });
+              })()}
+            </tbody>
+          </table>
         </div>
       </div>
 

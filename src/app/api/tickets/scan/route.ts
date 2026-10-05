@@ -146,9 +146,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Esta boleta acaba de ser escaneada simultáneamente en otra puerta." }, { status: 400 });
     }
 
+    const nowIso = new Date().toISOString();
+    const formattedTime = new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
     return NextResponse.json({ 
       success: true, 
-      message: `Acceso Concedido: ${attendeeName} - Localidad: ${tierName}`
+      message: "¡BIENVENIDO A BASSFACTORY!",
+      status_label: "ACTIVO EN EL EVENTO",
+      attendee_name: attendeeName,
+      tier_name: tierName,
+      scanned_at: nowIso,
+      scanned_time: formattedTime,
+      ticket_id: ticket.id,
+      event_id: tierEventId
     });
 
   } catch (err: any) {
