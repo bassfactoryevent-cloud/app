@@ -3,8 +3,9 @@ import { getAdminClient } from "@/utils/supabase/admin";
 import { redirect } from "next/navigation";
 import { getAssignmentsForUser } from "@/utils/staffAssignments";
 import MobileScannerClient from "./MobileScannerClient";
-import { Lock, LogOut, ShieldAlert } from "lucide-react";
+import { Lock, LogOut } from "lucide-react";
 import { signOut } from "../(auth)/actions";
+import Image from "next/image";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export default async function ScannerPortalPage() {
   let assignedEvents: any[] = [];
 
   if (isSuperOrAdmin) {
-    // Admins and Superadmins have universal access to all events
+    // Admins y Superadmins tienen acceso a todos los eventos
     const { data: allEvents } = await adminDb
       .from("events")
       .select("id, title, cover_image, location_name, start_date, total_capacity")
@@ -38,7 +39,7 @@ export default async function ScannerPortalPage() {
 
     assignedEvents = allEvents || [];
   } else {
-    // Scanner / Staff only gets explicitly assigned and active events
+    // Personal de puerta obtiene únicamente sus eventos activos asignados
     const userAssignments = await getAssignmentsForUser(user.id);
     const activeAssignments = userAssignments.filter((a) => a.is_active === true);
 
@@ -53,11 +54,11 @@ export default async function ScannerPortalPage() {
     }
   }
 
-  // Si no tiene eventos activos asignados, mostrar pantalla de bloqueo
+  // Si no tiene turnos activos asignados, mostrar pantalla de bloqueo brandeada
   if (assignedEvents.length === 0) {
     return (
       <div style={{
-        maxWidth: "450px",
+        maxWidth: "460px",
         margin: "0 auto",
         minHeight: "100vh",
         backgroundColor: "#050508",
@@ -69,6 +70,17 @@ export default async function ScannerPortalPage() {
         padding: "2rem 1.5rem",
         textAlign: "center"
       }}>
+        <div style={{ marginBottom: "2rem" }}>
+          <Image
+            src="/bassfactorylogo1.png"
+            alt="Bass Factory"
+            width={160}
+            height={50}
+            style={{ objectFit: "contain" }}
+            priority
+          />
+        </div>
+
         <div style={{
           width: "72px",
           height: "72px",
@@ -84,14 +96,14 @@ export default async function ScannerPortalPage() {
           <Lock size={36} />
         </div>
 
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 900, marginBottom: "0.5rem" }}>
+        <h1 style={{ fontSize: "1.45rem", fontWeight: 900, marginBottom: "0.5rem" }}>
           Acceso a Puerta No Disponible
         </h1>
 
         <p style={{ fontSize: "0.9rem", color: "rgba(255, 255, 255, 0.7)", lineHeight: 1.5, marginBottom: "2rem" }}>
           Hola <strong>{profile?.full_name || user.email}</strong>. No tienes ningún turno o evento asignado activamente en este momento.
           <br /><br />
-          Si estás contratado para trabajar hoy en el control de acceso, solicita al <strong>administrador de Bassfactory</strong> que active tu asignación de puerta en el panel.
+          Si estás contratado para el control de acceso de hoy, solicita al <strong>administrador de Bassfactory</strong> que active tu asignación de puerta en el panel de eventos.
         </p>
 
         <form action={signOut} style={{ width: "100%" }}>
@@ -125,17 +137,21 @@ export default async function ScannerPortalPage() {
   const eventIds = assignedEvents.map((e) => e.id);
   const { data: tiers } = await adminDb
     .from("ticket_tiers")
-    .select("id, event_id")
+    .select("id, event_id, name")
     .in("event_id", eventIds);
 
   const tierEventMap = new Map((tiers || []).map((t: any) => [t.id, t.event_id]));
+  const tierNameMap = new Map((tiers || []).map((t: any) => [t.id, t.name]));
   const allTierIds = (tiers || []).map((t: any) => t.id);
 
   let scannedCountMap: { [eventId: string]: number } = {};
+  let myScannedCountMap: { [eventId: string]: number } = {};
+  let myRecentScansMap: { [eventId: string]: any[] } = {};
+
   if (allTierIds.length > 0) {
     const { data: scannedTickets } = await adminDb
       .from("tickets")
-      .select("id, tier_id")
+      .select("id, tier_id, status, scanned_at, scanned_by, assigned_name")
       .in("tier_id", allTierIds)
       .eq("status", "scanned");
 
@@ -143,8 +159,24 @@ export default async function ScannerPortalPage() {
       const eId = tierEventMap.get(t.tier_id);
       if (eId) {
         scannedCountMap[eId] = (scannedCountMap[eId] || 0) + 1;
+        if (t.scanned_by === user.id) {
+          myScannedCountMap[eId] = (myScannedCountMap[eId] || 0) + 1;
+          if (!myRecentScansMap[eId]) myRecentScansMap[eId] = [];
+          myRecentScansMap[eId].push({
+            id: t.id,
+            attendee_name: t.assigned_name || "Asistente Oficial",
+            tier_name: tierNameMap.get(t.tier_id) || "Localidad Oficial",
+            scanned_at: t.scanned_at
+          });
+        }
       }
     });
+
+    // Ordenar los más recientes primero (hasta 20)
+    for (const eId of Object.keys(myRecentScansMap)) {
+      myRecentScansMap[eId].sort((a, b) => new Date(b.scanned_at).getTime() - new Date(a.scanned_at).getTime());
+      myRecentScansMap[eId] = myRecentScansMap[eId].slice(0, 20);
+    }
   }
 
   const enrichedEvents = assignedEvents.map((ev) => ({
@@ -155,6 +187,8 @@ export default async function ScannerPortalPage() {
     start_date: ev.start_date,
     total_capacity: Number(ev.total_capacity) || 0,
     scanned_count: scannedCountMap[ev.id] || 0,
+    my_scanned_count: myScannedCountMap[ev.id] || 0,
+    my_recent_scans: myRecentScansMap[ev.id] || []
   }));
 
   return (

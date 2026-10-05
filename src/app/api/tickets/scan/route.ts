@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     // 2. Control de acceso: Verificar rol administrativo / staff
     const { data: profile } = await adminDb
       .from("profiles")
-      .select("role")
+      .select("role, full_name")
       .eq("id", user.id)
       .single();
 
@@ -158,7 +158,9 @@ export async function POST(req: Request) {
       scanned_at: nowIso,
       scanned_time: formattedTime,
       ticket_id: ticket.id,
-      event_id: tierEventId
+      event_id: tierEventId,
+      scanned_by: user.id,
+      scanner_name: profile?.full_name || user.email || "Personal de Puerta"
     });
 
   } catch (err: any) {

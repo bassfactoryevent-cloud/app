@@ -5,10 +5,17 @@ import Image from "next/image";
 import { 
   ScanLine, CheckCircle2, XCircle, AlertTriangle, 
   Camera, LogOut, RefreshCw, Volume2, VolumeX, ShieldCheck, 
-  FlipHorizontal, Zap, ZapOff
+  FlipHorizontal, Zap, ZapOff, Users, Clock, ArrowRight, UserCheck
 } from "lucide-react";
 import { Html5Qrcode } from "html5-qrcode";
 import { signOut } from "../(auth)/actions";
+
+interface RecentScanItem {
+  id: string;
+  attendee_name: string;
+  tier_name: string;
+  scanned_at: string;
+}
 
 interface AssignedEvent {
   id: string;
@@ -18,6 +25,8 @@ interface AssignedEvent {
   start_date: string;
   total_capacity: number;
   scanned_count: number;
+  my_scanned_count: number;
+  my_recent_scans: RecentScanItem[];
 }
 
 interface MobileScannerClientProps {
@@ -47,13 +56,28 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
   }>({ status: "idle", message: "" });
   
   const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // Contadores globales e individuales
   const [scannedCounts, setScannedCounts] = useState<{ [id: string]: number }>(
     Object.fromEntries(events.map(e => [e.id, e.scanned_count]))
+  );
+  const [myScannedCounts, setMyScannedCounts] = useState<{ [id: string]: number }>(
+    Object.fromEntries(events.map(e => [e.id, e.my_scanned_count]))
+  );
+  const [recentScansMap, setRecentScansMap] = useState<{ [id: string]: RecentScanItem[] }>(
+    Object.fromEntries(events.map(e => [e.id, e.my_recent_scans || []]))
   );
 
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const isProcessingRef = useRef(false);
   const activeEvent = events.find(e => e.id === selectedEventId) || events[0];
+
+  const totalCapacity = activeEvent?.total_capacity || 0;
+  const currentTotalScanned = scannedCounts[selectedEventId] || 0;
+  const currentMyScanned = myScannedCounts[selectedEventId] || 0;
+  const pendingToEnter = Math.max(0, totalCapacity - currentTotalScanned);
+  const occupancyPercentage = totalCapacity > 0 ? Math.min(100, Math.round((currentTotalScanned / totalCapacity) * 100)) : 0;
+  const myRecentScans = recentScansMap[selectedEventId] || [];
 
   // Reproducir sonidos y vibración háptica
   const playFeedback = (isSuccess: boolean) => {
@@ -127,7 +151,7 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
             if (isProcessingRef.current) return;
             isProcessingRef.current = true;
 
-            setScanResult({ status: "scanning", message: "Verificando entrada..." });
+            setScanResult({ status: "scanning", message: "Verificando entrada en taquilla..." });
 
             try {
               const res = await fetch("/api/tickets/scan", {
@@ -140,24 +164,47 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
 
               if (res.ok && data.success) {
                 playFeedback(true);
+                const scanTime = data.scanned_time || new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+                
                 setScanResult({
                   status: "success",
                   message: "¡BIENVENIDO A BASSFACTORY!",
                   details: "Acceso Concedido • Verificado en taquilla",
                   attendee_name: data.attendee_name || "Asistente Oficial",
                   tier_name: data.tier_name || "Localidad Oficial",
-                  scanned_time: data.scanned_time || new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })
+                  scanned_time: scanTime
                 });
+
+                // Actualizar contadores en vivo
                 setScannedCounts(prev => ({
                   ...prev,
                   [selectedEventId]: (prev[selectedEventId] || 0) + 1
                 }));
+                setMyScannedCounts(prev => ({
+                  ...prev,
+                  [selectedEventId]: (prev[selectedEventId] || 0) + 1
+                }));
+
+                // Agregar al historial de este miembro de staff en la puerta
+                setRecentScansMap(prev => ({
+                  ...prev,
+                  [selectedEventId]: [
+                    {
+                      id: data.ticket_id || Math.random().toString(),
+                      attendee_name: data.attendee_name || "Asistente Oficial",
+                      tier_name: data.tier_name || "Localidad Oficial",
+                      scanned_at: data.scanned_at || new Date().toISOString()
+                    },
+                    ...(prev[selectedEventId] || [])
+                  ].slice(0, 20)
+                }));
+
               } else {
                 playFeedback(false);
                 setScanResult({
                   status: "error",
                   message: data.error || "ENTRADA INVÁLIDA",
-                  details: "No autorizar el ingreso"
+                  details: "No autorizar el ingreso a la sala"
                 });
               }
             } catch (err: any) {
@@ -236,16 +283,16 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
 
   return (
     <div style={{
-      maxWidth: "480px",
+      maxWidth: "500px",
       margin: "0 auto",
       minHeight: "100vh",
-      backgroundColor: "#000",
+      backgroundColor: "#050508",
       color: "#fff",
       display: "flex",
       flexDirection: "column",
-      padding: "1rem 1rem 3rem"
+      padding: "1rem 1rem 3.5rem"
     }}>
-      {/* BARRA SUPERIOR MÓVIL */}
+      {/* BARRA SUPERIOR BRANDING BASSFACTORY */}
       <div style={{
         display: "flex",
         justifyContent: "space-between",
@@ -254,39 +301,41 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
         borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
         marginBottom: "1.25rem"
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <div style={{
-            width: "36px",
-            height: "36px",
-            borderRadius: "50%",
-            backgroundColor: "#06b6d4",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontWeight: 900,
-            color: "#000",
-            fontSize: "0.85rem"
+        {/* LOGO CORPORATIVO */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <Image
+            src="/bassfactorylogo1.png"
+            alt="Bass Factory Logo"
+            width={125}
+            height={38}
+            style={{ objectFit: "contain" }}
+            priority
+          />
+          <span style={{
+            fontSize: "0.68rem",
+            fontWeight: 800,
+            color: "#06b6d4",
+            backgroundColor: "rgba(6, 182, 212, 0.12)",
+            border: "1px solid rgba(6, 182, 212, 0.3)",
+            padding: "0.2rem 0.55rem",
+            borderRadius: "999px",
+            letterSpacing: "0.04em",
+            textTransform: "uppercase"
           }}>
-            🚪
-          </div>
-          <div>
-            <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "white" }}>
-              {user.full_name || "Personal de Puerta"}
-            </div>
-            <div style={{ fontSize: "0.7rem", color: "#06b6d4", fontWeight: 700, textTransform: "uppercase" }}>
-              Control de Accesos Bassfactory
-            </div>
-          </div>
+            🚪 Puerta
+          </span>
         </div>
 
-        <div style={{ display: "flex", gap: "0.5rem" }}>
+        {/* ACCIONES SUPERIORES */}
+        <div style={{ display: "flex", gap: "0.45rem", alignItems: "center" }}>
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
+            title={soundEnabled ? "Silenciar confirmación" : "Activar sonido"}
             style={{
-              background: "rgba(255,255,255,0.08)",
-              border: "none",
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.12)",
               borderRadius: "0.5rem",
-              padding: "0.4rem 0.6rem",
+              padding: "0.45rem 0.65rem",
               color: soundEnabled ? "#22c55e" : "rgba(255,255,255,0.4)",
               cursor: "pointer"
             }}
@@ -298,29 +347,83 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
             onClick={() => signOut()}
             title="Cerrar turno / Salir"
             style={{
-              background: "rgba(239, 68, 68, 0.15)",
-              border: "1px solid rgba(239, 68, 68, 0.3)",
+              background: "rgba(239, 68, 68, 0.12)",
+              border: "1px solid rgba(239, 68, 68, 0.25)",
               borderRadius: "0.5rem",
-              padding: "0.4rem 0.6rem",
+              padding: "0.45rem 0.75rem",
               color: "#ef4444",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
               gap: "0.3rem",
-              fontSize: "0.75rem",
-              fontWeight: 700
+              fontSize: "0.78rem",
+              fontWeight: 800
             }}
           >
-            <LogOut size={16} /> Salir
+            <LogOut size={15} /> Salir
           </button>
         </div>
+      </div>
+
+      {/* CREDENCIAL DEL PERSONAL DE PUERTA */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0.75rem 1rem",
+        backgroundColor: "rgba(6, 182, 212, 0.06)",
+        border: "1px solid rgba(6, 182, 212, 0.2)",
+        borderRadius: "0.75rem",
+        marginBottom: "1.25rem"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <div style={{
+            width: "36px",
+            height: "36px",
+            borderRadius: "50%",
+            backgroundColor: "#06b6d4",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: 900,
+            color: "#000",
+            fontSize: "0.9rem"
+          }}>
+            {user.full_name ? user.full_name[0].toUpperCase() : "P"}
+          </div>
+          <div>
+            <div style={{ fontSize: "0.875rem", fontWeight: 800, color: "white" }}>
+              {user.full_name || "Personal de Puerta"}
+            </div>
+            <div style={{ fontSize: "0.72rem", color: "var(--color-text-secondary)" }}>
+              {user.email || "Staff Oficial de Taquilla"}
+            </div>
+          </div>
+        </div>
+
+        <span style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "0.3rem",
+          fontSize: "0.7rem",
+          fontWeight: 800,
+          color: "#22c55e",
+          backgroundColor: "rgba(34, 197, 94, 0.15)",
+          border: "1px solid rgba(34, 197, 94, 0.3)",
+          padding: "0.2rem 0.55rem",
+          borderRadius: "999px",
+          textTransform: "uppercase"
+        }}>
+          <span style={{ width: "6px", height: "6px", backgroundColor: "#22c55e", borderRadius: "50%", display: "inline-block", boxShadow: "0 0 6px #22c55e" }} />
+          Turno Activo
+        </span>
       </div>
 
       {/* SELECTOR SI TIENE MÚLTIPLES EVENTOS */}
       {events.length > 1 && (
         <div style={{ marginBottom: "1rem" }}>
           <label style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", fontWeight: 700 }}>
-            Evento asignado actual:
+            Cambiar evento asignado:
           </label>
           <select
             value={selectedEventId}
@@ -349,16 +452,16 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
         </div>
       )}
 
-      {/* TARJETA DEL EVENTO (FOTO OBLIGATORIA DEL EVENTO ASIGNADO) */}
+      {/* TARJETA DEL EVENTO (AFICHE OFICIAL) */}
       <div style={{
         backgroundColor: "rgba(255, 255, 255, 0.03)",
         border: "1px solid rgba(255, 255, 255, 0.1)",
         borderRadius: "1.25rem",
         overflow: "hidden",
-        marginBottom: "1.5rem"
+        marginBottom: "1.25rem"
       }}>
         {/* Foto del Flyer del Evento */}
-        <div style={{ position: "relative", width: "100%", height: "240px", backgroundColor: "#111" }}>
+        <div style={{ position: "relative", width: "100%", height: "230px", backgroundColor: "#111" }}>
           {activeEvent.cover_image ? (
             <Image
               src={activeEvent.cover_image}
@@ -375,7 +478,7 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
           <div style={{
             position: "absolute",
             inset: 0,
-            background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)"
+            background: "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.3) 55%, transparent 100%)"
           }} />
           <div style={{ position: "absolute", bottom: "1rem", left: "1rem", right: "1rem" }}>
             <span style={{
@@ -389,293 +492,423 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
               textTransform: "uppercase",
               marginBottom: "0.4rem"
             }}>
-              Turno de Puerta Asignado
+              📍 Puerta Oficial Asignada
             </span>
             <h2 style={{ fontSize: "1.35rem", fontWeight: 900, color: "white", margin: 0, lineHeight: 1.2 }}>
               {activeEvent.title}
             </h2>
             <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.8)", marginTop: "0.3rem" }}>
-              📍 {activeEvent.location_name || "Locación oficial"}
+              {activeEvent.location_name || "Locación oficial"}
             </div>
           </div>
         </div>
 
-        {/* Contador de Ingresos / Aforo */}
+        {/* TABLERO DE CONTEO Y AFORO ("CUÁNTAS PERSONAS DEBEN ENTRAR Y LAS QUE VA DEJANDO ENTRAR") */}
         <div style={{
-          padding: "1rem",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          backgroundColor: "rgba(0, 0, 0, 0.4)",
-          borderTop: "1px solid rgba(255, 255, 255, 0.05)"
+          padding: "1.25rem",
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          borderTop: "1px solid rgba(255, 255, 255, 0.08)"
         }}>
-          <div>
-            <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.6)", textTransform: "uppercase", fontWeight: 700 }}>
-              Ingresos Escaneados
-            </div>
-            <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "#22c55e" }}>
-              {scannedCounts[selectedEventId] || 0}{" "}
-              <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>
-                / {activeEvent.total_capacity ? `${activeEvent.total_capacity} Asistentes` : "Aforo Libre"}
-              </span>
-            </div>
-            {activeEvent.total_capacity > 0 && (
-              <div style={{ marginTop: "0.35rem" }}>
-                <div style={{ width: "140px", height: "5px", backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "999px", overflow: "hidden" }}>
-                  <div style={{
-                    height: "100%",
-                    backgroundColor: "#22c55e",
-                    width: `${Math.min(100, Math.round(((scannedCounts[selectedEventId] || 0) / activeEvent.total_capacity) * 100))}%`,
-                    transition: "width 0.3s ease"
-                  }} />
-                </div>
-                <div style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
-                  {Math.round(((scannedCounts[selectedEventId] || 0) / activeEvent.total_capacity) * 100)}% capacidad
-                </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
+            {/* KPI 1: Personas que deben entrar / Aforo Total */}
+            <div style={{
+              padding: "0.85rem",
+              borderRadius: "0.75rem",
+              backgroundColor: "rgba(255, 255, 255, 0.03)",
+              border: "1px solid rgba(255, 255, 255, 0.08)"
+            }}>
+              <div style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.6)", textTransform: "uppercase", fontWeight: 800 }}>
+                🎯 Deben Entrar (Aforo)
               </div>
-            )}
+              <div style={{ fontSize: "1.35rem", fontWeight: 900, color: "white", marginTop: "0.2rem" }}>
+                {totalCapacity > 0 ? totalCapacity : "Libre"}
+              </div>
+              <div style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.4)", marginTop: "0.2rem" }}>
+                Capacidad esperada
+              </div>
+            </div>
+
+            {/* KPI 2: Total Ingresados en Sala */}
+            <div style={{
+              padding: "0.85rem",
+              borderRadius: "0.75rem",
+              backgroundColor: "rgba(34, 197, 94, 0.08)",
+              border: "1px solid rgba(34, 197, 94, 0.25)"
+            }}>
+              <div style={{ fontSize: "0.68rem", color: "#22c55e", textTransform: "uppercase", fontWeight: 800 }}>
+                🚪 Total en Sala
+              </div>
+              <div style={{ fontSize: "1.35rem", fontWeight: 900, color: "#22c55e", marginTop: "0.2rem" }}>
+                {currentTotalScanned}{" "}
+                <span style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>
+                  / {totalCapacity > 0 ? totalCapacity : "∞"}
+                </span>
+              </div>
+              <div style={{ fontSize: "0.68rem", color: "#22c55e", marginTop: "0.2rem", fontWeight: 700 }}>
+                {occupancyPercentage}% aforo ocupado
+              </div>
+            </div>
           </div>
 
+          {/* KPI 3: Dejadas entrar por mí (Registro Personal del Staff) */}
           <div style={{
-            padding: "0.4rem 0.8rem",
-            borderRadius: "0.5rem",
-            backgroundColor: "rgba(34, 197, 94, 0.1)",
-            border: "1px solid rgba(34, 197, 94, 0.3)",
-            color: "#22c55e",
-            fontSize: "0.75rem",
-            fontWeight: 800,
+            padding: "0.85rem 1rem",
+            borderRadius: "0.75rem",
+            backgroundColor: "rgba(6, 182, 212, 0.08)",
+            border: "1px solid rgba(6, 182, 212, 0.25)",
             display: "flex",
             alignItems: "center",
-            gap: "0.4rem"
+            justifyContent: "space-between"
           }}>
-            <ShieldCheck size={16} /> Puerta Autorizada
+            <div>
+              <div style={{ fontSize: "0.7rem", color: "#06b6d4", textTransform: "uppercase", fontWeight: 800 }}>
+                🟢 Dejadas Entrar Por Mí (Mi Turno)
+              </div>
+              <div style={{ fontSize: "1.25rem", fontWeight: 900, color: "white", marginTop: "0.15rem" }}>
+                {currentMyScanned} personas
+              </div>
+              <div style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.5)" }}>
+                Validadas con tu usuario en taquilla
+              </div>
+            </div>
+
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", fontWeight: 700 }}>
+                Faltan por llegar
+              </div>
+              <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#f59e0b" }}>
+                {pendingToEnter}
+              </div>
+            </div>
           </div>
+
+          {/* Barra de Progreso de Aforo */}
+          {totalCapacity > 0 && (
+            <div style={{ marginTop: "0.85rem" }}>
+              <div style={{ width: "100%", height: "6px", backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "999px", overflow: "hidden" }}>
+                <div style={{
+                  height: "100%",
+                  backgroundColor: occupancyPercentage >= 95 ? "#ef4444" : "#22c55e",
+                  width: `${occupancyPercentage}%`,
+                  transition: "width 0.3s ease",
+                  boxShadow: "0 0 8px rgba(34, 197, 94, 0.5)"
+                }} />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ÁREA DE ESCÁNER DE CÁMARA */}
+      {/* BOTÓN PRINCIPAL: ABRIR ESCÁNER QR */}
       {!isScannerOpen ? (
         <button
           onClick={() => setIsScannerOpen(true)}
           style={{
             width: "100%",
-            padding: "1.25rem",
-            backgroundColor: "#22c55e",
-            color: "#000",
-            border: "none",
+            padding: "1.1rem",
             borderRadius: "1rem",
+            backgroundColor: "var(--color-magenta, #ec4899)",
+            color: "white",
+            border: "none",
             fontWeight: 900,
             fontSize: "1.1rem",
+            cursor: "pointer",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             gap: "0.75rem",
-            cursor: "pointer",
-            boxShadow: "0 10px 25px rgba(34, 197, 94, 0.35)",
-            transition: "transform 0.1s"
+            boxShadow: "0 10px 25px rgba(236, 72, 153, 0.4)",
+            transition: "all 0.2s ease",
+            marginBottom: "1.5rem"
           }}
-          onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.98)"}
-          onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
+          onMouseOver={(e) => e.currentTarget.style.opacity = "0.95"}
+          onMouseOut={(e) => e.currentTarget.style.opacity = "1"}
         >
-          <Camera size={26} />
-          ABRIR CÁMARA TRASERA
+          <Camera size={24} />
+          ABRIR ESCÁNER DE BOLETAS
         </button>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {/* Barra de Controles Rápidos de la Cámara */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <button
-              onClick={handleToggleCamera}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.4rem",
-                padding: "0.5rem 0.9rem",
-                borderRadius: "0.5rem",
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                color: "white",
-                fontSize: "0.8rem",
-                fontWeight: 700,
-                cursor: "pointer"
-              }}
-            >
-              <FlipHorizontal size={16} />
-              {cameraFacing === "environment" ? "Cámara Trasera (Activa)" : "Cámara Frontal"}
-            </button>
+        /* VISOR DE LA CÁMARA ESCÁNER */
+        <div style={{
+          backgroundColor: "#111",
+          borderRadius: "1.25rem",
+          overflow: "hidden",
+          border: "2px solid var(--color-magenta)",
+          position: "relative",
+          marginBottom: "1.5rem",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.8)"
+        }}>
+          {/* Header del Escáner */}
+          <div style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 10,
+            padding: "0.75rem 1rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            background: "linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%)"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <span style={{
+                width: "8px", height: "8px", backgroundColor: "#22c55e",
+                borderRadius: "50%", display: "inline-block", boxShadow: "0 0 8px #22c55e"
+              }} />
+              <span style={{ fontSize: "0.8rem", fontWeight: 800, color: "white" }}>
+                CÁMARA ACTIVA
+              </span>
+            </div>
 
-            {hasTorch && (
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              {hasTorch && (
+                <button
+                  onClick={handleToggleTorch}
+                  style={{
+                    background: isTorchOn ? "#f59e0b" : "rgba(0,0,0,0.6)",
+                    color: isTorchOn ? "#000" : "#fff",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    borderRadius: "0.5rem",
+                    padding: "0.4rem 0.6rem",
+                    cursor: "pointer"
+                  }}
+                >
+                  {isTorchOn ? <Zap size={16} /> : <ZapOff size={16} />}
+                </button>
+              )}
+
               <button
-                onClick={handleToggleTorch}
+                onClick={handleToggleCamera}
+                title="Cambiar de cámara"
                 style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.4rem",
-                  padding: "0.5rem 0.9rem",
+                  background: "rgba(0,0,0,0.6)",
+                  color: "#fff",
+                  border: "1px solid rgba(255,255,255,0.2)",
                   borderRadius: "0.5rem",
-                  backgroundColor: isTorchOn ? "rgba(234, 179, 8, 0.25)" : "rgba(255, 255, 255, 0.1)",
-                  border: isTorchOn ? "1px solid #eab308" : "1px solid rgba(255, 255, 255, 0.2)",
-                  color: isTorchOn ? "#eab308" : "white",
-                  fontSize: "0.8rem",
-                  fontWeight: 700,
+                  padding: "0.4rem 0.6rem",
                   cursor: "pointer"
                 }}
               >
-                {isTorchOn ? <Zap size={16} /> : <ZapOff size={16} />}
-                Linterna {isTorchOn ? "ON" : "OFF"}
+                <FlipHorizontal size={16} />
               </button>
-            )}
+
+              <button
+                onClick={handleCloseScanner}
+                style={{
+                  background: "rgba(239, 68, 68, 0.8)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "0.5rem",
+                  padding: "0.4rem 0.8rem",
+                  fontSize: "0.75rem",
+                  fontWeight: 800,
+                  cursor: "pointer"
+                }}
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
 
-          {/* Visor de Cámara */}
+          {/* Contenedor del video html5-qrcode */}
+          <div id="mobile-qr-reader" style={{ width: "100%", minHeight: "340px", backgroundColor: "#000" }} />
+
+          {/* Mira de enfoque láser */}
           <div style={{
-            position: "relative",
-            backgroundColor: "#111",
-            borderRadius: "1rem",
-            overflow: "hidden",
-            border: "2px solid #06b6d4",
-            minHeight: "320px"
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "220px",
+            height: "220px",
+            border: "2px dashed rgba(236, 72, 153, 0.7)",
+            borderRadius: "1.25rem",
+            pointerEvents: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 0 25px rgba(236, 72, 153, 0.2)"
           }}>
-            <div id="mobile-qr-reader" style={{ width: "100%", height: "100%" }} />
-
-            {/* OVERLAY DE RESULTADO EN PANTALLA GIGANTE */}
-            {scanResult.status !== "idle" && (
-              <div style={{
-                position: "absolute",
-                inset: 0,
-                backgroundColor: 
-                  scanResult.status === "success" ? "rgba(34, 197, 94, 0.95)" :
-                  scanResult.status === "error" ? "rgba(239, 68, 68, 0.95)" : "rgba(0, 0, 0, 0.85)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "2rem",
-                textAlign: "center",
-                zIndex: 20,
-                transition: "background-color 0.2s"
-              }}>
-                {scanResult.status === "success" && (
-                  <>
-                    <div style={{
-                      width: "72px",
-                      height: "72px",
-                      borderRadius: "50%",
-                      backgroundColor: "rgba(255, 255, 255, 0.2)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginBottom: "0.75rem"
-                    }}>
-                      <CheckCircle2 size={52} color="#fff" />
-                    </div>
-
-                    <h2 style={{
-                      fontSize: "1.5rem",
-                      fontWeight: 900,
-                      color: "#fff",
-                      margin: 0,
-                      letterSpacing: "-0.01em"
-                    }}>
-                      🎉 ¡BIENVENIDO A BASSFACTORY!
-                    </h2>
-
-                    <div style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "0.4rem",
-                      backgroundColor: "#000",
-                      color: "#22c55e",
-                      padding: "0.35rem 0.85rem",
-                      borderRadius: "999px",
-                      fontWeight: 900,
-                      fontSize: "0.85rem",
-                      marginTop: "0.6rem",
-                      marginBottom: "0.6rem",
-                      textTransform: "uppercase"
-                    }}>
-                      <span style={{ width: "8px", height: "8px", backgroundColor: "#22c55e", borderRadius: "50%" }} />
-                      ACTIVO EN EL EVENTO
-                    </div>
-
-                    <div style={{
-                      backgroundColor: "rgba(0,0,0,0.35)",
-                      borderRadius: "0.75rem",
-                      padding: "0.75rem 1rem",
-                      width: "100%",
-                      maxWidth: "320px",
-                      marginTop: "0.25rem",
-                      border: "1px solid rgba(255,255,255,0.15)"
-                    }}>
-                      <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "white" }}>
-                        {scanResult.attendee_name || "Asistente Oficial"}
-                      </div>
-                      <div style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.85)", marginTop: "2px" }}>
-                        Localidad: <strong>{scanResult.tier_name || "General"}</strong>
-                      </div>
-                      {scanResult.scanned_time && (
-                        <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", marginTop: "4px" }}>
-                          Hora de ingreso: {scanResult.scanned_time}
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-
-                {scanResult.status === "error" && (
-                  <>
-                    <XCircle size={80} color="#fff" />
-                    <h2 style={{
-                      fontSize: "1.5rem",
-                      fontWeight: 900,
-                      color: "#fff",
-                      marginTop: "1rem",
-                      marginBottom: "0.5rem",
-                      textTransform: "uppercase"
-                    }}>
-                      {scanResult.message}
-                    </h2>
-                    {scanResult.details && (
-                      <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.9)", margin: 0, fontWeight: 700 }}>
-                        {scanResult.details}
-                      </p>
-                    )}
-                  </>
-                )}
-
-                {scanResult.status === "scanning" && (
-                  <>
-                    <RefreshCw size={50} color="#06b6d4" className="animate-spin" />
-                    <h2 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#fff", marginTop: "1rem" }}>
-                      Verificando entrada...
-                    </h2>
-                  </>
-                )}
-              </div>
-            )}
+            <div style={{
+              width: "100%",
+              height: "2px",
+              backgroundColor: "rgba(236, 72, 153, 0.8)",
+              boxShadow: "0 0 8px #ec4899"
+            }} />
           </div>
 
-          <button
-            onClick={handleCloseScanner}
-            style={{
-              padding: "0.85rem",
-              backgroundColor: "rgba(255, 255, 255, 0.1)",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-              color: "white",
-              borderRadius: "0.75rem",
-              fontWeight: 800,
-              fontSize: "0.95rem",
-              cursor: "pointer"
-            }}
-          >
-            Pausar Cámara / Volver
-          </button>
+          {/* Modal / Toast de resultado de escaneo en vivo */}
+          {scanResult.status !== "idle" && (
+            <div style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              padding: "1.25rem",
+              backgroundColor: scanResult.status === "success" 
+                ? "rgba(10, 40, 20, 0.95)" 
+                : scanResult.status === "error" 
+                ? "rgba(50, 10, 10, 0.95)" 
+                : "rgba(0,0,0,0.9)",
+              borderTop: `3px solid ${
+                scanResult.status === "success" ? "#22c55e" : scanResult.status === "error" ? "#ef4444" : "#3b82f6"
+              }`,
+              zIndex: 20,
+              backdropFilter: "blur(8px)"
+            }}>
+              {scanResult.status === "scanning" && (
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", color: "#60a5fa" }}>
+                  <RefreshCw size={22} className="animate-spin" />
+                  <span style={{ fontWeight: 800, fontSize: "0.95rem" }}>{scanResult.message}</span>
+                </div>
+              )}
+
+              {scanResult.status === "success" && (
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#22c55e", marginBottom: "0.3rem" }}>
+                    <CheckCircle2 size={24} />
+                    <span style={{ fontSize: "1.1rem", fontWeight: 900 }}>{scanResult.message}</span>
+                  </div>
+
+                  <div style={{ fontSize: "1.25rem", fontWeight: 900, color: "white", marginTop: "0.25rem" }}>
+                    {scanResult.attendee_name}
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginTop: "0.35rem", flexWrap: "wrap" }}>
+                    <span style={{
+                      backgroundColor: "rgba(34, 197, 94, 0.2)",
+                      color: "#22c55e",
+                      padding: "0.2rem 0.5rem",
+                      borderRadius: "4px",
+                      fontSize: "0.75rem",
+                      fontWeight: 800
+                    }}>
+                      🟢 ACTIVO EN EL EVENTO
+                    </span>
+                    <span style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.78rem", fontWeight: 700 }}>
+                      Localidad: {scanResult.tier_name}
+                    </span>
+                    <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.75rem" }}>
+                      Hora: {scanResult.scanned_time}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {scanResult.status === "error" && (
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#ef4444", marginBottom: "0.3rem" }}>
+                    <XCircle size={24} />
+                    <span style={{ fontSize: "1.1rem", fontWeight: 900 }}>{scanResult.message}</span>
+                  </div>
+                  <div style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.8)", marginTop: "0.2rem" }}>
+                    {scanResult.details}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
-      {/* PIE DE PÁGINA INFORMATIVO */}
-      <div style={{ marginTop: "auto", paddingTop: "2rem", textAlign: "center", fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>
-        Acceso restringido para control de acceso • Bassfactory Cloud
+      {/* SECCIÓN: REGISTRO EN VIVO DE INGRESOS EN MI PUERTA ("LAS QUE VA DEJANDO ENTRAR") */}
+      <div style={{
+        backgroundColor: "rgba(255, 255, 255, 0.03)",
+        border: "1px solid rgba(255, 255, 255, 0.08)",
+        borderRadius: "1rem",
+        overflow: "hidden"
+      }}>
+        <div style={{
+          padding: "1rem 1.25rem",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <UserCheck size={18} color="#06b6d4" />
+            <h3 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 800, color: "white" }}>
+              Mis Ingresos Registrados en Puerta
+            </h3>
+          </div>
+          <span style={{
+            fontSize: "0.75rem",
+            fontWeight: 800,
+            color: "#06b6d4",
+            backgroundColor: "rgba(6, 182, 212, 0.12)",
+            padding: "0.2rem 0.5rem",
+            borderRadius: "999px"
+          }}>
+            {currentMyScanned} validados
+          </span>
+        </div>
+
+        <div style={{ maxHeight: "260px", overflowY: "auto" }}>
+          {myRecentScans.length === 0 ? (
+            <div style={{
+              padding: "2rem 1.5rem",
+              textAlign: "center",
+              color: "rgba(255,255,255,0.4)",
+              fontSize: "0.85rem"
+            }}>
+              Aún no has registrado ingresos en este turno.
+              <br />
+              <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.3)", marginTop: "0.3rem", display: "inline-block" }}>
+                Abre el escáner y lee el código QR de un asistente para dejarlo entrar.
+              </span>
+            </div>
+          ) : (
+            myRecentScans.map((scan, idx) => (
+              <div
+                key={scan.id || idx}
+                style={{
+                  padding: "0.85rem 1.25rem",
+                  borderBottom: "1px solid rgba(255, 255, 255, 0.04)",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  backgroundColor: idx === 0 ? "rgba(34, 197, 94, 0.04)" : "transparent"
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: "0.88rem", fontWeight: 800, color: "white" }}>
+                    {scan.attendee_name}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.2rem" }}>
+                    <span style={{
+                      fontSize: "0.68rem",
+                      fontWeight: 700,
+                      color: "#06b6d4",
+                      backgroundColor: "rgba(6, 182, 212, 0.12)",
+                      padding: "0.15rem 0.4rem",
+                      borderRadius: "4px"
+                    }}>
+                      {scan.tier_name}
+                    </span>
+                    <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.4)" }}>
+                      {new Date(scan.scanned_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                </div>
+
+                <span style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.25rem",
+                  fontSize: "0.72rem",
+                  fontWeight: 800,
+                  color: "#22c55e",
+                  backgroundColor: "rgba(34, 197, 94, 0.12)",
+                  padding: "0.25rem 0.5rem",
+                  borderRadius: "999px"
+                }}>
+                  <CheckCircle2 size={12} /> INGRESÓ
+                </span>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

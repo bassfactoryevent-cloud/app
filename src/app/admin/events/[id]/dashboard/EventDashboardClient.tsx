@@ -18,6 +18,7 @@ interface EventDashboardClientProps {
   initialTransfers: any[];
   initialAssignments?: any[];
   availableUsers?: any[];
+  staffUsersMap?: Record<string, { full_name: string; email: string; role: string }>;
 }
 
 export default function EventDashboardClient({ 
@@ -27,7 +28,8 @@ export default function EventDashboardClient({
   initialTickets, 
   initialTransfers,
   initialAssignments = [],
-  availableUsers = []
+  availableUsers = [],
+  staffUsersMap = {}
 }: EventDashboardClientProps) {
   const supabase = createClient();
   const [orders, setOrders] = useState(initialOrders);
@@ -350,6 +352,7 @@ export default function EventDashboardClient({
                 <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.85rem" }}>Localidad</th>
                 <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.85rem" }}>Estado en Puerta</th>
                 <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.85rem" }}>Hora de Ingreso</th>
+                <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.85rem" }}>Validado en Puerta Por</th>
                 <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.85rem", textAlign: "right" }}>Ticket ID</th>
               </tr>
             </thead>
@@ -374,7 +377,7 @@ export default function EventDashboardClient({
                 if (filtered.length === 0) {
                   return (
                     <tr>
-                      <td colSpan={5} style={{ padding: "2.5rem", textAlign: "center", color: "var(--color-text-secondary)" }}>
+                      <td colSpan={6} style={{ padding: "2.5rem", textAlign: "center", color: "var(--color-text-secondary)" }}>
                         {attendeeSearch ? "No se encontraron asistentes con ese criterio." : "No hay boletas en esta categoría."}
                       </td>
                     </tr>
@@ -387,6 +390,7 @@ export default function EventDashboardClient({
                   const attendeeName = t.assigned_name || relatedOrder?.customer_name || "Titular de Cuenta";
                   const attendeeEmail = t.assigned_email || relatedOrder?.customer_email || "-";
                   const tier = initialTiers.find(ti => ti.id === t.tier_id || ti.id === t.ticket_tier_id);
+                  const staffUser = t.scanned_by ? staffUsersMap[t.scanned_by] : null;
 
                   return (
                     <tr key={t.id} style={{
@@ -445,6 +449,31 @@ export default function EventDashboardClient({
                       </td>
                       <td style={{ padding: "1rem", color: isScanned ? "white" : "var(--color-text-secondary)", fontSize: "0.85rem", fontFamily: isScanned ? "monospace" : "inherit" }}>
                         {t.scanned_at ? new Date(t.scanned_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Pendiente"}
+                      </td>
+                      <td style={{ padding: "1rem" }}>
+                        {isScanned ? (
+                          t.scanned_by ? (
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.45rem" }}>
+                              <span style={{ fontSize: "0.85rem" }}>🚪</span>
+                              <div>
+                                <div style={{ fontWeight: 800, color: "white", fontSize: "0.825rem" }}>
+                                  {staffUser?.full_name || assignments.find(a => a.user_id === t.scanned_by)?.user_name || "Staff de Puerta"}
+                                </div>
+                                <div style={{ fontSize: "0.7rem", color: "#06b6d4", fontWeight: 700 }}>
+                                  {staffUser?.role === "superadmin" ? "👑 Super Admin" : staffUser?.role === "admin" ? "Admin" : "Personal de Puerta"}
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.8rem", fontStyle: "italic" }}>
+                              Validado en taquilla
+                            </span>
+                          )
+                        ) : (
+                          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.8rem" }}>
+                            — Pendiente
+                          </span>
+                        )}
                       </td>
                       <td style={{ padding: "1rem", textAlign: "right", fontFamily: "monospace", fontSize: "0.78rem", color: "var(--color-accent, #00f0ff)" }}>
                         #{t.id.slice(0, 8).toUpperCase()}
@@ -559,38 +588,55 @@ export default function EventDashboardClient({
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
-              {assignments.map((a: any) => (
-                <div key={a.id} style={{
-                  padding: "1rem",
-                  borderRadius: "0.75rem",
-                  backgroundColor: a.is_active ? "rgba(6, 182, 212, 0.05)" : "rgba(239, 68, 68, 0.05)",
-                  border: `1px solid ${a.is_active ? "rgba(6, 182, 212, 0.25)" : "rgba(239, 68, 68, 0.25)"}`,
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  gap: "0.75rem"
-                }}>
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
-                      <div style={{ fontWeight: 800, color: "white", fontSize: "0.95rem" }}>
-                        {a.user_name || "Personal de Puerta"}
+              {assignments.map((a: any) => {
+                const staffScansCount = tickets.filter(t => t.scanned_by === a.user_id && (t.status === 'scanned' || Boolean(t.scanned_at))).length;
+                return (
+                  <div key={a.id} style={{
+                    padding: "1rem",
+                    borderRadius: "0.75rem",
+                    backgroundColor: a.is_active ? "rgba(6, 182, 212, 0.05)" : "rgba(239, 68, 68, 0.05)",
+                    border: `1px solid ${a.is_active ? "rgba(6, 182, 212, 0.25)" : "rgba(239, 68, 68, 0.25)"}`,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    gap: "0.75rem"
+                  }}>
+                    <div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                        <div style={{ fontWeight: 800, color: "white", fontSize: "0.95rem" }}>
+                          {a.user_name || "Personal de Puerta"}
+                        </div>
+                        <span style={{
+                          padding: "0.2rem 0.5rem",
+                          borderRadius: "999px",
+                          fontSize: "0.7rem",
+                          fontWeight: 800,
+                          backgroundColor: a.is_active ? "rgba(34, 197, 94, 0.2)" : "rgba(239, 68, 68, 0.2)",
+                          color: a.is_active ? "#22c55e" : "#ef4444",
+                          textTransform: "uppercase"
+                        }}>
+                          {a.is_active ? "ACTIVO" : "BLOQUEADO"}
+                        </span>
                       </div>
-                      <span style={{
-                        padding: "0.2rem 0.5rem",
-                        borderRadius: "999px",
-                        fontSize: "0.7rem",
+                      <div style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)", marginTop: "2px" }}>
+                        {a.user_email || "Sin correo"}
+                      </div>
+                      <div style={{
+                        marginTop: "0.5rem",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "0.35rem",
+                        fontSize: "0.75rem",
                         fontWeight: 800,
-                        backgroundColor: a.is_active ? "rgba(34, 197, 94, 0.2)" : "rgba(239, 68, 68, 0.2)",
-                        color: a.is_active ? "#22c55e" : "#ef4444",
-                        textTransform: "uppercase"
+                        color: staffScansCount > 0 ? "#22c55e" : "rgba(255,255,255,0.4)",
+                        backgroundColor: staffScansCount > 0 ? "rgba(34, 197, 94, 0.1)" : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${staffScansCount > 0 ? "rgba(34, 197, 94, 0.25)" : "rgba(255,255,255,0.08)"}`,
+                        padding: "0.25rem 0.55rem",
+                        borderRadius: "0.4rem"
                       }}>
-                        {a.is_active ? "ACTIVO" : "BLOQUEADO"}
-                      </span>
+                        🎟️ {staffScansCount} {staffScansCount === 1 ? "persona ingresada" : "personas ingresadas"}
+                      </div>
                     </div>
-                    <div style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)", marginTop: "2px" }}>
-                      {a.user_email || "Sin correo"}
-                    </div>
-                  </div>
 
                   <div style={{ display: "flex", gap: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "0.75rem" }}>
                     <button
@@ -632,7 +678,8 @@ export default function EventDashboardClient({
                     </button>
                   </div>
                 </div>
-              ))}
+              );
+            })}
             </div>
           )}
         </div>

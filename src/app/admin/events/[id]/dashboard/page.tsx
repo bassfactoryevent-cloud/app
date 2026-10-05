@@ -42,10 +42,10 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
   let transfers: any[] = [];
 
   if (tierIds.length > 0) {
-    // 3. Obtener boletas emitidas ÚNICAMENTE para las localidades de este evento
+    // 3. Obtener boletas emitidas ÚNICAMENTE para las localidades de este evento (incluyendo quién la escaneó)
     const { data: rawTickets } = await adminDb
       .from("tickets")
-      .select("id, tier_id, order_id, status, assigned_name, assigned_email, scanned_at, created_at")
+      .select("id, tier_id, order_id, status, assigned_name, assigned_email, scanned_at, scanned_by, created_at")
       .in("tier_id", tierIds);
 
     eventTickets = rawTickets || [];
@@ -85,18 +85,26 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
   const emailMap = new Map((authUsers?.users || []).map((u) => [u.id, u.email]));
   const metaRoleMap = new Map((authUsers?.users || []).map((u) => [u.id, u.user_metadata?.role]));
 
+  // Mapa completo para auditar quién escaneó cada boleta en el panel
+  const staffUsersMap: Record<string, { full_name: string; email: string; role: string }> = {};
+  (profiles || []).forEach((p: any) => {
+    const metaRole = metaRoleMap.get(p.id);
+    const effectiveRole = metaRole === "scanner" ? "scanner" : (p.role || "customer");
+    staffUsersMap[p.id] = {
+      full_name: p.full_name || (p.role === "superadmin" ? "Super Admin" : "Personal de Puerta"),
+      email: emailMap.get(p.id) || "",
+      role: effectiveRole,
+    };
+  });
+
   // Solo incluir usuarios con rol de puerta o admin (NUNCA clientes normales)
   const availableUsers = (profiles || [])
-    .map((p: any) => {
-      const metaRole = metaRoleMap.get(p.id);
-      const effectiveRole = metaRole === "scanner" ? "scanner" : (p.role || "customer");
-      return {
-        id: p.id,
-        full_name: p.full_name,
-        email: emailMap.get(p.id) || "",
-        role: effectiveRole,
-      };
-    })
+    .map((p: any) => ({
+      id: p.id,
+      full_name: staffUsersMap[p.id]?.full_name || p.full_name,
+      email: staffUsersMap[p.id]?.email || "",
+      role: staffUsersMap[p.id]?.role || "customer",
+    }))
     .filter((u: any) => u.role !== "customer");
 
   return (
@@ -109,6 +117,7 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
         initialTransfers={transfers}
         initialAssignments={assignments}
         availableUsers={availableUsers}
+        staffUsersMap={staffUsersMap}
       />
     </div>
   );
