@@ -6,6 +6,9 @@ import TicketCard from "./TicketCard";
 
 import { getAdminClient } from "@/utils/supabase/admin";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const adminDb = getAdminClient();
 
 export default async function AccountTicketsPage() {
