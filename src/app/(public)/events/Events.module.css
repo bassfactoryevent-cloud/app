@@ -136,8 +136,8 @@
   }
 }
 
-/* 3-COLUMN MAIN LAYOUT */
-.mainGrid {
+/* DYNAMIC GRID LAYOUTS BASED ON SIDEBAR ADS */
+.mainGridBoth {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr) 220px;
   gap: 2rem;
@@ -145,15 +145,48 @@
   margin-bottom: 5rem;
 }
 
+.mainGridLeftOnly {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 2rem;
+  align-items: start;
+  margin-bottom: 5rem;
+}
+
+.mainGridRightOnly {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 2rem;
+  align-items: start;
+  margin-bottom: 5rem;
+}
+
+.mainGridNoAds {
+  display: block;
+  width: 100%;
+  margin-bottom: 5rem;
+}
+
 @media (max-width: 1240px) {
-  .mainGrid {
+  .mainGridBoth {
     grid-template-columns: 180px minmax(0, 1fr) 180px;
+    gap: 1.25rem;
+  }
+  .mainGridLeftOnly {
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+  .mainGridRightOnly {
+    grid-template-columns: minmax(0, 1fr) 180px;
     gap: 1.25rem;
   }
 }
 
 @media (max-width: 960px) {
-  .mainGrid {
+  .mainGridBoth,
+  .mainGridLeftOnly,
+  .mainGridRightOnly,
+  .mainGridNoAds {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;

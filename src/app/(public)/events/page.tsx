@@ -1,7 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import Image from "next/image";
-import VerticalAdSlot from "@/components/VerticalAdSlot";
+import AdBanner from "@/components/AdBanner";
 import HorizontalScroll from "@/components/ui/HorizontalScroll";
 import { Calendar, MapPin, ArrowRight, ShieldCheck, Sparkles, QrCode, CreditCard, ShoppingBag, ExternalLink } from "lucide-react";
 import styles from "./Events.module.css";
@@ -20,8 +20,8 @@ export default async function EventsPage() {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
 
-  // Fetch en paralelo: eventos, productos de merch y patrocinadores oficiales
-  const [eventsRes, merchRes, sponsorsRes] = await Promise.all([
+  // Fetch en paralelo: eventos, productos de merch, patrocinadores oficiales y pautas laterales
+  const [eventsRes, merchRes, sponsorsRes, adsRes] = await Promise.all([
     supabase
       .from("events")
       .select("*, ticket_tiers(*)")
@@ -43,7 +43,18 @@ export default async function EventsPage() {
     supabase
       .from("sponsors")
       .select("id, name, logo_url, website_url")
-      .order("name", { ascending: true })
+      .order("name", { ascending: true }),
+    supabase
+      .from("ads")
+      .select(`
+        id,
+        ad_placements!inner(name, is_active),
+        ad_campaigns!inner(is_active, end_date)
+      `)
+      .eq("is_active", true)
+      .eq("ad_campaigns.is_active", true)
+      .eq("ad_placements.is_active", true)
+      .in("ad_placements.name", ["events_vertical_left", "events_vertical_right"])
   ]);
 
   // Filtrar eventos pasados
@@ -64,6 +75,27 @@ export default async function EventsPage() {
 
   const merchProducts = merchRes.data || [];
   const sponsors = sponsorsRes.data || [];
+
+  const now = new Date();
+  const hasLeftAd = (adsRes.data || []).some((a: any) => {
+    const pName = Array.isArray(a.ad_placements) ? a.ad_placements[0]?.name : a.ad_placements?.name;
+    const campaign = Array.isArray(a.ad_campaigns) ? a.ad_campaigns[0] : a.ad_campaigns;
+    return pName === "events_vertical_left" && (!campaign?.end_date || new Date(campaign.end_date) >= now);
+  });
+
+  const hasRightAd = (adsRes.data || []).some((a: any) => {
+    const pName = Array.isArray(a.ad_placements) ? a.ad_placements[0]?.name : a.ad_placements?.name;
+    const campaign = Array.isArray(a.ad_campaigns) ? a.ad_campaigns[0] : a.ad_campaigns;
+    return pName === "events_vertical_right" && (!campaign?.end_date || new Date(campaign.end_date) >= now);
+  });
+
+  const gridClass = hasLeftAd && hasRightAd
+    ? styles.mainGridBoth
+    : hasLeftAd
+    ? styles.mainGridLeftOnly
+    : hasRightAd
+    ? styles.mainGridRightOnly
+    : styles.mainGridNoAds;
 
   return (
     <div className={styles.eventsContainer}>
@@ -97,26 +129,24 @@ export default async function EventsPage() {
         </div>
       </header>
 
-      {/* 2. 3-COLUMN MAIN LAYOUT: BANNER IZQUIERDO | EVENTOS | BANNER DERECHO */}
-      <div className={styles.mainGrid}>
+      {/* 2. DYNAMIC MAIN LAYOUT: BANNER IZQUIERDO | EVENTOS | BANNER DERECHO */}
+      <div className={gridClass}>
         
-        {/* COLUMNA IZQUIERDA: BANNER VERTICAL */}
-        <aside className={styles.sidebarCol}>
-          <VerticalAdSlot 
-            placementName="events_vertical_left" 
-            label="Banner Lateral Izquierdo" 
-          />
-        </aside>
+        {/* COLUMNA IZQUIERDA: BANNER VERTICAL (SOLO SI HAY PAUTA ACTIVA) */}
+        {hasLeftAd && (
+          <aside className={styles.sidebarCol}>
+            <AdBanner placementName="events_vertical_left" />
+          </aside>
+        )}
 
         {/* COLUMNA CENTRAL: CARTELERA DE EVENTOS */}
         <main className={styles.eventsCol}>
           {/* BANNER MOBILE SUPERIOR (SOLO VISIBLE EN MÓVIL / PANTALLAS PEQUEÑAS) */}
-          <div className={styles.mobileAdSlot}>
-            <VerticalAdSlot 
-              placementName="events_vertical_left" 
-              label="Pauta Oficial" 
-            />
-          </div>
+          {hasLeftAd && (
+            <div className={styles.mobileAdSlot}>
+              <AdBanner placementName="events_vertical_left" />
+            </div>
+          )}
 
           {(!events || events.length === 0) ? (
             <div className={styles.emptyState}>
@@ -204,21 +234,19 @@ export default async function EventsPage() {
           )}
 
           {/* BANNER MOBILE INFERIOR (SOLO VISIBLE EN MÓVIL / PANTALLAS PEQUEÑAS) */}
-          <div className={styles.mobileAdSlot} style={{ marginTop: '1.75rem' }}>
-            <VerticalAdSlot 
-              placementName="events_vertical_right" 
-              label="Pauta Oficial" 
-            />
-          </div>
+          {hasRightAd && (
+            <div className={styles.mobileAdSlot} style={{ marginTop: '1.75rem' }}>
+              <AdBanner placementName="events_vertical_right" />
+            </div>
+          )}
         </main>
 
-        {/* COLUMNA DERECHA: BANNER VERTICAL */}
-        <aside className={styles.sidebarCol}>
-          <VerticalAdSlot 
-            placementName="events_vertical_right" 
-            label="Banner Lateral Derecho" 
-          />
-        </aside>
+        {/* COLUMNA DERECHA: BANNER VERTICAL (SOLO SI HAY PAUTA ACTIVA) */}
+        {hasRightAd && (
+          <aside className={styles.sidebarCol}>
+            <AdBanner placementName="events_vertical_right" />
+          </aside>
+        )}
 
       </div>
 
