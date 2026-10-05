@@ -1,8 +1,7 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
 import EventDashboardClient from "./EventDashboardClient";
-
 import { getAdminClient } from "@/utils/supabase/admin";
+import { getAssignmentsForEvent } from "@/utils/staffAssignments";
 
 export const dynamic = "force-dynamic";
 
@@ -76,6 +75,21 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
     }
   }
 
+  // 6. Obtener personal asignado a la puerta de este evento y lista de usuarios disponibles
+  const [assignments, { data: profiles }, { data: authUsers }] = await Promise.all([
+    getAssignmentsForEvent(id),
+    adminDb.from("profiles").select("id, full_name, role").order("created_at", { ascending: false }),
+    adminDb.auth.admin.listUsers()
+  ]);
+
+  const emailMap = new Map((authUsers?.users || []).map((u) => [u.id, u.email]));
+  const availableUsers = (profiles || []).map((p: any) => ({
+    id: p.id,
+    full_name: p.full_name,
+    email: emailMap.get(p.id) || "",
+    role: p.role || "customer",
+  }));
+
   return (
     <div style={{ paddingBottom: "4rem" }}>
       <EventDashboardClient 
@@ -84,6 +98,8 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
         initialOrders={eventOrders} 
         initialTickets={eventTickets} 
         initialTransfers={transfers}
+        initialAssignments={assignments}
+        availableUsers={availableUsers}
       />
     </div>
   );

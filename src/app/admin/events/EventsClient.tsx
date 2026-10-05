@@ -153,14 +153,17 @@ export default function EventsClient({ initialEvents, error }: { initialEvents: 
                   </span>
                 </div>
 
-                <div style={{ marginTop: 'auto', display: 'flex', gap: '0.5rem', borderTop: '1px solid rgba(128,128,128,0.1)', paddingTop: '1rem' }}>
-                  <Link href={`/admin/events/${event.id}/dashboard`} style={{ flex: 1, textAlign: 'center', padding: '0.5rem', backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#3b82f6', borderRadius: 'var(--radius-md)', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600 }}>
+                <div style={{ marginTop: 'auto', display: 'flex', gap: '0.4rem', borderTop: '1px solid rgba(128,128,128,0.1)', paddingTop: '1rem', flexWrap: 'wrap' }}>
+                  <Link href={`/admin/events/${event.id}/dashboard`} style={{ flex: 1, minWidth: '70px', textAlign: 'center', padding: '0.5rem', backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#3b82f6', borderRadius: 'var(--radius-md)', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 700 }}>
                     Ventas
                   </Link>
-                  <Link href={`/admin/events/${event.id}`} style={{ flex: 1, textAlign: 'center', padding: '0.5rem', backgroundColor: 'rgba(128,128,128,0.1)', borderRadius: 'var(--radius-md)', textDecoration: 'none', color: 'inherit', fontSize: '0.875rem' }}>
+                  <Link href={`/admin/events/${event.id}/staff`} style={{ flex: 1, minWidth: '70px', textAlign: 'center', padding: '0.5rem', backgroundColor: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4', borderRadius: 'var(--radius-md)', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 700 }}>
+                    🚪 Puerta
+                  </Link>
+                  <Link href={`/admin/events/${event.id}`} style={{ flex: 1, minWidth: '60px', textAlign: 'center', padding: '0.5rem', backgroundColor: 'rgba(128,128,128,0.1)', borderRadius: 'var(--radius-md)', textDecoration: 'none', color: 'inherit', fontSize: '0.8rem' }}>
                     Editar
                   </Link>
-                  <Link href={`/admin/events/${event.id}/scan`} style={{ flex: 1, textAlign: 'center', padding: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', borderRadius: 'var(--radius-md)', textDecoration: 'none', fontSize: '0.875rem' }}>
+                  <Link href={`/admin/events/${event.id}/scan`} style={{ flex: 1, minWidth: '65px', textAlign: 'center', padding: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', borderRadius: 'var(--radius-md)', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 600 }}>
                     Escáner
                   </Link>
                   <DeleteEventButton id={event.id} eventName={event.title} />

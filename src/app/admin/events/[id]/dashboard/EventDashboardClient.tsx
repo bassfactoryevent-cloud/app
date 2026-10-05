@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
-import { ArrowLeft, DollarSign, Ticket, Users, Activity, ScanLine, CheckCircle2, Clock, Search } from "lucide-react";
+import { 
+  ArrowLeft, DollarSign, Ticket, Users, Activity, ScanLine, 
+  CheckCircle2, Clock, Search, UserPlus, Power, Trash2, ShieldCheck, Smartphone, ExternalLink 
+} from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
+import { addStaffToEventAction, toggleStaffStatusAction, removeStaffAction } from "../staff/actions";
 
 interface EventDashboardClientProps {
   event: any;
@@ -12,15 +16,89 @@ interface EventDashboardClientProps {
   initialOrders: any[];
   initialTickets: any[];
   initialTransfers: any[];
+  initialAssignments?: any[];
+  availableUsers?: any[];
 }
 
-export default function EventDashboardClient({ event, initialTiers, initialOrders, initialTickets, initialTransfers }: EventDashboardClientProps) {
+export default function EventDashboardClient({ 
+  event, 
+  initialTiers, 
+  initialOrders, 
+  initialTickets, 
+  initialTransfers,
+  initialAssignments = [],
+  availableUsers = []
+}: EventDashboardClientProps) {
   const supabase = createClient();
   const [orders, setOrders] = useState(initialOrders);
   const [tickets, setTickets] = useState(initialTickets);
   const [transfers, setTransfers] = useState(initialTransfers);
-  const [attendeeFilter, setAttendeeFilter] = useState<"all" | "active" | "pending">("all");
+  const [assignments, setAssignments] = useState(initialAssignments);
+  const [selectedStaffUserId, setSelectedStaffUserId] = useState("");
+  const [isStaffPending, startStaffTransition] = useTransition();
+
+  const [attendeeFilter, setAttendeeFilter] = useState<"all" | "active" | "pending">("active");
   const [attendeeSearch, setAttendeeSearch] = useState("");
+
+  const handleAssignStaff = () => {
+    if (!selectedStaffUserId) {
+      toast.error("Selecciona un usuario para asignar a la puerta");
+      return;
+    }
+
+    startStaffTransition(async () => {
+      const res = await addStaffToEventAction(event.id, selectedStaffUserId);
+      if (res.success) {
+        toast.success("Personal asignado a la puerta de este evento");
+        const assignedUser = availableUsers?.find((u: any) => u.id === selectedStaffUserId);
+        if (assignedUser) {
+          setAssignments((prev: any[]) => [
+            ...prev.filter((a: any) => a.user_id !== selectedStaffUserId),
+            {
+              id: crypto.randomUUID(),
+              user_id: selectedStaffUserId,
+              user_name: assignedUser.full_name || "Personal de Puerta",
+              user_email: assignedUser.email || "",
+              event_id: event.id,
+              event_title: event.title,
+              is_active: true,
+              assigned_at: new Date().toISOString(),
+              assigned_by: "Admin",
+            }
+          ]);
+        }
+        setSelectedStaffUserId("");
+      } else {
+        toast.error(res.error || "Error al asignar personal");
+      }
+    });
+  };
+
+  const handleToggleStaffStatus = (assignmentId: string, currentStatus: boolean) => {
+    const nextStatus = !currentStatus;
+    startStaffTransition(async () => {
+      const res = await toggleStaffStatusAction(assignmentId, nextStatus, event.id);
+      if (res.success) {
+        setAssignments((prev: any[]) => prev.map((a: any) => a.id === assignmentId ? { ...a, is_active: nextStatus } : a));
+        toast.success(nextStatus ? "Acceso de escáner activado" : "Acceso de escáner bloqueado inmediatamente");
+      } else {
+        toast.error(res.error || "Error al actualizar estado");
+      }
+    });
+  };
+
+  const handleRemoveStaff = (assignmentId: string) => {
+    if (!confirm("¿Deseas revocar el permiso de escaneo a este usuario para este evento?")) return;
+    startStaffTransition(async () => {
+      const res = await removeStaffAction(assignmentId, event.id);
+      if (res.success) {
+        setAssignments((prev: any[]) => prev.filter((a: any) => a.id !== assignmentId));
+        toast.success("Asignación de puerta eliminada");
+      } else {
+        toast.error(res.error || "Error al eliminar");
+      }
+    });
+  };
   
   // Realtime subscription
   useEffect(() => {
@@ -244,6 +322,179 @@ export default function EventDashboardClient({ event, initialTiers, initialOrder
             </table>
           </div>
         </div>
+      </div>
+
+      {/* Door Staff Assignment Card */}
+      <div style={{ marginTop: "2.5rem", backgroundColor: "var(--color-surface, #111)", border: "1px solid var(--color-border, #333)", borderRadius: "var(--radius-lg)", overflow: "hidden" }}>
+        <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--color-border, #333)", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <Users size={22} color="#06b6d4" />
+              <h3 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0, color: "white" }}>
+                Personal de Puerta Asignado (Escáner de Boletas)
+              </h3>
+            </div>
+            <p style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)", marginTop: "0.35rem", marginBottom: 0 }}>
+              Configura quiénes están autorizados para recibir los QRs y escanear en la puerta de este evento desde su celular en <strong>bassfactory.co/scanner</strong>.
+            </p>
+          </div>
+
+          <Link href={`/admin/events/${event.id}/staff`} style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            fontSize: "0.825rem",
+            fontWeight: 700,
+            color: "#06b6d4",
+            textDecoration: "none",
+            padding: "0.45rem 0.9rem",
+            borderRadius: "0.5rem",
+            backgroundColor: "rgba(6, 182, 212, 0.12)",
+            border: "1px solid rgba(6, 182, 212, 0.3)"
+          }}>
+            <ExternalLink size={14} /> Gestión Completa de Puerta
+          </Link>
+        </div>
+
+        {/* Quick Assign Form */}
+        <div style={{ padding: "1.25rem 1.5rem", backgroundColor: "rgba(255,255,255,0.015)", borderBottom: "1px solid var(--color-border, #333)", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "1rem" }}>
+          <div style={{ flex: 1, minWidth: "260px" }}>
+            <label style={{ display: "block", fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", fontWeight: 700, marginBottom: "0.35rem" }}>
+              Seleccionar usuario para asignar a la puerta de este evento:
+            </label>
+            <select
+              value={selectedStaffUserId}
+              onChange={(e) => setSelectedStaffUserId(e.target.value)}
+              disabled={isStaffPending}
+              style={{
+                width: "100%",
+                padding: "0.6rem 0.85rem",
+                borderRadius: "0.5rem",
+                backgroundColor: "rgba(0,0,0,0.5)",
+                border: "1px solid rgba(255,255,255,0.15)",
+                color: "white",
+                fontSize: "0.85rem",
+                fontWeight: 600
+              }}
+            >
+              <option value="">-- Elige un usuario registrado --</option>
+              {availableUsers?.map((u: any) => (
+                <option key={u.id} value={u.id}>
+                  {u.full_name} ({u.email}) — Rol: {u.role}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            onClick={handleAssignStaff}
+            disabled={isStaffPending || !selectedStaffUserId}
+            style={{
+              alignSelf: "flex-end",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              padding: "0.65rem 1.25rem",
+              borderRadius: "0.5rem",
+              backgroundColor: isStaffPending || !selectedStaffUserId ? "rgba(6, 182, 212, 0.2)" : "#06b6d4",
+              color: isStaffPending || !selectedStaffUserId ? "rgba(255,255,255,0.4)" : "#000",
+              fontWeight: 800,
+              fontSize: "0.85rem",
+              border: "none",
+              cursor: isStaffPending || !selectedStaffUserId ? "not-allowed" : "pointer"
+            }}
+          >
+            <UserPlus size={16} /> Asignar a la Puerta
+          </button>
+        </div>
+
+        {/* Assigned Staff List */}
+        <div style={{ padding: "1.25rem 1.5rem" }}>
+          {assignments.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "1.75rem", color: "rgba(255,255,255,0.5)", fontSize: "0.875rem" }}>
+              No hay personal asignado a la puerta de este evento. Asigna a uno arriba para que pueda escanear desde su celular.
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
+              {assignments.map((a: any) => (
+                <div key={a.id} style={{
+                  padding: "1rem",
+                  borderRadius: "0.75rem",
+                  backgroundColor: a.is_active ? "rgba(6, 182, 212, 0.05)" : "rgba(239, 68, 68, 0.05)",
+                  border: `1px solid ${a.is_active ? "rgba(6, 182, 212, 0.25)" : "rgba(239, 68, 68, 0.25)"}`,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  gap: "0.75rem"
+                }}>
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                      <div style={{ fontWeight: 800, color: "white", fontSize: "0.95rem" }}>
+                        {a.user_name || "Personal de Puerta"}
+                      </div>
+                      <span style={{
+                        padding: "0.2rem 0.5rem",
+                        borderRadius: "999px",
+                        fontSize: "0.7rem",
+                        fontWeight: 800,
+                        backgroundColor: a.is_active ? "rgba(34, 197, 94, 0.2)" : "rgba(239, 68, 68, 0.2)",
+                        color: a.is_active ? "#22c55e" : "#ef4444",
+                        textTransform: "uppercase"
+                      }}>
+                        {a.is_active ? "ACTIVO" : "BLOQUEADO"}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)", marginTop: "2px" }}>
+                      {a.user_email || "Sin correo"}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "0.75rem" }}>
+                    <button
+                      onClick={() => handleToggleStaffStatus(a.id, a.is_active)}
+                      disabled={isStaffPending}
+                      style={{
+                        flex: 1,
+                        padding: "0.45rem 0.6rem",
+                        borderRadius: "0.4rem",
+                        backgroundColor: a.is_active ? "rgba(239, 68, 68, 0.15)" : "rgba(34, 197, 94, 0.15)",
+                        border: `1px solid ${a.is_active ? "rgba(239, 68, 68, 0.3)" : "rgba(34, 197, 94, 0.3)"}`,
+                        color: a.is_active ? "#ef4444" : "#22c55e",
+                        fontWeight: 700,
+                        fontSize: "0.75rem",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "0.3rem"
+                      }}
+                    >
+                      <Power size={13} /> {a.is_active ? "Bloquear Acceso" : "Reactivar Acceso"}
+                    </button>
+
+                    <button
+                      onClick={() => handleRemoveStaff(a.id)}
+                      disabled={isStaffPending}
+                      title="Eliminar asignación"
+                      style={{
+                        padding: "0.45rem 0.6rem",
+                        borderRadius: "0.4rem",
+                        backgroundColor: "rgba(255,255,255,0.05)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        color: "rgba(255,255,255,0.6)",
+                        cursor: "pointer"
+                      }}
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Live Door Check-in & Attendees Table */}
       <div style={{ marginTop: "2.5rem", backgroundColor: "var(--color-surface, #111)", border: "1px solid var(--color-border, #333)", borderRadius: "var(--radius-lg)", overflow: "hidden" }}>
         <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--color-border, #333)", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
