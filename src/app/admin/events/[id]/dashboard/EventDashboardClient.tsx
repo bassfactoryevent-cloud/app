@@ -232,274 +232,6 @@ export default function EventDashboardClient({
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "2rem", alignItems: "start" }}>
-        
-        {/* Inventory Control */}
-        <div style={{ backgroundColor: "var(--color-surface, #111)", border: "1px solid var(--color-border, #333)", borderRadius: "var(--radius-lg)", padding: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.25rem", fontWeight: 600, margin: "0 0 1.5rem 0", color: "white" }}>
-            Inventario por Localidad
-          </h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-            {initialTiers.map(tier => {
-              const soldInTier = tickets.filter(t => t.tier_id === tier.id || t.ticket_tier_id === tier.id).length;
-              const tierCapacity = Number(tier.quantity_available) || 0;
-              const remaining = Math.max(0, tierCapacity - soldInTier);
-              const percentage = tierCapacity > 0 ? Math.min(100, (soldInTier / tierCapacity) * 100) : 0;
-              
-              return (
-                <div key={tier.id}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "0.875rem" }}>
-                    <span style={{ fontWeight: 600, color: "white" }}>{tier.name}</span>
-                    <span style={{ color: "var(--color-text-secondary)" }}>{soldInTier} / {tierCapacity} vendidas</span>
-                  </div>
-                  <div style={{ width: "100%", height: "8px", backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "4px", overflow: "hidden" }}>
-                    <div style={{ 
-                      width: `${percentage}%`, 
-                      height: "100%", 
-                      backgroundColor: percentage >= 100 ? "#ef4444" : "#3b82f6",
-                      borderRadius: "4px"
-                    }} />
-                  </div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginTop: "0.25rem", textAlign: "right" }}>
-                    Quedan: <span style={{ color: "white", fontWeight: 600 }}>{remaining}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Live Orders Table */}
-        <div style={{ backgroundColor: "var(--color-surface, #111)", border: "1px solid var(--color-border, #333)", borderRadius: "var(--radius-lg)", overflow: "hidden" }}>
-          <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--color-border, #333)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h3 style={{ fontSize: "1.25rem", fontWeight: 600, margin: 0, color: "white" }}>
-              Últimas Compras (Real-Time)
-            </h3>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.75rem", color: "#22c55e" }}>
-              <span style={{ width: "8px", height: "8px", backgroundColor: "#22c55e", borderRadius: "50%", display: "inline-block", boxShadow: "0 0 8px #22c55e" }}></span>
-              Sincronizando
-            </div>
-          </div>
-          
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-              <thead>
-                <tr style={{ backgroundColor: "rgba(255,255,255,0.02)", borderBottom: "1px solid var(--color-border, #333)" }}>
-                  <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.875rem" }}>Cliente</th>
-                  <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.875rem" }}>Fecha</th>
-                  <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.875rem" }}>Estado</th>
-                  <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.875rem", textAlign: "right" }}>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "var(--color-text-secondary)" }}>
-                      Aún no hay ventas para este evento.
-                    </td>
-                  </tr>
-                ) : (
-                  orders.map((order, i) => (
-                    <tr key={order.id} style={{ borderBottom: "1px solid var(--color-border, #333)", backgroundColor: i === 0 ? "rgba(34, 197, 94, 0.05)" : "transparent" }}>
-                      <td style={{ padding: "1rem" }}>
-                        <div style={{ fontWeight: 600, color: "white" }}>{order.customer_name}</div>
-                        <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>{order.customer_email}</div>
-                      </td>
-                      <td style={{ padding: "1rem", color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
-                        {new Date(order.created_at).toLocaleString()}
-                      </td>
-                      <td style={{ padding: "1rem" }}>
-                        <span style={{
-                          padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.75rem", fontWeight: 600,
-                          backgroundColor: order.status === 'paid' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                          color: order.status === 'paid' ? '#22c55e' : '#f59e0b', textTransform: "uppercase"
-                        }}>
-                          {order.status}
-                        </span>
-                      </td>
-                      <td style={{ padding: "1rem", textAlign: "right", fontWeight: 700, color: "white" }}>
-                        {formatCurrency(Number(order.total_amount))}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      {/* Door Staff Assignment Card */}
-      <div style={{ marginTop: "2.5rem", backgroundColor: "var(--color-surface, #111)", border: "1px solid var(--color-border, #333)", borderRadius: "var(--radius-lg)", overflow: "hidden" }}>
-        <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--color-border, #333)", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <Users size={22} color="#06b6d4" />
-              <h3 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0, color: "white" }}>
-                Personal de Puerta Asignado (Escáner de Boletas)
-              </h3>
-            </div>
-            <p style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)", marginTop: "0.35rem", marginBottom: 0 }}>
-              Configura quiénes están autorizados para recibir los QRs y escanear en la puerta de este evento desde su celular en <strong>bassfactory.co/scanner</strong>.
-            </p>
-          </div>
-
-          <Link href={`/admin/events/${event.id}/staff`} style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.4rem",
-            fontSize: "0.825rem",
-            fontWeight: 700,
-            color: "#06b6d4",
-            textDecoration: "none",
-            padding: "0.45rem 0.9rem",
-            borderRadius: "0.5rem",
-            backgroundColor: "rgba(6, 182, 212, 0.12)",
-            border: "1px solid rgba(6, 182, 212, 0.3)"
-          }}>
-            <ExternalLink size={14} /> Gestión Completa de Puerta
-          </Link>
-        </div>
-
-        {/* Quick Assign Form */}
-        <div style={{ padding: "1.25rem 1.5rem", backgroundColor: "rgba(255,255,255,0.015)", borderBottom: "1px solid var(--color-border, #333)", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "1rem" }}>
-          <div style={{ flex: 1, minWidth: "260px" }}>
-            <label style={{ display: "block", fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", fontWeight: 700, marginBottom: "0.35rem" }}>
-              Seleccionar usuario para asignar a la puerta de este evento:
-            </label>
-            <select
-              value={selectedStaffUserId}
-              onChange={(e) => setSelectedStaffUserId(e.target.value)}
-              disabled={isStaffPending}
-              style={{
-                width: "100%",
-                padding: "0.6rem 0.85rem",
-                borderRadius: "0.5rem",
-                backgroundColor: "rgba(0,0,0,0.5)",
-                border: "1px solid rgba(255,255,255,0.15)",
-                color: "white",
-                fontSize: "0.85rem",
-                fontWeight: 600
-              }}
-            >
-              <option value="">-- Elige un usuario registrado --</option>
-              {availableUsers?.map((u: any) => (
-                <option key={u.id} value={u.id}>
-                  {u.full_name} ({u.email}) — Rol: {u.role}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <button
-            onClick={handleAssignStaff}
-            disabled={isStaffPending || !selectedStaffUserId}
-            style={{
-              alignSelf: "flex-end",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.4rem",
-              padding: "0.65rem 1.25rem",
-              borderRadius: "0.5rem",
-              backgroundColor: isStaffPending || !selectedStaffUserId ? "rgba(6, 182, 212, 0.2)" : "#06b6d4",
-              color: isStaffPending || !selectedStaffUserId ? "rgba(255,255,255,0.4)" : "#000",
-              fontWeight: 800,
-              fontSize: "0.85rem",
-              border: "none",
-              cursor: isStaffPending || !selectedStaffUserId ? "not-allowed" : "pointer"
-            }}
-          >
-            <UserPlus size={16} /> Asignar a la Puerta
-          </button>
-        </div>
-
-        {/* Assigned Staff List */}
-        <div style={{ padding: "1.25rem 1.5rem" }}>
-          {assignments.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "1.75rem", color: "rgba(255,255,255,0.5)", fontSize: "0.875rem" }}>
-              No hay personal asignado a la puerta de este evento. Asigna a uno arriba para que pueda escanear desde su celular.
-            </div>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
-              {assignments.map((a: any) => (
-                <div key={a.id} style={{
-                  padding: "1rem",
-                  borderRadius: "0.75rem",
-                  backgroundColor: a.is_active ? "rgba(6, 182, 212, 0.05)" : "rgba(239, 68, 68, 0.05)",
-                  border: `1px solid ${a.is_active ? "rgba(6, 182, 212, 0.25)" : "rgba(239, 68, 68, 0.25)"}`,
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  gap: "0.75rem"
-                }}>
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
-                      <div style={{ fontWeight: 800, color: "white", fontSize: "0.95rem" }}>
-                        {a.user_name || "Personal de Puerta"}
-                      </div>
-                      <span style={{
-                        padding: "0.2rem 0.5rem",
-                        borderRadius: "999px",
-                        fontSize: "0.7rem",
-                        fontWeight: 800,
-                        backgroundColor: a.is_active ? "rgba(34, 197, 94, 0.2)" : "rgba(239, 68, 68, 0.2)",
-                        color: a.is_active ? "#22c55e" : "#ef4444",
-                        textTransform: "uppercase"
-                      }}>
-                        {a.is_active ? "ACTIVO" : "BLOQUEADO"}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)", marginTop: "2px" }}>
-                      {a.user_email || "Sin correo"}
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", gap: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "0.75rem" }}>
-                    <button
-                      onClick={() => handleToggleStaffStatus(a.id, a.is_active)}
-                      disabled={isStaffPending}
-                      style={{
-                        flex: 1,
-                        padding: "0.45rem 0.6rem",
-                        borderRadius: "0.4rem",
-                        backgroundColor: a.is_active ? "rgba(239, 68, 68, 0.15)" : "rgba(34, 197, 94, 0.15)",
-                        border: `1px solid ${a.is_active ? "rgba(239, 68, 68, 0.3)" : "rgba(34, 197, 94, 0.3)"}`,
-                        color: a.is_active ? "#ef4444" : "#22c55e",
-                        fontWeight: 700,
-                        fontSize: "0.75rem",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "0.3rem"
-                      }}
-                    >
-                      <Power size={13} /> {a.is_active ? "Bloquear Acceso" : "Reactivar Acceso"}
-                    </button>
-
-                    <button
-                      onClick={() => handleRemoveStaff(a.id)}
-                      disabled={isStaffPending}
-                      title="Eliminar asignación"
-                      style={{
-                        padding: "0.45rem 0.6rem",
-                        borderRadius: "0.4rem",
-                        backgroundColor: "rgba(255,255,255,0.05)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        color: "rgba(255,255,255,0.6)",
-                        cursor: "pointer"
-                      }}
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Live Door Check-in & Attendees Table */}
       <div style={{ marginTop: "2.5rem", backgroundColor: "var(--color-surface, #111)", border: "1px solid var(--color-border, #333)", borderRadius: "var(--radius-lg)", overflow: "hidden" }}>
         <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--color-border, #333)", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
@@ -723,6 +455,274 @@ export default function EventDashboardClient({
               })()}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* Door Staff Assignment Card */}
+      <div style={{ marginTop: "2.5rem", backgroundColor: "var(--color-surface, #111)", border: "1px solid var(--color-border, #333)", borderRadius: "var(--radius-lg)", overflow: "hidden" }}>
+        <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--color-border, #333)", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <Users size={22} color="#06b6d4" />
+              <h3 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0, color: "white" }}>
+                Personal de Puerta Asignado (Escáner de Boletas)
+              </h3>
+            </div>
+            <p style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)", marginTop: "0.35rem", marginBottom: 0 }}>
+              Configura quiénes están autorizados para recibir los QRs y escanear en la puerta de este evento desde su celular en <strong>bassfactory.co/scanner</strong>.
+            </p>
+          </div>
+
+          <Link href={`/admin/events/${event.id}/staff`} style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            fontSize: "0.825rem",
+            fontWeight: 700,
+            color: "#06b6d4",
+            textDecoration: "none",
+            padding: "0.45rem 0.9rem",
+            borderRadius: "0.5rem",
+            backgroundColor: "rgba(6, 182, 212, 0.12)",
+            border: "1px solid rgba(6, 182, 212, 0.3)"
+          }}>
+            <ExternalLink size={14} /> Gestión Completa de Puerta
+          </Link>
+        </div>
+
+        {/* Quick Assign Form */}
+        <div style={{ padding: "1.25rem 1.5rem", backgroundColor: "rgba(255,255,255,0.015)", borderBottom: "1px solid var(--color-border, #333)", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "1rem" }}>
+          <div style={{ flex: 1, minWidth: "260px" }}>
+            <label style={{ display: "block", fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", fontWeight: 700, marginBottom: "0.35rem" }}>
+              Seleccionar usuario para asignar a la puerta de este evento:
+            </label>
+            <select
+              value={selectedStaffUserId}
+              onChange={(e) => setSelectedStaffUserId(e.target.value)}
+              disabled={isStaffPending}
+              style={{
+                width: "100%",
+                padding: "0.6rem 0.85rem",
+                borderRadius: "0.5rem",
+                backgroundColor: "rgba(0,0,0,0.5)",
+                border: "1px solid rgba(255,255,255,0.15)",
+                color: "white",
+                fontSize: "0.85rem",
+                fontWeight: 600
+              }}
+            >
+              <option value="">-- Elige un usuario registrado --</option>
+              {availableUsers?.map((u: any) => (
+                <option key={u.id} value={u.id}>
+                  {u.full_name} ({u.email}) — Rol: {u.role}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            onClick={handleAssignStaff}
+            disabled={isStaffPending || !selectedStaffUserId}
+            style={{
+              alignSelf: "flex-end",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              padding: "0.65rem 1.25rem",
+              borderRadius: "0.5rem",
+              backgroundColor: isStaffPending || !selectedStaffUserId ? "rgba(6, 182, 212, 0.2)" : "#06b6d4",
+              color: isStaffPending || !selectedStaffUserId ? "rgba(255,255,255,0.4)" : "#000",
+              fontWeight: 800,
+              fontSize: "0.85rem",
+              border: "none",
+              cursor: isStaffPending || !selectedStaffUserId ? "not-allowed" : "pointer"
+            }}
+          >
+            <UserPlus size={16} /> Asignar a la Puerta
+          </button>
+        </div>
+
+        {/* Assigned Staff List */}
+        <div style={{ padding: "1.25rem 1.5rem" }}>
+          {assignments.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "1.75rem", color: "rgba(255,255,255,0.5)", fontSize: "0.875rem" }}>
+              No hay personal asignado a la puerta de este evento. Asigna a uno arriba para que pueda escanear desde su celular.
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
+              {assignments.map((a: any) => (
+                <div key={a.id} style={{
+                  padding: "1rem",
+                  borderRadius: "0.75rem",
+                  backgroundColor: a.is_active ? "rgba(6, 182, 212, 0.05)" : "rgba(239, 68, 68, 0.05)",
+                  border: `1px solid ${a.is_active ? "rgba(6, 182, 212, 0.25)" : "rgba(239, 68, 68, 0.25)"}`,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  gap: "0.75rem"
+                }}>
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                      <div style={{ fontWeight: 800, color: "white", fontSize: "0.95rem" }}>
+                        {a.user_name || "Personal de Puerta"}
+                      </div>
+                      <span style={{
+                        padding: "0.2rem 0.5rem",
+                        borderRadius: "999px",
+                        fontSize: "0.7rem",
+                        fontWeight: 800,
+                        backgroundColor: a.is_active ? "rgba(34, 197, 94, 0.2)" : "rgba(239, 68, 68, 0.2)",
+                        color: a.is_active ? "#22c55e" : "#ef4444",
+                        textTransform: "uppercase"
+                      }}>
+                        {a.is_active ? "ACTIVO" : "BLOQUEADO"}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)", marginTop: "2px" }}>
+                      {a.user_email || "Sin correo"}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "0.75rem" }}>
+                    <button
+                      onClick={() => handleToggleStaffStatus(a.id, a.is_active)}
+                      disabled={isStaffPending}
+                      style={{
+                        flex: 1,
+                        padding: "0.45rem 0.6rem",
+                        borderRadius: "0.4rem",
+                        backgroundColor: a.is_active ? "rgba(239, 68, 68, 0.15)" : "rgba(34, 197, 94, 0.15)",
+                        border: `1px solid ${a.is_active ? "rgba(239, 68, 68, 0.3)" : "rgba(34, 197, 94, 0.3)"}`,
+                        color: a.is_active ? "#ef4444" : "#22c55e",
+                        fontWeight: 700,
+                        fontSize: "0.75rem",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "0.3rem"
+                      }}
+                    >
+                      <Power size={13} /> {a.is_active ? "Bloquear Acceso" : "Reactivar Acceso"}
+                    </button>
+
+                    <button
+                      onClick={() => handleRemoveStaff(a.id)}
+                      disabled={isStaffPending}
+                      title="Eliminar asignación"
+                      style={{
+                        padding: "0.45rem 0.6rem",
+                        borderRadius: "0.4rem",
+                        backgroundColor: "rgba(255,255,255,0.05)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        color: "rgba(255,255,255,0.6)",
+                        cursor: "pointer"
+                      }}
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "2rem", alignItems: "start" }}>
+        
+        {/* Inventory Control */}
+        <div style={{ backgroundColor: "var(--color-surface, #111)", border: "1px solid var(--color-border, #333)", borderRadius: "var(--radius-lg)", padding: "1.5rem" }}>
+          <h3 style={{ fontSize: "1.25rem", fontWeight: 600, margin: "0 0 1.5rem 0", color: "white" }}>
+            Inventario por Localidad
+          </h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+            {initialTiers.map(tier => {
+              const soldInTier = tickets.filter(t => t.tier_id === tier.id || t.ticket_tier_id === tier.id).length;
+              const tierCapacity = Number(tier.quantity_available) || 0;
+              const remaining = Math.max(0, tierCapacity - soldInTier);
+              const percentage = tierCapacity > 0 ? Math.min(100, (soldInTier / tierCapacity) * 100) : 0;
+              
+              return (
+                <div key={tier.id}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "0.875rem" }}>
+                    <span style={{ fontWeight: 600, color: "white" }}>{tier.name}</span>
+                    <span style={{ color: "var(--color-text-secondary)" }}>{soldInTier} / {tierCapacity} vendidas</span>
+                  </div>
+                  <div style={{ width: "100%", height: "8px", backgroundColor: "rgba(255,255,255,0.1)", borderRadius: "4px", overflow: "hidden" }}>
+                    <div style={{ 
+                      width: `${percentage}%`, 
+                      height: "100%", 
+                      backgroundColor: percentage >= 100 ? "#ef4444" : "#3b82f6",
+                      borderRadius: "4px"
+                    }} />
+                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginTop: "0.25rem", textAlign: "right" }}>
+                    Quedan: <span style={{ color: "white", fontWeight: 600 }}>{remaining}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Live Orders Table */}
+        <div style={{ backgroundColor: "var(--color-surface, #111)", border: "1px solid var(--color-border, #333)", borderRadius: "var(--radius-lg)", overflow: "hidden" }}>
+          <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--color-border, #333)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h3 style={{ fontSize: "1.25rem", fontWeight: 600, margin: 0, color: "white" }}>
+              Últimas Compras (Real-Time)
+            </h3>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.75rem", color: "#22c55e" }}>
+              <span style={{ width: "8px", height: "8px", backgroundColor: "#22c55e", borderRadius: "50%", display: "inline-block", boxShadow: "0 0 8px #22c55e" }}></span>
+              Sincronizando
+            </div>
+          </div>
+          
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+              <thead>
+                <tr style={{ backgroundColor: "rgba(255,255,255,0.02)", borderBottom: "1px solid var(--color-border, #333)" }}>
+                  <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.875rem" }}>Cliente</th>
+                  <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.875rem" }}>Fecha</th>
+                  <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.875rem" }}>Estado</th>
+                  <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.875rem", textAlign: "right" }}>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "var(--color-text-secondary)" }}>
+                      Aún no hay ventas para este evento.
+                    </td>
+                  </tr>
+                ) : (
+                  orders.map((order, i) => (
+                    <tr key={order.id} style={{ borderBottom: "1px solid var(--color-border, #333)", backgroundColor: i === 0 ? "rgba(34, 197, 94, 0.05)" : "transparent" }}>
+                      <td style={{ padding: "1rem" }}>
+                        <div style={{ fontWeight: 600, color: "white" }}>{order.customer_name}</div>
+                        <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>{order.customer_email}</div>
+                      </td>
+                      <td style={{ padding: "1rem", color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
+                        {new Date(order.created_at).toLocaleString()}
+                      </td>
+                      <td style={{ padding: "1rem" }}>
+                        <span style={{
+                          padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.75rem", fontWeight: 600,
+                          backgroundColor: order.status === 'paid' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                          color: order.status === 'paid' ? '#22c55e' : '#f59e0b', textTransform: "uppercase"
+                        }}>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: "1rem", textAlign: "right", fontWeight: 700, color: "white" }}>
+                        {formatCurrency(Number(order.total_amount))}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
