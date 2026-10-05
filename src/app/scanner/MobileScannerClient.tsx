@@ -4,9 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { 
   ScanLine, CheckCircle2, XCircle, AlertTriangle, 
-  Camera, LogOut, RefreshCw, Volume2, VolumeX, ShieldCheck
+  Camera, LogOut, RefreshCw, Volume2, VolumeX, ShieldCheck, 
+  FlipHorizontal, Zap, ZapOff
 } from "lucide-react";
-import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode";
 import { signOut } from "../(auth)/actions";
 
 interface AssignedEvent {
@@ -32,6 +33,10 @@ interface MobileScannerClientProps {
 export default function MobileScannerClient({ user, events }: MobileScannerClientProps) {
   const [selectedEventId, setSelectedEventId] = useState<string>(events[0]?.id || "");
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [cameraFacing, setCameraFacing] = useState<"environment" | "user">("environment");
+  const [isTorchOn, setIsTorchOn] = useState(false);
+  const [hasTorch, setHasTorch] = useState(false);
+
   const [scanResult, setScanResult] = useState<{
     status: "idle" | "scanning" | "success" | "error";
     message: string;
@@ -43,16 +48,17 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
     Object.fromEntries(events.map(e => [e.id, e.scanned_count]))
   );
 
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
+  const isProcessingRef = useRef(false);
   const activeEvent = events.find(e => e.id === selectedEventId) || events[0];
 
-  // Reproducir sonidos y vibración
+  // Reproducir sonidos y vibración háptica
   const playFeedback = (isSuccess: boolean) => {
     if (typeof window !== "undefined" && "navigator" in window && navigator.vibrate) {
       if (isSuccess) {
-        navigator.vibrate([100, 50, 100]);
+        navigator.vibrate([80, 40, 80]);
       } else {
-        navigator.vibrate([300, 100, 300]);
+        navigator.vibrate([250, 80, 250]);
       }
     }
 
@@ -73,106 +79,153 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + 0.15);
       } else {
-        osc.frequency.setValueAtTime(250, ctx.currentTime);
-        osc.frequency.setValueAtTime(180, ctx.currentTime + 0.15);
+        osc.frequency.setValueAtTime(240, ctx.currentTime);
+        osc.frequency.setValueAtTime(170, ctx.currentTime + 0.15);
         gain.gain.setValueAtTime(0.5, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + 0.3);
       }
     } catch {
-      // AudioContext no permitido o bloqueado
+      // AudioContext bloqueado por política del navegador
     }
   };
 
+  // Iniciar la cámara trasera (o frontal si se cambia)
   useEffect(() => {
-    if (isScannerOpen && !scannerRef.current) {
-      const scanner = new Html5QrcodeScanner(
-        "mobile-qr-reader",
-        {
-          fps: 12,
+    let isMounted = true;
+
+    async function startCamera() {
+      if (!isScannerOpen) return;
+
+      try {
+        if (!html5QrCodeRef.current) {
+          html5QrCodeRef.current = new Html5Qrcode("mobile-qr-reader");
+        }
+
+        const qrCode = html5QrCodeRef.current;
+
+        if (qrCode.isScanning) {
+          await qrCode.stop();
+        }
+
+        // Forzar explícitamente cámara trasera ("environment")
+        const cameraConfig = { facingMode: cameraFacing };
+        const qrConfig = {
+          fps: 15,
           qrbox: { width: 260, height: 260 },
-          supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-          rememberLastUsedCamera: true,
-        },
-        false
-      );
+          aspectRatio: 1.0,
+        };
 
-      scanner.render(
-        async (decodedText) => {
-          if (scanResult.status === "scanning") return;
+        await qrCode.start(
+          cameraConfig,
+          qrConfig,
+          async (decodedText) => {
+            if (isProcessingRef.current) return;
+            isProcessingRef.current = true;
 
-          setScanResult({ status: "scanning", message: "Verificando entrada..." });
-          scanner.pause(true);
+            setScanResult({ status: "scanning", message: "Verificando entrada..." });
 
-          try {
-            const res = await fetch("/api/tickets/scan", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ qr_hash: decodedText, event_id: selectedEventId })
-            });
-
-            const data = await res.json();
-
-            if (res.ok && data.success) {
-              playFeedback(true);
-              setScanResult({
-                status: "success",
-                message: data.message || "¡ACCESO CONCEDIDO!",
-                details: "Entrada validada correctamente"
+            try {
+              const res = await fetch("/api/tickets/scan", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ qr_hash: decodedText, event_id: selectedEventId })
               });
-              setScannedCounts(prev => ({
-                ...prev,
-                [selectedEventId]: (prev[selectedEventId] || 0) + 1
-              }));
-            } else {
+
+              const data = await res.json();
+
+              if (res.ok && data.success) {
+                playFeedback(true);
+                setScanResult({
+                  status: "success",
+                  message: data.message || "¡ACCESO CONCEDIDO!",
+                  details: "Entrada válida • Aforo actualizado"
+                });
+                setScannedCounts(prev => ({
+                  ...prev,
+                  [selectedEventId]: (prev[selectedEventId] || 0) + 1
+                }));
+              } else {
+                playFeedback(false);
+                setScanResult({
+                  status: "error",
+                  message: data.error || "ENTRADA INVÁLIDA",
+                  details: "No autorizar el ingreso"
+                });
+              }
+            } catch (err: any) {
               playFeedback(false);
               setScanResult({
                 status: "error",
-                message: data.error || "ENTRADA INVÁLIDA",
-                details: "No autorizar el ingreso"
+                message: "ERROR DE CONEXIÓN",
+                details: err.message || "Revisa la señal de internet"
               });
             }
-          } catch (err: any) {
-            playFeedback(false);
-            setScanResult({
-              status: "error",
-              message: "ERROR DE CONEXIÓN",
-              details: err.message || "Revisa la señal de internet"
-            });
+
+            // Esperar 2.2 segundos y permitir el siguiente escaneo
+            setTimeout(() => {
+              if (isMounted) {
+                setScanResult({ status: "idle", message: "" });
+                isProcessingRef.current = false;
+              }
+            }, 2200);
+          },
+          () => {
+            // Ignorar frames sin código
           }
+        );
 
-          // Reanudar cámara tras 2.2 segundos para siguiente persona
-          setTimeout(() => {
-            setScanResult({ status: "idle", message: "" });
-            if (scannerRef.current) {
-              scannerRef.current.resume();
-            }
-          }, 2200);
-        },
-        () => {
-          // Ignorar frames sin código
+        // Detectar si la cámara soporta linterna / torch
+        try {
+          const capabilities = (qrCode as any).getRunningTrackCameraCapabilities?.();
+          if (capabilities && capabilities.torchFeature?.().isSupported()) {
+            setHasTorch(true);
+          }
+        } catch {
+          setHasTorch(false);
         }
-      );
 
-      scannerRef.current = scanner;
+      } catch (err) {
+        console.error("Error al iniciar cámara:", err);
+      }
     }
+
+    startCamera();
 
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(() => {});
-        scannerRef.current = null;
+      isMounted = false;
+      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+        html5QrCodeRef.current.stop().catch(() => {});
       }
     };
-  }, [isScannerOpen, selectedEventId, soundEnabled]);
+  }, [isScannerOpen, cameraFacing, selectedEventId, soundEnabled]);
 
-  const handleCloseScanner = () => {
-    if (scannerRef.current) {
-      scannerRef.current.clear().catch(() => {});
-      scannerRef.current = null;
+  const handleCloseScanner = async () => {
+    if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+      await html5QrCodeRef.current.stop().catch(() => {});
     }
     setIsScannerOpen(false);
+    setIsTorchOn(false);
     setScanResult({ status: "idle", message: "" });
+    isProcessingRef.current = false;
+  };
+
+  const handleToggleCamera = () => {
+    setCameraFacing(prev => (prev === "environment" ? "user" : "environment"));
+  };
+
+  const handleToggleTorch = async () => {
+    if (!html5QrCodeRef.current) return;
+    try {
+      const nextTorch = !isTorchOn;
+      await (html5QrCodeRef.current as any).applyVideoConstraints({
+        advanced: [{ torch: nextTorch }]
+      });
+      setIsTorchOn(nextTorch);
+    } catch (e) {
+      console.error("Error toggling torch:", e);
+    }
   };
 
   return (
@@ -404,19 +457,65 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
           onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
         >
           <Camera size={26} />
-          ABRIR LECTOR DE BOLETAS
+          ABRIR CÁMARA TRASERA
         </button>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {/* Cámara Render */}
+          {/* Barra de Controles Rápidos de la Cámara */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <button
+              onClick={handleToggleCamera}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.4rem",
+                padding: "0.5rem 0.9rem",
+                borderRadius: "0.5rem",
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                color: "white",
+                fontSize: "0.8rem",
+                fontWeight: 700,
+                cursor: "pointer"
+              }}
+            >
+              <FlipHorizontal size={16} />
+              {cameraFacing === "environment" ? "Cámara Trasera (Activa)" : "Cámara Frontal"}
+            </button>
+
+            {hasTorch && (
+              <button
+                onClick={handleToggleTorch}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  padding: "0.5rem 0.9rem",
+                  borderRadius: "0.5rem",
+                  backgroundColor: isTorchOn ? "rgba(234, 179, 8, 0.25)" : "rgba(255, 255, 255, 0.1)",
+                  border: isTorchOn ? "1px solid #eab308" : "1px solid rgba(255, 255, 255, 0.2)",
+                  color: isTorchOn ? "#eab308" : "white",
+                  fontSize: "0.8rem",
+                  fontWeight: 700,
+                  cursor: "pointer"
+                }}
+              >
+                {isTorchOn ? <Zap size={16} /> : <ZapOff size={16} />}
+                Linterna {isTorchOn ? "ON" : "OFF"}
+              </button>
+            )}
+          </div>
+
+          {/* Visor de Cámara */}
           <div style={{
             position: "relative",
             backgroundColor: "#111",
             borderRadius: "1rem",
             overflow: "hidden",
-            border: "2px solid #06b6d4"
+            border: "2px solid #06b6d4",
+            minHeight: "320px"
           }}>
-            <div id="mobile-qr-reader" style={{ width: "100%" }} />
+            <div id="mobile-qr-reader" style={{ width: "100%", height: "100%" }} />
 
             {/* OVERLAY DE RESULTADO EN PANTALLA GIGANTE */}
             {scanResult.status !== "idle" && (

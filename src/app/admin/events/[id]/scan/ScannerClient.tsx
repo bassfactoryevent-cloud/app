@@ -19,10 +19,11 @@ export default function ScannerClient({ eventId }: { eventId: string }) {
       scannerRef.current = new Html5QrcodeScanner(
         "qr-reader",
         { 
-          fps: 10, 
-          qrbox: { width: 250, height: 250 },
+          fps: 15, 
+          qrbox: { width: 260, height: 260 },
           supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-          rememberLastUsedCamera: true
+          rememberLastUsedCamera: true,
+          videoConstraints: { facingMode: "environment" }
         },
         false
       );
