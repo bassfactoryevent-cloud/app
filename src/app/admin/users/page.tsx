@@ -2,6 +2,7 @@ import { getAdminClient } from "@/utils/supabase/admin";
 import { UsersClient } from "./UsersClient";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function UsersPage() {
   const adminDb = getAdminClient();
@@ -23,11 +24,15 @@ export default async function UsersPage() {
       const emailMap = new Map(authUsers.users.map(u => [u.id, u.email]));
       usersWithEmail = (profiles || []).map((p: any) => ({
         ...p,
-        email: emailMap.get(p.id) || null
+        email: emailMap.get(p.id) || (p.role === "superadmin" || p.id === "afd1c477-11a5-4c47-b6f3-568556bfaa93" ? "admin@admin.com" : null)
       }));
     }
   } catch (authErr) {
     console.error("Error fetching auth users emails:", authErr);
+    usersWithEmail = (profiles || []).map((p: any) => ({
+      ...p,
+      email: p.role === "superadmin" || p.id === "afd1c477-11a5-4c47-b6f3-568556bfaa93" ? "admin@admin.com" : null
+    }));
   }
 
   return (

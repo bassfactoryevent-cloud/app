@@ -27,7 +27,8 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
   // Counts by role
   const roleCounts = {
     all: users.length,
-    admin: users.filter(u => u.role === "admin" || u.role === "superadmin").length,
+    superadmin: users.filter(u => u.role === "superadmin").length,
+    admin: users.filter(u => u.role === "admin").length,
     customer: users.filter(u => u.role === "customer" || !u.role).length,
     dj: users.filter(u => u.role === "dj").length,
     promoter: users.filter(u => u.role === "promoter").length,
@@ -45,7 +46,8 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
     if (!matchesSearch) return false;
 
     if (roleFilter !== "all") {
-      if (roleFilter === "admin" && u.role !== "admin" && u.role !== "superadmin") return false;
+      if (roleFilter === "superadmin" && u.role !== "superadmin") return false;
+      if (roleFilter === "admin" && u.role !== "admin") return false;
       if (roleFilter === "customer" && u.role !== "customer" && u.role) return false;
       if (roleFilter === "dj" && u.role !== "dj") return false;
       if (roleFilter === "promoter" && u.role !== "promoter") return false;
@@ -119,6 +121,7 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
         <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
           {[
             { id: "all", label: `Todos (${roleCounts.all})` },
+            ...(roleCounts.superadmin > 0 ? [{ id: "superadmin", label: `👑 Super Admin (${roleCounts.superadmin})` }] : []),
             { id: "admin", label: `Admin (${roleCounts.admin})` },
             { id: "customer", label: `Clientes (${roleCounts.customer})` },
             { id: "dj", label: `DJs (${roleCounts.dj})` },
@@ -176,7 +179,8 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                 </tr>
               ) : (
                 paginatedUsers.map((user) => {
-                  const isAdmin = user.role === "admin" || user.role === "superadmin";
+                  const isSuperAdmin = user.role === "superadmin";
+                  const isAdmin = user.role === "admin";
                   const isDJ = user.role === "dj";
                   const isPromoter = user.role === "promoter";
                   const isEditing = editingUserId === user.id;
@@ -186,7 +190,7 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                       key={user.id} 
                       style={{ 
                         borderBottom: "1px solid rgba(255,255,255,0.05)",
-                        backgroundColor: isEditing ? "rgba(255,255,255,0.04)" : "transparent",
+                        backgroundColor: isEditing ? "rgba(255,255,255,0.04)" : isSuperAdmin ? "rgba(234, 179, 8, 0.03)" : "transparent",
                         transition: "background-color 0.2s"
                       }}
                     >
@@ -195,19 +199,20 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                           <div style={{
                             width: "42px", height: "42px", borderRadius: "50%",
-                            backgroundColor: isAdmin ? "var(--color-magenta)" : isDJ ? "#8b5cf6" : "#22c55e",
+                            backgroundColor: isSuperAdmin ? "#eab308" : isAdmin ? "var(--color-magenta)" : isDJ ? "#8b5cf6" : "#22c55e",
                             display: "flex", alignItems: "center", justifyContent: "center",
-                            fontWeight: 800, color: "white", overflow: "hidden", flexShrink: 0
+                            fontWeight: 800, color: isSuperAdmin ? "#000" : "white", overflow: "hidden", flexShrink: 0
                           }}>
                             {user.avatar_url ? (
                               <img src={user.avatar_url} alt={user.full_name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                             ) : (
-                              (user.full_name || "U")[0].toUpperCase()
+                              isSuperAdmin ? "👑" : (user.full_name || "U")[0].toUpperCase()
                             )}
                           </div>
                           <div>
-                            <div style={{ fontWeight: 700, color: "white", fontSize: "0.95rem" }}>
+                            <div style={{ fontWeight: 700, color: "white", fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
                               {user.full_name || "Sin Nombre"}
+                              {isSuperAdmin && <span style={{ fontSize: "0.75rem", color: "#eab308" }}>👑</span>}
                             </div>
                             {user.email && (
                               <div style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)" }}>
@@ -239,8 +244,9 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                                 outline: "none"
                               }}
                             >
-                              <option value="customer">Customer (Cliente)</option>
+                              <option value="superadmin">👑 Super Admin</option>
                               <option value="admin">Admin</option>
+                              <option value="customer">Customer (Cliente)</option>
                               <option value="dj">DJ</option>
                               <option value="promoter">Promotor</option>
                             </select>
@@ -261,20 +267,23 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                               textTransform: "uppercase",
                               letterSpacing: "0.04em",
                               backgroundColor: 
+                                isSuperAdmin ? "rgba(234, 179, 8, 0.15)" :
                                 isAdmin ? "rgba(229, 9, 20, 0.15)" :
                                 isDJ ? "rgba(139, 92, 246, 0.15)" :
                                 isPromoter ? "rgba(245, 158, 11, 0.15)" : "rgba(255,255,255,0.08)",
                               color: 
+                                isSuperAdmin ? "#eab308" :
                                 isAdmin ? "#ff4d5a" :
                                 isDJ ? "#c084fc" :
                                 isPromoter ? "#fde68a" : "rgba(255,255,255,0.85)",
                               border: `1px solid ${
+                                isSuperAdmin ? "rgba(234, 179, 8, 0.4)" :
                                 isAdmin ? "rgba(229, 9, 20, 0.3)" :
                                 isDJ ? "rgba(139, 92, 246, 0.3)" :
                                 isPromoter ? "rgba(245, 158, 11, 0.3)" : "rgba(255,255,255,0.15)"
                               }`
                             }}>
-                              {user.role || "customer"}
+                              {isSuperAdmin ? "👑 SUPER ADMIN" : user.role || "customer"}
                             </span>
                             <button
                               onClick={() => setEditingUserId(user.id)}
