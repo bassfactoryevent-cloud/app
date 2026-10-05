@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import AdSliderClient from "./AdSliderClient";
+import AdSingleClient from "./AdSingleClient";
 
 import styles from "./AdBanner.module.css";
 
@@ -61,7 +62,7 @@ export default async function AdBanner({ placementName, className = "" }: AdBann
     return <AdSliderClient ads={validAds} className={className} intervalSecs={7} placementName={placementName} />;
   }
 
-  // Si no es VIP o solo hay 1 banner activo, renderizamos estático como antes
+  // Si no es VIP o solo hay 1 banner activo, renderizamos con AdSingleClient que previene imágenes rotas
   const ad = validAds[0];
   const isVideo = ad.image_url.toLowerCase().endsWith('.mp4') || ad.image_url.toLowerCase().endsWith('.webm');
 
@@ -71,37 +72,13 @@ export default async function AdBanner({ placementName, className = "" }: AdBann
   const heightClass = isThin ? styles.thin : isVertical ? styles.vertical : styles.standard;
   const fitClass = isThin ? styles.autoHeight : isVertical ? styles.cover : styles.contain;
 
-  const content = (
-    <div className={`${styles.adWrapper} ${heightClass} ${className}`}>
-      {isVideo ? (
-        <video 
-          src={ad.image_url} 
-          autoPlay 
-          loop 
-          muted 
-          playsInline 
-          className={`${styles.media} ${fitClass}`} 
-        />
-      ) : (
-        <img 
-          src={ad.image_url} 
-          alt="Ad Banner" 
-          className={`${styles.media} ${fitClass}`} 
-        />
-      )}
-      <span className={styles.adBadge}>
-        Ad
-      </span>
-    </div>
+  return (
+    <AdSingleClient
+      ad={ad}
+      heightClass={heightClass}
+      fitClass={fitClass}
+      className={className}
+      isVideo={isVideo}
+    />
   );
-
-  if (ad.target_url) {
-    return (
-      <a href={ad.target_url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', width: '100%' }}>
-        {content}
-      </a>
-    );
-  }
-
-  return content;
 }

@@ -96,9 +96,9 @@ export default async function CampaignDetailsPage({ params, searchParams }: { pa
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Recurso Gráfico del Banner *</label>
-                    <ImageUpload name="image_url" bucket="ads" defaultImage={editingAd?.image_url} label="Subir Imagen al Servidor (Recomendado)" />
+                    <ImageUpload name="image_url" bucket="ads" defaultImage={editingAd?.image_url} label="Subir Archivo de Imagen / Banner (Recomendado - Permanente)" />
                     <div style={{ marginTop: '1rem' }}>
-                      <p style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: '0.25rem' }}>O si prefieres usar un enlace externo permanente (ej. video en Cloudinary):</p>
+                      <p style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: '0.25rem' }}>O enlace externo (el servidor lo archivará automáticamente en Bassfactory Storage para evitar vencimientos):</p>
                       <input type="url" name="image_url_fallback" defaultValue={editingAd?.image_url || ""} placeholder="https://..." style={{ width: '100%', fontSize: '0.875rem' }} />
                     </div>
                   </div>

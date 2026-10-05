@@ -56,13 +56,58 @@ export async function deleteCampaign(id: string) {
   revalidatePath("/admin/ads");
 }
 
+import { getAdminClient } from "@/utils/supabase/admin";
+
+async function ensurePermanentStorageUrl(url: string): Promise<string> {
+  if (!url || !url.startsWith("http")) return url;
+
+  // Si ya está guardada permanentemente en nuestro Supabase Storage
+  if (url.includes(".supabase.co/storage/v1/object/public/")) {
+    return url;
+  }
+
+  // Descargar y alojar permanentemente en el bucket 'ads' de Supabase
+  try {
+    const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+    if (!res.ok) {
+      console.warn("No se pudo descargar la imagen externa del anuncio:", res.status);
+      return url;
+    }
+
+    const arrayBuffer = await res.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const contentType = res.headers.get("content-type") || "image/jpeg";
+    const ext = contentType.includes("png") ? "png" : contentType.includes("webp") ? "webp" : contentType.includes("gif") ? "gif" : contentType.includes("mp4") ? "mp4" : "jpg";
+    const filename = `banner_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
+
+    const adminSupabase = getAdminClient();
+    const { error: uploadError } = await adminSupabase.storage
+      .from("ads")
+      .upload(filename, buffer, { contentType, upsert: true });
+
+    if (!uploadError) {
+      const { data } = adminSupabase.storage.from("ads").getPublicUrl(filename);
+      return data.publicUrl;
+    } else {
+      console.error("Error al subir al bucket ads:", uploadError);
+    }
+  } catch (err) {
+    console.error("Error archivando imagen de banner en Supabase Storage:", err);
+  }
+
+  return url;
+}
+
 export async function addAdToCampaign(campaignId: string, formData: FormData) {
   const supabase = await createClient();
   
   const placement_name = formData.get("placement_name") as string;
   const uploadedUrl = formData.get("image_url") as string;
   const fallbackUrl = formData.get("image_url_fallback") as string;
-  const image_url = uploadedUrl || fallbackUrl;
+  let image_url = uploadedUrl || fallbackUrl;
+  if (image_url) {
+    image_url = await ensurePermanentStorageUrl(image_url);
+  }
   const target_url = formData.get("target_url") as string || null;
 
   // Find or create placement
@@ -102,7 +147,10 @@ export async function updateAd(adId: string, campaignId: string, formData: FormD
   const placement_name = formData.get("placement_name") as string;
   const uploadedUrl = formData.get("image_url") as string;
   const fallbackUrl = formData.get("image_url_fallback") as string;
-  const image_url = uploadedUrl || fallbackUrl;
+  let image_url = uploadedUrl || fallbackUrl;
+  if (image_url) {
+    image_url = await ensurePermanentStorageUrl(image_url);
+  }
   const target_url = formData.get("target_url") as string || null;
 
   // Find or create placement
