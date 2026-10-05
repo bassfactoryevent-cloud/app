@@ -52,6 +52,11 @@ export async function updatePlatformSettings(formData: FormData) {
       site_title: (formData.get("site_title") as string) || current.site_title,
       site_description: (formData.get("site_description") as string) || current.site_description,
       site_keywords: (formData.get("site_keywords") as string) || current.site_keywords,
+      dev_fee_per_ticket: formData.get("dev_fee_per_ticket") !== null ? Number(formData.get("dev_fee_per_ticket")) : current.dev_fee_per_ticket,
+      dev_fee_merch_percent: formData.get("dev_fee_merch_percent") !== null ? Number(formData.get("dev_fee_merch_percent")) : current.dev_fee_merch_percent,
+      dev_fee_ads_percent: formData.get("dev_fee_ads_percent") !== null ? Number(formData.get("dev_fee_ads_percent")) : current.dev_fee_ads_percent,
+      vercel_bandwidth_alert_gb: formData.get("vercel_bandwidth_alert_gb") !== null ? Number(formData.get("vercel_bandwidth_alert_gb")) : current.vercel_bandwidth_alert_gb,
+      supabase_storage_alert_mb: formData.get("supabase_storage_alert_mb") !== null ? Number(formData.get("supabase_storage_alert_mb")) : current.supabase_storage_alert_mb,
     };
 
     const jsonString = JSON.stringify(updated);

@@ -29,7 +29,7 @@ export default async function AdminLayout({
 
   return (
     <div className={styles.adminWrapper}>
-      <AdminSidebar profile={profile} />
+      <AdminSidebar profile={{ ...profile, email: user.email }} />
 
       {/* Main Content Area */}
       <div className={styles.mainContent}>

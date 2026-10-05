@@ -22,6 +22,12 @@ export interface PlatformSettingsData {
   site_title: string;
   site_description: string;
   site_keywords: string;
+  // Tarifas del Desarrollo
+  dev_fee_per_ticket: number;
+  dev_fee_merch_percent: number;
+  dev_fee_ads_percent: number;
+  vercel_bandwidth_alert_gb: number;
+  supabase_storage_alert_mb: number;
 }
 
 export const defaultSettings: PlatformSettingsData = {
@@ -47,5 +53,11 @@ export const defaultSettings: PlatformSettingsData = {
   social_whatsapp: "+573192543690",
   site_title: "Bassfactory | Plataforma Oficial de Música Electrónica, Eventos y Merch",
   site_description: "El ecosistema definitivo B2B y B2C para la cultura de la música electrónica en Colombia.",
-  site_keywords: "Techno, Drum and Bass, Eventos Bogotá, Boletas, Raves Colombia, Merch Oficial"
+  site_keywords: "Techno, Drum and Bass, Eventos Bogotá, Boletas, Raves Colombia, Merch Oficial",
+  // Tarifas del Desarrollo
+  dev_fee_per_ticket: 2000,
+  dev_fee_merch_percent: 5,
+  dev_fee_ads_percent: 5,
+  vercel_bandwidth_alert_gb: 80,
+  supabase_storage_alert_mb: 800,
 };

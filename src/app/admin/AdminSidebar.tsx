@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { LayoutDashboard, FileText, Calendar, Music, ShoppingCart, Settings, Briefcase, Megaphone, LogOut, MonitorPlay, Users, DollarSign } from "lucide-react";
+import { LayoutDashboard, FileText, Calendar, Music, ShoppingCart, Settings, Briefcase, Megaphone, LogOut, MonitorPlay, Users, DollarSign, Coins, Activity, Crown } from "lucide-react";
 import styles from "./AdminLayout.module.css";
 import logo from "../../../public/bassfactorylogo1.png";
 import { signOut } from "../(auth)/actions";
@@ -12,7 +12,16 @@ import { motion } from "framer-motion";
 export function AdminSidebar({ profile }: { profile: any }) {
   const pathname = usePathname();
 
+  const isSuperAdmin = profile?.role === "superadmin" || profile?.email === "admin@admin.com" || profile?.email === "admin@admin";
+
   const navGroups = [
+    ...(isSuperAdmin ? [{
+      title: "👑 Consola Master",
+      items: [
+        { name: "Ganancias Desarrollo", href: "/admin/super/revenue", icon: <Coins size={20} /> },
+        { name: "Consumo Vercel & BD", href: "/admin/super/infrastructure", icon: <Activity size={20} /> },
+      ]
+    }] : []),
     {
       title: "Resumen",
       items: [
