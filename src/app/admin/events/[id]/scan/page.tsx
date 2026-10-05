@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export default async function ScanPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -12,7 +13,15 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
     redirect("/login");
   }
 
-  const { id } = await params;
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || (profile.role !== "admin" && profile.role !== "superadmin" && profile.role !== "promoter")) {
+    redirect("/account");
+  }
   
   const { data: event } = await supabase
     .from("events")

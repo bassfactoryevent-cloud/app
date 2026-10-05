@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { renderToStream } from "@react-pdf/renderer";
 import { TicketPDF } from "@/components/pdf/TicketPDF";
@@ -15,6 +14,18 @@ const resend = new Resend(process.env.RESEND_API_KEY || "");
 
 export async function GET(req: Request) {
   try {
+    // 0. Authorization check
+    const authHeader = req.headers.get("authorization");
+    const cronSecret = process.env.CRON_SECRET;
+    const isVercelCron = req.headers.get("x-vercel-cron") !== null;
+
+    if (cronSecret) {
+      if (authHeader !== `Bearer ${cronSecret}` && !isVercelCron) {
+        return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+      }
+    } else if (!isVercelCron && process.env.NODE_ENV === "production") {
+      return NextResponse.json({ error: "No autorizado. CRON_SECRET requerido en producción." }, { status: 401 });
+    }
     // 1. Obtener los eventos que suceden mañana
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);

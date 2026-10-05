@@ -101,8 +101,22 @@ export default async function TransferAcceptPage({ params }: { params: Promise<{
     const { data: { user: currentUser } } = await supabaseAuth.auth.getUser();
     if (!currentUser || !rawTransfer) return;
 
-    // 1. Marcar transfer como aceptado con adminDb
-    await adminDb.from("ticket_transfers").update({ status: 'accepted', updated_at: new Date().toISOString() }).eq("id", rawTransfer.id);
+    // 0. SEGURIDAD: Verificar que el usuario que intenta aceptar sea el destinatario legítimo
+    if (currentUser.email?.toLowerCase() !== rawTransfer.to_email?.toLowerCase()) {
+      throw new Error(`Esta entrada fue transferida a ${rawTransfer.to_email}. Debes iniciar sesión con esa cuenta para aceptarla.`);
+    }
+
+    // 1. Marcar transfer como aceptado con condición atómica (solo si está pending)
+    const { data: updatedTransfer } = await adminDb
+      .from("ticket_transfers")
+      .update({ status: 'accepted', updated_at: new Date().toISOString() })
+      .eq("id", rawTransfer.id)
+      .eq("status", "pending")
+      .select("id");
+
+    if (!updatedTransfer || updatedTransfer.length === 0) {
+      throw new Error("Esta transferencia ya fue procesada, expiró o fue cancelada por el emisor.");
+    }
 
     // 2. Cambiar dueño del ticket y resetear qr_dispatched
     await adminDb.from("tickets").update({ 

@@ -56,13 +56,34 @@ export async function GET(
 
     const ticket = rawTicket as any;
 
-    // Check ownership or admin
-    const isAdmin = user.email === "admin@admin.com" || (
-      (await adminSupabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").single()).data !== null
-    );
+    // Validar propiedad de la boleta o rol administrativo
+    let isOwner = ticket.user_id === user.id || ticket.assigned_email?.toLowerCase() === user.email?.toLowerCase();
 
-    if (ticket.user_id !== user.id && !isAdmin) {
-      return NextResponse.json({ error: "No tienes permiso para descargar esta boleta" }, { status: 403 });
+    if (!isOwner && ticket.order_id) {
+      const { data: order } = await adminSupabase
+        .from("merch_orders")
+        .select("user_id, customer_email")
+        .eq("id", ticket.order_id)
+        .single();
+      if (order && (order.user_id === user.id || order.customer_email?.toLowerCase() === user.email?.toLowerCase())) {
+        isOwner = true;
+      }
+    }
+
+    let isAdmin = false;
+    if (!isOwner) {
+      const { data: profile } = await adminSupabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      if (profile && (profile.role === "admin" || profile.role === "superadmin")) {
+        isAdmin = true;
+      }
+    }
+
+    if (!isOwner && !isAdmin) {
+      return NextResponse.json({ error: "Acceso denegado: No tienes permiso para descargar esta entrada." }, { status: 403 });
     }
 
     if (ticket.status !== "valid" && ticket.status !== "scanned") {

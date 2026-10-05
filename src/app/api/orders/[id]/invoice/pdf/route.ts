@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { createClient } from "@/utils/supabase/server";
 import { renderToStream } from "@react-pdf/renderer";
 import { InvoicePDF, InvoiceItem } from "@/components/pdf/InvoicePDF";
 import { getOrAssignInvoiceNumber } from "@/utils/orderFulfillment";
@@ -24,7 +24,15 @@ export async function GET(
       return NextResponse.json({ error: "ID de orden requerido" }, { status: 400 });
     }
 
-    // 1. Fetch order details
+    // 1. Auth check
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "No autorizado. Inicia sesión para descargar la factura." }, { status: 401 });
+    }
+
+    // 2. Fetch order details
     const { data: order, error: orderError } = await adminSupabase
       .from("merch_orders")
       .select("*")
@@ -33,6 +41,24 @@ export async function GET(
 
     if (orderError || !order) {
       return NextResponse.json({ error: "Orden no encontrada" }, { status: 404 });
+    }
+
+    // 3. Ownership or admin verification
+    const isOwner =
+      (order.user_id && order.user_id === user.id) ||
+      (order.customer_email && order.customer_email.toLowerCase() === user.email?.toLowerCase());
+
+    if (!isOwner) {
+      const { data: profile } = await adminSupabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      const isAdmin = profile?.role === "admin" || profile?.role === "superadmin";
+      if (!isAdmin) {
+        return NextResponse.json({ error: "No tienes permiso para acceder a esta factura" }, { status: 403 });
+      }
     }
 
     // 2. Ensure consecutive invoice number is assigned

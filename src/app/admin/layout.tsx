@@ -23,9 +23,8 @@ export default async function AdminLayout({
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.role !== "admin") {
-    // TEMPORARY: Bypass role check for testing
-    // redirect("/account");
+  if (!profile || (profile.role !== "admin" && profile.role !== "superadmin")) {
+    redirect("/account");
   }
 
   return (

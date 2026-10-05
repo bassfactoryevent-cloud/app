@@ -1,5 +1,6 @@
 import { getAdminClient } from "@/utils/supabase/admin";
-import { notFound } from "next/navigation";
+import { createClient } from "@/utils/supabase/server";
+import { notFound, redirect } from "next/navigation";
 import Image from "next/image";
 import PrintInvoiceButton from "./PrintInvoiceButton";
 import { getOrAssignInvoiceNumber } from "@/utils/orderFulfillment";
@@ -13,6 +14,14 @@ export default async function OrderInvoicePage({
 }) {
   const { id: orderId } = await params;
 
+  // Auth check
+  const authSupabase = await createClient();
+  const { data: { user } } = await authSupabase.auth.getUser();
+
+  if (!user) {
+    redirect(`/login?returnUrl=/orders/${orderId}/invoice`);
+  }
+
   // 1. Fetch order
   const { data: order, error } = await supabase
     .from("merch_orders")
@@ -22,6 +31,24 @@ export default async function OrderInvoicePage({
 
   if (error || !order) {
     notFound();
+  }
+
+  // Ownership or admin check
+  const isOwner =
+    (order.user_id && order.user_id === user.id) ||
+    (order.customer_email && order.customer_email.toLowerCase() === user.email?.toLowerCase());
+
+  if (!isOwner) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    const isAdmin = profile?.role === "admin" || profile?.role === "superadmin";
+    if (!isAdmin) {
+      redirect("/account");
+    }
   }
 
   // Ensure consecutive invoice number is assigned if paid
