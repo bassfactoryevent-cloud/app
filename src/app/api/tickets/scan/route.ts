@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       .eq("id", user.id)
       .single();
 
-    const allowedRoles = ["admin", "superadmin", "promoter"];
+    const allowedRoles = ["admin", "superadmin", "promoter", "scanner"];
     if (!profile || !allowedRoles.includes(profile.role)) {
       return NextResponse.json({ error: "Acceso denegado: Se requieren permisos de control de acceso / taquilla." }, { status: 403 });
     }
@@ -32,6 +32,15 @@ export async function POST(req: Request) {
 
     if (!qr_hash || !event_id) {
       return NextResponse.json({ error: "Datos de escaneo incompletos (qr_hash y event_id requeridos)." }, { status: 400 });
+    }
+
+    // 2.1 Verificación de asignación al evento (Previene que ex-trabajadores sigan escaneando)
+    const { isUserAllowedToScanEvent } = await import("@/utils/staffAssignments");
+    const isAllowed = await isUserAllowedToScanEvent(user.id, profile.role, event_id);
+    if (!isAllowed) {
+      return NextResponse.json({ 
+        error: "Acceso Denegado / Revocado: No tienes asignación activa para leer entradas en este evento." 
+      }, { status: 403 });
     }
 
     // 3. Buscar la boleta por su hash QR único
@@ -89,7 +98,8 @@ export async function POST(req: Request) {
       .from("tickets")
       .update({ 
         status: 'scanned', 
-        scanned_at: new Date().toISOString() 
+        scanned_at: new Date().toISOString(),
+        scanned_by: user.id
       })
       .eq("id", ticket.id)
       .eq("status", "valid")

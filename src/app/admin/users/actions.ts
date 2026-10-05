@@ -7,7 +7,7 @@ const adminDb = getAdminClient();
 
 export async function updateUserRole(userId: string, newRole: string) {
   try {
-    const validRoles = ["superadmin", "admin", "dj", "promoter", "customer"];
+    const validRoles = ["superadmin", "admin", "dj", "promoter", "scanner", "customer"];
     if (!validRoles.includes(newRole)) {
       return { success: false, error: "Rol no válido" };
     }

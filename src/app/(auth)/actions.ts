@@ -26,8 +26,10 @@ export async function signIn(formData: FormData) {
       .eq('id', user.id)
       .single();
 
-    if (profile && profile.role === 'admin') {
+    if (profile && (profile.role === 'admin' || profile.role === 'superadmin')) {
       return redirect("/admin");
+    } else if (profile && profile.role === 'scanner') {
+      return redirect("/scanner");
     } else {
       return redirect("/account");
     }

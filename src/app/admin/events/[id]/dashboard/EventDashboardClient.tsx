@@ -89,6 +89,18 @@ export default function EventDashboardClient({ event, initialTiers, initialOrder
             Ventas: {event.title}
           </h1>
         </div>
+        <Link href={`/admin/events/${event.id}/staff`} style={{
+          display: 'flex', alignItems: 'center', gap: '0.5rem',
+          backgroundColor: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4',
+          border: '1px solid rgba(6, 182, 212, 0.3)',
+          padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-md)',
+          textDecoration: 'none', fontWeight: 700, transition: 'background-color 0.2s'
+        }}
+        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(6, 182, 212, 0.25)'}
+        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(6, 182, 212, 0.15)'}
+        >
+          <Users size={18} /> Personal de Puerta
+        </Link>
         <Link href={`/admin/events/${event.id}/scan`} style={{
           display: 'flex', alignItems: 'center', gap: '0.5rem',
           backgroundColor: 'var(--color-magenta)', color: 'white',
