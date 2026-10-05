@@ -162,7 +162,6 @@ export async function createEvent(formData: FormData) {
   }
 
   // Insertar boletas (Etapas)
-  const ticketsJson = formData.get("tickets_json") as string;
   if (ticketsJson && event) {
     try {
       const tickets = JSON.parse(ticketsJson);
