@@ -3,9 +3,8 @@ import { UsersClient } from "./UsersClient";
 
 export const dynamic = "force-dynamic";
 
-const adminDb = getAdminClient();
-
 export default async function UsersPage() {
+  const adminDb = getAdminClient();
   // 1. Obtener perfiles
   const { data: profiles, error } = await adminDb
     .from("profiles")
