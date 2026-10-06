@@ -1,7 +1,9 @@
 import { getAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 import { notFound, redirect } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
+import { Clock, AlertCircle } from "lucide-react";
 import PrintInvoiceButton from "./PrintInvoiceButton";
 import { getOrAssignInvoiceNumber } from "@/utils/orderFulfillment";
 
@@ -48,6 +50,40 @@ export default async function OrderInvoicePage({
     if (!isAdmin) {
       redirect("/account");
     }
+  }
+
+  // Si la orden no está pagada / confirmada, NO se emite factura oficial
+  if (order.status !== "paid") {
+    return (
+      <div style={{ maxWidth: '650px', margin: '4rem auto', padding: '3.5rem 2rem', textAlign: 'center', backgroundColor: 'rgba(234,179,8,0.03)', borderRadius: '1rem', border: '1px solid rgba(234,179,8,0.2)' }}>
+        <Clock size={64} style={{ color: '#eab308', margin: '0 auto 1.5rem' }} />
+        
+        <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '1rem', color: 'white' }}>
+          Factura No Disponible
+        </h1>
+        
+        <p style={{ fontSize: '1.05rem', color: '#a1a1aa', marginBottom: '2rem', lineHeight: 1.6 }}>
+          La orden <strong>#{orderId.slice(0, 8).toUpperCase()}</strong> se encuentra en estado <strong>Pendiente de Pago</strong>. La factura electrónica oficial solo se emite y valida una vez el banco confirma la transacción.
+        </p>
+
+        <Link
+          href="/account/orders"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.875rem 1.75rem',
+            backgroundColor: 'var(--color-magenta)',
+            color: 'white',
+            textDecoration: 'none',
+            borderRadius: '0.5rem',
+            fontWeight: 700
+          }}
+        >
+          Volver a Mis Compras
+        </Link>
+      </div>
+    );
   }
 
   // Ensure consecutive invoice number is assigned if paid

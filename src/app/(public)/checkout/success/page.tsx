@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { getAdminClient } from "@/utils/supabase/admin";
 import PaymentStatusPoller from "./PaymentStatusPoller";
-import { getOrAssignInvoiceNumber } from "@/utils/orderFulfillment";
+import { getOrAssignInvoiceNumber, fulfillOrder } from "@/utils/orderFulfillment";
 
 export default async function CheckoutSuccessPage({ 
   searchParams 
@@ -91,6 +91,28 @@ export default async function CheckoutSuccessPage({
             ...t,
             ticket_tiers: tiersData?.find((tr: any) => tr.id === t.tier_id) || null
           }));
+        }
+      }
+
+      // If pending, check Bold Payment Voucher actively on the server
+      if (order?.status === "pending") {
+        try {
+          const apiKey = process.env.NEXT_PUBLIC_BOLD_API_KEY || "nwvAHzfbKKkqP6Sw4wCi86jB5tqAf9WPwJi-zBFQftA";
+          const boldRes = await fetch(`https://payments.api.bold.co/v2/payment-voucher/${orderId}`, {
+            headers: { "Authorization": `x-api-key ${apiKey}` },
+            cache: "no-store"
+          });
+          if (boldRes.ok) {
+            const boldData = await boldRes.json();
+            const pStatus = (boldData?.payment_status || "").toString().toUpperCase();
+            if (pStatus === "APPROVED" || pStatus === "PAID" || pStatus === "SUCCESSFUL") {
+              console.log(`[Success Page SSR] Pago verificado con éxito en Bold para orden ${orderId}`);
+              await fulfillOrder(orderId);
+              order.status = "paid";
+            }
+          }
+        } catch (boldErr) {
+          console.error("Bold voucher check error in success page:", boldErr);
         }
       }
 

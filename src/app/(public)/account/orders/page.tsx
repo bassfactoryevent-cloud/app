@@ -215,12 +215,29 @@ export default async function AccountOrdersPage() {
                                 </div>
                               </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', padding: '0.35rem 0.75rem', borderRadius: '1rem' }}>
-                                  ✓ Confirmada
-                                </span>
-                                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', padding: '0.35rem 0.75rem', borderRadius: '1rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                  <Clock size={12} /> QR se genera 1 día antes
-                                </span>
+                                {order.status === 'paid' ? (
+                                  <>
+                                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', padding: '0.35rem 0.75rem', borderRadius: '1rem' }}>
+                                      ✓ Confirmada
+                                    </span>
+                                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', padding: '0.35rem 0.75rem', borderRadius: '1rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                      <Clock size={12} /> QR se genera 1 día antes
+                                    </span>
+                                  </>
+                                ) : order.status === 'pending' ? (
+                                  <>
+                                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#eab308', backgroundColor: 'rgba(234,179,8,0.12)', padding: '0.35rem 0.75rem', borderRadius: '1rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                      <Clock size={12} /> Pago en Verificación
+                                    </span>
+                                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)', backgroundColor: 'rgba(255,255,255,0.05)', padding: '0.35rem 0.75rem', borderRadius: '1rem' }}>
+                                      Bloqueada hasta confirmación
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#ef4444', backgroundColor: 'rgba(239,68,68,0.12)', padding: '0.35rem 0.75rem', borderRadius: '1rem' }}>
+                                    ❌ No Confirmada
+                                  </span>
+                                )}
                               </div>
                             </div>
                           );
@@ -252,42 +269,56 @@ export default async function AccountOrdersPage() {
                     </div>
                   )}
 
-                  {/* Enlaces de Acción: Ver Factura y Boletas */}
+                  {/* Enlaces de Acción: Solo disponibles si el pago está aprobado */}
                   <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                    <Link
-                      href={`/orders/${order.id}/invoice`}
-                      style={{
-                        fontSize: '0.85rem',
-                        fontWeight: 700,
-                        color: '#00F0FF',
-                        textDecoration: 'none',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.4rem',
-                        padding: '0.4rem 0.85rem',
-                        borderRadius: '0.375rem',
-                        backgroundColor: 'rgba(0, 240, 255, 0.08)',
-                        border: '1px solid rgba(0, 240, 255, 0.2)'
-                      }}
-                    >
-                      <FileText size={15} /> Ver Factura Oficial
-                    </Link>
+                    {order.status === 'paid' ? (
+                      <>
+                        <Link
+                          href={`/orders/${order.id}/invoice`}
+                          style={{
+                            fontSize: '0.85rem',
+                            fontWeight: 700,
+                            color: '#00F0FF',
+                            textDecoration: 'none',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            padding: '0.4rem 0.85rem',
+                            borderRadius: '0.375rem',
+                            backgroundColor: 'rgba(0, 240, 255, 0.08)',
+                            border: '1px solid rgba(0, 240, 255, 0.2)'
+                          }}
+                        >
+                          <FileText size={15} /> Ver Factura Oficial
+                        </Link>
 
-                    {tickets.length > 0 && (
-                      <Link 
-                        href="/account/tickets" 
-                        style={{ 
-                          fontSize: '0.875rem', 
-                          fontWeight: 700, 
-                          color: 'var(--color-magenta)', 
-                          textDecoration: 'none',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.4rem'
-                        }}
-                      >
-                        Ir a Mis Boletas &rarr;
-                      </Link>
+                        {tickets.length > 0 && (
+                          <Link 
+                            href="/account/tickets" 
+                            style={{ 
+                              fontSize: '0.875rem', 
+                              fontWeight: 700, 
+                              color: 'var(--color-magenta)', 
+                              textDecoration: 'none',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.4rem'
+                            }}
+                          >
+                            Ir a Mis Boletas &rarr;
+                          </Link>
+                        )}
+                      </>
+                    ) : order.status === 'pending' ? (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#eab308', fontSize: '0.825rem' }}>
+                        <Clock size={15} />
+                        <span>La factura y las boletas solo se habilitan una vez confirmado el pago bancario.</span>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444', fontSize: '0.825rem' }}>
+                        <AlertCircle size={15} />
+                        <span>Orden cancelada. No se generó factura ni boletas.</span>
+                      </div>
                     )}
                   </div>
 
