@@ -680,7 +680,7 @@ export default function TicketCard({ event, tickets, eventDate }: TicketCardProp
                         <div style={{ color: 'black', fontSize: '0.8rem', fontWeight: 700, paddingTop: '60px' }}>Generando QR...</div>
                       )}
                     </div>
-                    <div style={{ color: '#00F0FF', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.05em' }}>
+                    <div style={{ color: 'white', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.05em' }}>
                       QR ACTIVO PARA TAQUILLA
                     </div>
                     <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', margin: '4px 0 0 0' }}>
@@ -690,7 +690,7 @@ export default function TicketCard({ event, tickets, eventDate }: TicketCardProp
                 )}
 
                 {/* Modal Actions */}
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
                   <a 
                     href={`/api/tickets/${selectedTicketForPass.id}/pdf`}
                     target="_blank"
@@ -698,6 +698,7 @@ export default function TicketCard({ event, tickets, eventDate }: TicketCardProp
                     download={`Boleta-${(event?.title || 'Bassfactory').replace(/[^a-zA-Z0-9]/g, '-')}-${selectedTicketForPass.id.slice(0, 8).toUpperCase()}.pdf`}
                     style={{
                       flex: 1,
+                      minWidth: '200px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -715,25 +716,44 @@ export default function TicketCard({ event, tickets, eventDate }: TicketCardProp
                     <Download size={16} /> Descargar Boleta PDF
                   </a>
 
-                  <button 
-                    onClick={() => {
-                      const t = selectedTicketForPass;
-                      setSelectedTicketForPass(null);
-                      setSelectedTicketForTransfer(t);
-                    }}
-                    style={{
-                      padding: '0.85rem 1.25rem',
-                      backgroundColor: 'rgba(255,255,255,0.08)',
-                      border: '1px solid rgba(255,255,255,0.15)',
-                      color: 'white',
+                  {selectedTicketForPass.status === 'valid' && !getPendingTransfer(selectedTicketForPass) && (
+                    <button 
+                      onClick={() => {
+                        const t = selectedTicketForPass;
+                        setSelectedTicketForPass(null);
+                        setSelectedTicketForTransfer(t);
+                      }}
+                      style={{
+                        padding: '0.85rem 1.25rem',
+                        backgroundColor: 'rgba(255,255,255,0.08)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        color: 'white',
+                        borderRadius: '0.5rem',
+                        fontWeight: 600,
+                        fontSize: '0.875rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Transferir
+                    </button>
+                  )}
+
+                  {(selectedTicketForPass.status === 'scanned' || selectedTicketForPass.status === 'used') && (
+                    <div style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      padding: '0.75rem 1rem',
+                      backgroundColor: 'rgba(34, 197, 94, 0.08)',
+                      border: '1px solid rgba(34, 197, 94, 0.25)',
                       borderRadius: '0.5rem',
-                      fontWeight: 600,
-                      fontSize: '0.875rem',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Transferir
-                  </button>
+                      color: '#22c55e',
+                      fontSize: '0.78rem',
+                      fontWeight: 700
+                    }}>
+                      🔒 Entrada utilizada (No transferible)
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>

@@ -62,8 +62,18 @@ export async function initiateTransfer(ticketId: string, name: string, email: st
       return { success: false, error: "No tienes permiso para transferir esta boleta." };
     }
 
+    if (ticket.status === "scanned" || ticket.status === "used") {
+      return { 
+        success: false, 
+        error: "Acción no permitida: Esta boleta ya fue validada e ingresó al evento, por lo que no puede ser transferida." 
+      };
+    }
+
     if (ticket.status !== "valid") {
-      return { success: false, error: `Esta boleta no se encuentra activa (Estado: ${ticket.status}).` };
+      return { 
+        success: false, 
+        error: `Esta boleta no se encuentra activa para ser transferida (Estado actual: ${ticket.status}).` 
+      };
     }
 
     // 2. Verificar si ya hay una transferencia pendiente
