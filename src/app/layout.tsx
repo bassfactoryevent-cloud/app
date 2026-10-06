@@ -32,6 +32,8 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: "#000000",
+  colorScheme: "dark",
 };
 
 import { Toaster } from "sonner";
@@ -42,10 +44,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
-      <body>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <Toaster richColors position="top-right" />
+    <html lang="es" className={`dark ${geistSans.variable} ${geistMono.variable}`} style={{ colorScheme: "dark", backgroundColor: "#000000" }} suppressHydrationWarning>
+      <body style={{ backgroundColor: "#000000", color: "#FFFFFF" }}>
+        <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark" enableSystem={false} disableTransitionOnChange>
+          <Toaster richColors position="top-right" theme="dark" />
           {children}
         </ThemeProvider>
       </body>
