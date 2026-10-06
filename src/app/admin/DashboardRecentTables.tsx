@@ -83,7 +83,7 @@ export default function DashboardRecentTables({
         </div>
 
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "700px" }}>
             <thead>
               <tr style={{ backgroundColor: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)", color: "var(--color-text-secondary)", fontSize: "0.78rem", textTransform: "uppercase" }}>
                 <th style={{ padding: "0.85rem 1.25rem" }}>Evento</th>
@@ -217,7 +217,7 @@ export default function DashboardRecentTables({
         </div>
 
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "700px" }}>
             <thead>
               <tr style={{ backgroundColor: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)", color: "var(--color-text-secondary)", fontSize: "0.78rem", textTransform: "uppercase" }}>
                 <th style={{ padding: "0.85rem 1.25rem" }}>Pedido ID</th>

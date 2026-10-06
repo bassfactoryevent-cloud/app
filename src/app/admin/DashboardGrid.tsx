@@ -16,35 +16,37 @@ interface StatItem {
 export default function DashboardGrid({ stats, totalSales, totalUsers }: { stats: StatItem[], totalSales: number, totalUsers: number }) {
   return (
     <>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem", marginBottom: "2rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))", gap: "1rem", marginBottom: "2rem" }}>
         {/* Total Sales Card */}
         <div style={{
           background: "linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%)",
           border: "1px solid rgba(34, 197, 94, 0.2)",
           borderRadius: "1rem",
-          padding: "1.5rem",
+          padding: "1.25rem",
           display: "flex",
           alignItems: "center",
-          gap: "1.5rem",
+          gap: "1rem",
           position: "relative",
-          overflow: "hidden"
+          overflow: "hidden",
+          minWidth: 0
         }}>
           <div style={{
             backgroundColor: "rgba(34, 197, 94, 0.2)",
             color: "#22c55e",
-            padding: "1rem",
+            padding: "0.85rem",
             borderRadius: "0.75rem",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center"
+            justifyContent: "center",
+            flexShrink: 0
           }}>
-            <DollarSign size={32} />
+            <DollarSign size={28} />
           </div>
-          <div>
-            <h3 style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.7)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.25rem" }}>
+          <div style={{ minWidth: 0 }}>
+            <h3 style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.7)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.25rem" }}>
               Ingresos Totales (Tickets + Merch)
             </h3>
-            <p style={{ fontSize: "2.5rem", fontWeight: 800, color: "white", margin: 0, lineHeight: 1 }}>
+            <p style={{ fontSize: "clamp(1.5rem, 5vw, 2.5rem)", fontWeight: 800, color: "white", margin: 0, lineHeight: 1.1, wordBreak: "break-word" }}>
               ${totalSales.toLocaleString('es-CO')}
             </p>
           </div>
@@ -55,36 +57,38 @@ export default function DashboardGrid({ stats, totalSales, totalUsers }: { stats
           background: "linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%)",
           border: "1px solid rgba(59, 130, 246, 0.2)",
           borderRadius: "1rem",
-          padding: "1.5rem",
+          padding: "1.25rem",
           display: "flex",
           alignItems: "center",
-          gap: "1.5rem",
+          gap: "1rem",
           position: "relative",
-          overflow: "hidden"
+          overflow: "hidden",
+          minWidth: 0
         }}>
           <div style={{
             backgroundColor: "rgba(59, 130, 246, 0.2)",
             color: "#3b82f6",
-            padding: "1rem",
+            padding: "0.85rem",
             borderRadius: "0.75rem",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center"
+            justifyContent: "center",
+            flexShrink: 0
           }}>
-            <Users size={32} />
+            <Users size={28} />
           </div>
-          <div>
-            <h3 style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.7)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.25rem" }}>
+          <div style={{ minWidth: 0 }}>
+            <h3 style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.7)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.25rem" }}>
               Usuarios Registrados
             </h3>
-            <p style={{ fontSize: "2.5rem", fontWeight: 800, color: "white", margin: 0, lineHeight: 1 }}>
+            <p style={{ fontSize: "clamp(1.5rem, 5vw, 2.5rem)", fontWeight: 800, color: "white", margin: 0, lineHeight: 1.1, wordBreak: "break-word" }}>
               {totalUsers}
             </p>
           </div>
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1.5rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))", gap: "1rem" }}>
       {stats.map((stat) => (
         <Link href={stat.href} key={stat.name} style={{ textDecoration: "none" }}>
           <div 

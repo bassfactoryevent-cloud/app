@@ -74,7 +74,7 @@ export default function EventsClient({ initialEvents, error }: { initialEvents: 
             />
           </div>
           
-          <div style={{ position: "relative", width: "200px" }}>
+          <div style={{ position: "relative", flex: "1 1 180px", minWidth: "min(100%, 180px)" }}>
             <Filter size={18} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-secondary)" }} />
             <select
               value={statusFilter}
@@ -97,7 +97,7 @@ export default function EventsClient({ initialEvents, error }: { initialEvents: 
       </div>
 
       {/* Grid de Eventos */}
-      <div style={{ display: 'grid', gap: '1.5rem', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))' }}>
+      <div style={{ display: 'grid', gap: '1.5rem', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))' }}>
         {error && <p style={{ color: 'red' }}>Error: {error.message}</p>}
         {(!initialEvents || initialEvents.length === 0) ? (
           <div style={{ padding: '3rem', textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-lg)', gridColumn: '1 / -1' }}>

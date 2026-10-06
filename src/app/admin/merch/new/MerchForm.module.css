@@ -1,0 +1,164 @@
+/* Merch Form Responsive Styles */
+.headerContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.submitBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--color-magenta);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.submitBtn:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 640px) {
+  .submitBtn {
+    width: 100%;
+  }
+}
+
+.formGrid {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  width: 100%;
+}
+
+@media (max-width: 960px) {
+  .formGrid {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+}
+
+.mainColumn {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  min-width: 0;
+  width: 100%;
+}
+
+@media (max-width: 960px) {
+  .mainColumn {
+    flex: none;
+    width: 100%;
+  }
+}
+
+.sideColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  min-width: 0;
+  width: 100%;
+}
+
+@media (max-width: 960px) {
+  .sideColumn {
+    flex: none;
+    width: 100%;
+  }
+}
+
+.formCard {
+  background-color: var(--color-surface);
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .formCard {
+    padding: 1.25rem 1rem;
+  }
+}
+
+.twoColGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 1rem;
+}
+
+/* Variant card */
+.variantCard {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background-color: rgba(128, 128, 128, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.25rem;
+  border-radius: var(--radius-md);
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.variantCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 0.5rem;
+}
+
+.variantBadge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-magenta);
+}
+
+.variantDeleteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.variantDeleteBtn:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+}
+
+.variantSubGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+@media (max-width: 500px) {
+  .variantSubGrid {
+    grid-template-columns: 1fr;
+  }
+}

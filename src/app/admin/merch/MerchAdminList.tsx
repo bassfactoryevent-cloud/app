@@ -52,7 +52,7 @@ export default function MerchAdminList({ products, categories }: { products: any
         <select 
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
-          style={{ padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', minWidth: '200px' }}
+          style={{ padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', flex: '1 1 180px', minWidth: 'min(100%, 180px)' }}
         >
           <option value="all">Todas las Categorías</option>
           {categories?.map((cat: any) => (
@@ -61,7 +61,7 @@ export default function MerchAdminList({ products, categories }: { products: any
         </select>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 260px), 1fr))', gap: '1.5rem' }}>
         {filteredProducts?.map((product: any) => {
           const primaryImage = product.merch_product_images?.find((img: any) => img.is_primary)?.image_url || product.merch_product_images?.[0]?.image_url;
           return (

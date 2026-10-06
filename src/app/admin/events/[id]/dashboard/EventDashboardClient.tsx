@@ -202,33 +202,33 @@ export default function EventDashboardClient({
       </div>
 
       {/* KPI Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem", marginBottom: "2rem" }}>
-        <div style={{ backgroundColor: "rgba(34, 197, 94, 0.1)", border: "1px solid rgba(34, 197, 94, 0.2)", borderRadius: "var(--radius-lg)", padding: "1.5rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))", gap: "1rem", marginBottom: "2rem" }}>
+        <div style={{ backgroundColor: "rgba(34, 197, 94, 0.1)", border: "1px solid rgba(34, 197, 94, 0.2)", borderRadius: "var(--radius-lg)", padding: "1.25rem", minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#22c55e", marginBottom: "0.5rem" }}>
             <DollarSign size={20} />
-            <h3 style={{ fontSize: "0.875rem", fontWeight: 600, textTransform: "uppercase", margin: 0 }}>Ingresos Totales</h3>
+            <h3 style={{ fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", margin: 0 }}>Ingresos Totales</h3>
           </div>
-          <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "white" }}>
+          <div style={{ fontSize: "clamp(1.5rem, 5vw, 2.5rem)", fontWeight: 800, color: "white", wordBreak: "break-word" }}>
             {formatCurrency(totalRevenue)}
           </div>
         </div>
 
-        <div style={{ backgroundColor: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.2)", borderRadius: "var(--radius-lg)", padding: "1.5rem" }}>
+        <div style={{ backgroundColor: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.2)", borderRadius: "var(--radius-lg)", padding: "1.25rem", minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#3b82f6", marginBottom: "0.5rem" }}>
             <Ticket size={20} />
-            <h3 style={{ fontSize: "0.875rem", fontWeight: 600, textTransform: "uppercase", margin: 0 }}>Boletas Vendidas</h3>
+            <h3 style={{ fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", margin: 0 }}>Boletas Vendidas</h3>
           </div>
-          <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "white" }}>
+          <div style={{ fontSize: "clamp(1.5rem, 5vw, 2.5rem)", fontWeight: 800, color: "white", wordBreak: "break-word" }}>
             {totalTicketsSold}
           </div>
         </div>
 
-        <div style={{ backgroundColor: "rgba(236, 72, 153, 0.1)", border: "1px solid rgba(236, 72, 153, 0.2)", borderRadius: "var(--radius-lg)", padding: "1.5rem" }}>
+        <div style={{ backgroundColor: "rgba(236, 72, 153, 0.1)", border: "1px solid rgba(236, 72, 153, 0.2)", borderRadius: "var(--radius-lg)", padding: "1.25rem", minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#ec4899", marginBottom: "0.5rem" }}>
             <ScanLine size={20} />
-            <h3 style={{ fontSize: "0.875rem", fontWeight: 600, textTransform: "uppercase", margin: 0 }}>Aforo Ingresado (Escaneado)</h3>
+            <h3 style={{ fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", margin: 0 }}>Aforo Ingresado (Escaneado)</h3>
           </div>
-          <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "white" }}>
+          <div style={{ fontSize: "clamp(1.5rem, 5vw, 2.5rem)", fontWeight: 800, color: "white", wordBreak: "break-word" }}>
             {totalScanned} <span style={{ fontSize: "1rem", opacity: 0.5, fontWeight: 500 }}>/ {totalAforo > 0 ? totalAforo : totalTicketsSold}</span>
           </div>
         </div>
@@ -345,7 +345,7 @@ export default function EventDashboardClient({
 
         {/* Table of Attendees */}
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "680px" }}>
             <thead>
               <tr style={{ backgroundColor: "rgba(255,255,255,0.02)", borderBottom: "1px solid var(--color-border, #333)" }}>
                 <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.85rem" }}>Asistente</th>

@@ -54,7 +54,7 @@ export default function FinancesClient({
       {/* 1. KPI CARDS */}
       <div style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
         gap: "1.25rem"
       }}>
         {/* Total Consolidado */}
@@ -62,12 +62,13 @@ export default function FinancesClient({
           backgroundColor: "rgba(34, 197, 94, 0.08)",
           border: "1px solid rgba(34, 197, 94, 0.25)",
           borderRadius: "1.25rem",
-          padding: "1.5rem"
+          padding: "1.25rem",
+          minWidth: 0
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#22c55e", fontSize: "0.825rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "0.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#22c55e", fontSize: "0.8rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "0.5rem" }}>
             <DollarSign size={20} /> Ingresos Totales Consolidados
           </div>
-          <div style={{ fontSize: "2.2rem", fontWeight: 900, color: "white" }}>
+          <div style={{ fontSize: "clamp(1.4rem, 4.5vw, 2.2rem)", fontWeight: 900, color: "white", wordBreak: "break-word" }}>
             {formatCOP(totalRevenue)}
           </div>
           <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.6)", marginTop: "0.4rem" }}>
@@ -80,12 +81,13 @@ export default function FinancesClient({
           backgroundColor: "rgba(0, 240, 255, 0.08)",
           border: "1px solid rgba(0, 240, 255, 0.25)",
           borderRadius: "1.25rem",
-          padding: "1.5rem"
+          padding: "1.25rem",
+          minWidth: 0
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-accent, #00f0ff)", fontSize: "0.825rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "0.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-accent, #00f0ff)", fontSize: "0.8rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "0.5rem" }}>
             <Ticket size={20} /> Recaudo Boletería (Eventos)
           </div>
-          <div style={{ fontSize: "2.2rem", fontWeight: 900, color: "white" }}>
+          <div style={{ fontSize: "clamp(1.4rem, 4.5vw, 2.2rem)", fontWeight: 900, color: "white", wordBreak: "break-word" }}>
             {formatCOP(ticketRevenue)}
           </div>
           <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.6)", marginTop: "0.4rem" }}>
@@ -98,12 +100,13 @@ export default function FinancesClient({
           backgroundColor: "rgba(236, 72, 153, 0.08)",
           border: "1px solid rgba(236, 72, 153, 0.25)",
           borderRadius: "1.25rem",
-          padding: "1.5rem"
+          padding: "1.25rem",
+          minWidth: 0
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#ec4899", fontSize: "0.825rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "0.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#ec4899", fontSize: "0.8rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "0.5rem" }}>
             <ShoppingBag size={20} /> Ventas Tienda (Merch)
           </div>
-          <div style={{ fontSize: "2.2rem", fontWeight: 900, color: "white" }}>
+          <div style={{ fontSize: "clamp(1.4rem, 4.5vw, 2.2rem)", fontWeight: 900, color: "white", wordBreak: "break-word" }}>
             {formatCOP(merchRevenue)}
           </div>
           <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.6)", marginTop: "0.4rem" }}>
@@ -116,12 +119,13 @@ export default function FinancesClient({
           backgroundColor: "rgba(168, 85, 247, 0.08)",
           border: "1px solid rgba(168, 85, 247, 0.25)",
           borderRadius: "1.25rem",
-          padding: "1.5rem"
+          padding: "1.25rem",
+          minWidth: 0
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#a855f7", fontSize: "0.825rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "0.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#a855f7", fontSize: "0.8rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "0.5rem" }}>
             <TrendingUp size={20} /> Transacciones Aprobadas
           </div>
-          <div style={{ fontSize: "2.2rem", fontWeight: 900, color: "white" }}>
+          <div style={{ fontSize: "clamp(1.4rem, 4.5vw, 2.2rem)", fontWeight: 900, color: "white", wordBreak: "break-word" }}>
             {totalTransactions}
           </div>
           <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.6)", marginTop: "0.4rem" }}>
@@ -185,7 +189,7 @@ export default function FinancesClient({
         {/* Events Table */}
         {activeTab === "events" && (
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "680px" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", color: "var(--color-text-secondary)", fontSize: "0.8rem", textTransform: "uppercase" }}>
                   <th style={{ padding: "0.85rem 1rem" }}>Evento</th>
@@ -264,7 +268,7 @@ export default function FinancesClient({
         {/* Products Table */}
         {activeTab === "products" && (
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "550px" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", color: "var(--color-text-secondary)", fontSize: "0.8rem", textTransform: "uppercase" }}>
                   <th style={{ padding: "0.85rem 1rem" }}>Producto</th>
@@ -378,7 +382,7 @@ export default function FinancesClient({
         </div>
 
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "750px" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", color: "var(--color-text-secondary)", fontSize: "0.8rem", textTransform: "uppercase" }}>
                 <th style={{ padding: "0.85rem 1rem" }}>Referencia</th>

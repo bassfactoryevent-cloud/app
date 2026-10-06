@@ -8,6 +8,7 @@ import ImageUpload from "@/components/admin/ImageUpload";
 import Link from "next/link";
 import { toast } from "sonner";
 import SubmitButton from "@/components/admin/SubmitButton";
+import styles from "./EventForm.module.css";
 
 type TicketData = { id?: string, name: string, price: number, quantity: number, sales_start: string, sales_end: string };
 
@@ -77,31 +78,26 @@ export default function EventFormClient({ djs, sponsors, initialData }: { djs: a
         toast.error("Error guardando evento");
       }
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <div className={styles.headerContainer}>
         <div>
-          <Link href="/admin/events" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-magenta)', textDecoration: 'none', marginBottom: '1rem', fontSize: '0.875rem' }}>
+          <Link href="/admin/events" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-magenta)', textDecoration: 'none', marginBottom: '0.75rem', fontSize: '0.875rem' }}>
             <ArrowLeft size={16} /> Volver a eventos
           </Link>
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Calendar size={28} /> {initialData ? 'Editar Evento' : 'Crear Nuevo Evento'}</h1>
-          <p style={{ opacity: 0.7, marginTop: '0.5rem' }}>Configura toda la información, boletas y line up del evento.</p>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}><Calendar size={28} /> {initialData ? 'Editar Evento' : 'Crear Nuevo Evento'}</h1>
+          <p style={{ opacity: 0.7, marginTop: '0.35rem', marginBottom: 0 }}>Configura toda la información, boletas y line up del evento.</p>
         </div>
-        <SubmitButton style={{
-          display: 'flex', alignItems: 'center', gap: '0.5rem',
-          backgroundColor: 'var(--color-magenta)', color: 'white',
-          padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-md)',
-          border: 'none', fontWeight: 600, cursor: 'pointer'
-        }}>
+        <SubmitButton className={styles.submitBtn}>
           <Save size={18} /> {initialData ? 'Guardar Cambios' : 'Publicar Evento'}
         </SubmitButton>
       </div>
 
-      <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
+      <div className={styles.formGrid}>
         
         {/* Columna Principal */}
-        <div style={{ flex: '2', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div className={styles.mainColumn}>
           
           {/* Info Básica */}
-          <div style={{ backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
+          <div className={styles.formCard}>
             <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(128,128,128,0.1)', paddingBottom: '0.5rem' }}>Información Básica</h2>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -113,22 +109,22 @@ export default function EventFormClient({ djs, sponsors, initialData }: { djs: a
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>URL Slug *</label>
                 <input type="text" name="slug" defaultValue={initialData?.slug} required placeholder="ej-bassfactory-5-aniversario" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }} />
               </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <div style={{ flex: 1 }}>
+              <div className={styles.twoColGrid}>
+                <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Inicio</label>
                   <input type="datetime-local" name="start_date" defaultValue={formatDateForInput(initialData?.start_date)} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }} />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Fin</label>
                   <input type="datetime-local" name="end_date" defaultValue={formatDateForInput(initialData?.end_date)} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }} />
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <div style={{ flex: 1 }}>
+              <div className={styles.twoColGrid}>
+                <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Lugar / Club</label>
                   <input type="text" name="location_name" defaultValue={initialData?.location_name} placeholder="Ej. Kaputt Club" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }} />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Dirección</label>
                   <input type="text" name="location_address" defaultValue={initialData?.location_address} placeholder="Ej. Calle 73 # 10-83" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }} />
                 </div>
@@ -162,16 +158,16 @@ export default function EventFormClient({ djs, sponsors, initialData }: { djs: a
           </div>
 
           {/* Descripción */}
-          <div style={{ backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
+          <div className={styles.formCard}>
             <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(128,128,128,0.1)', paddingBottom: '0.5rem' }}>Descripción del Evento</h2>
             <TiptapEditor content={description} onChange={setDescription} />
           </div>
 
           {/* Ticketing */}
-          <div style={{ backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(128,128,128,0.1)', paddingBottom: '0.5rem' }}>
-              <h2 style={{ fontSize: '1.25rem' }}>Boletería (Ticketing) y Etapas</h2>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+          <div className={styles.formCard}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(128,128,128,0.1)', paddingBottom: '0.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Boletería (Ticketing) y Etapas</h2>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem' }}>
                 <input type="checkbox" name="is_free" checked={isFree} onChange={(e) => setIsFree(e.target.checked)} />
                 Evento Gratuito
               </label>
@@ -179,41 +175,46 @@ export default function EventFormClient({ djs, sponsors, initialData }: { djs: a
             
             {!isFree && (
               <>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '1.5rem' }}>
                   {tickets.map((t, idx) => (
-                    <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', backgroundColor: 'rgba(128,128,128,0.05)', padding: '1.5rem', borderRadius: 'var(--radius-md)', position: 'relative' }}>
-                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end' }}>
-                        <div style={{ flex: 2 }}>
-                          <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '0.25rem', opacity: 0.7 }}>Categoría (Ej. Lanzamiento)</label>
-                          <input type="text" value={t.name} onChange={e => updateTicket(idx, 'name', e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }} />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '0.25rem', opacity: 0.7 }}>Precio ($)</label>
-                          <input type="number" value={t.price} onChange={e => updateTicket(idx, 'price', e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }} />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '0.25rem', opacity: 0.7 }}>Aforo</label>
-                          <input type="number" value={t.quantity} onChange={e => updateTicket(idx, 'quantity', e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }} />
-                        </div>
-                        <button type="button" onClick={() => removeTicket(idx)} style={{ position: 'absolute', top: '1rem', right: '1rem', padding: '0.5rem', backgroundColor: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer' }}>
-                          <Trash2 size={16} />
+                    <div key={idx} className={styles.tierCard}>
+                      <div className={styles.tierCardHeader}>
+                        <span className={styles.tierBadge}>Etapa #{idx + 1}</span>
+                        <button type="button" onClick={() => removeTicket(idx)} className={styles.tierDeleteBtn}>
+                          <Trash2 size={14} /> Eliminar
                         </button>
                       </div>
-                      
-                      <div style={{ display: 'flex', gap: '1rem' }}>
-                        <div style={{ flex: 1 }}>
-                          <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '0.25rem', opacity: 0.7 }}>Inicio de Ventas</label>
-                          <input type="datetime-local" value={t.sales_start} onChange={e => updateTicket(idx, 'sales_start', e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }} />
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '0.25rem', opacity: 0.8, fontWeight: 600 }}>Categoría / Nombre de Fase (Ej. Preventa Early Bird)</label>
+                        <input type="text" value={t.name} onChange={e => updateTicket(idx, 'name', e.target.value)} placeholder="Ej. Lanzamiento / Early Bird / General" style={{ width: '100%', padding: '0.65rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }} />
+                      </div>
+
+                      <div className={styles.tierSubGrid}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '0.25rem', opacity: 0.8, fontWeight: 600 }}>Precio ($ COP)</label>
+                          <input type="number" value={t.price} onChange={e => updateTicket(idx, 'price', e.target.value)} placeholder="Ej. 50000" style={{ width: '100%', padding: '0.65rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }} />
                         </div>
-                        <div style={{ flex: 1 }}>
-                          <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '0.25rem', opacity: 0.7 }}>Fin de Ventas</label>
-                          <input type="datetime-local" value={t.sales_end} onChange={e => updateTicket(idx, 'sales_end', e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }} />
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '0.25rem', opacity: 0.8, fontWeight: 600 }}>Aforo / Cupos</label>
+                          <input type="number" value={t.quantity} onChange={e => updateTicket(idx, 'quantity', e.target.value)} placeholder="Ej. 150" style={{ width: '100%', padding: '0.65rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }} />
+                        </div>
+                      </div>
+                      
+                      <div className={styles.tierDatesGrid}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '0.25rem', opacity: 0.8, fontWeight: 600 }}>Inicio de Ventas</label>
+                          <input type="datetime-local" value={t.sales_start} onChange={e => updateTicket(idx, 'sales_start', e.target.value)} style={{ width: '100%', padding: '0.65rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '0.25rem', opacity: 0.8, fontWeight: 600 }}>Fin de Ventas</label>
+                          <input type="datetime-local" value={t.sales_end} onChange={e => updateTicket(idx, 'sales_end', e.target.value)} style={{ width: '100%', padding: '0.65rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }} />
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
-                <button type="button" onClick={addTicket} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1rem', backgroundColor: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 'var(--radius-md)', color: 'inherit', cursor: 'pointer', fontSize: '0.875rem' }}>
+                <button type="button" onClick={addTicket} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.85rem 1rem', backgroundColor: 'rgba(255,255,255,0.08)', border: '1px dashed rgba(255,255,255,0.2)', borderRadius: 'var(--radius-md)', color: 'inherit', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, width: '100%' }}>
                   <Plus size={16} /> Añadir Nueva Etapa de Boleta
                 </button>
               </>
@@ -225,9 +226,9 @@ export default function EventFormClient({ djs, sponsors, initialData }: { djs: a
         </div>
 
         {/* Columna Lateral */}
-        <div style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        <div className={styles.sideColumn}>
           
-          <div style={{ backgroundColor: 'var(--color-surface)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
+          <div className={styles.formCard}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', borderBottom: '1px solid rgba(128,128,128,0.1)', paddingBottom: '0.5rem' }}><Music size={20} /> Line Up (DJs)</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '250px', overflowY: 'auto' }}>
               {djs.length === 0 ? <p style={{ opacity: 0.5, fontSize: '0.875rem' }}>No hay DJs. Créalos en la pestaña DJs.</p> : djs.map(dj => (
@@ -239,7 +240,7 @@ export default function EventFormClient({ djs, sponsors, initialData }: { djs: a
             </div>
           </div>
 
-          <div style={{ backgroundColor: 'var(--color-surface)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
+          <div className={styles.formCard}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', borderBottom: '1px solid rgba(128,128,128,0.1)', paddingBottom: '0.5rem' }}><Briefcase size={20} /> Patrocinadores</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto' }}>
               {sponsors.length === 0 ? <p style={{ opacity: 0.5, fontSize: '0.875rem' }}>No hay marcas. Créalas en Patrocinadores.</p> : sponsors.map(s => (
@@ -251,7 +252,7 @@ export default function EventFormClient({ djs, sponsors, initialData }: { djs: a
             </div>
           </div>
 
-          <div style={{ backgroundColor: 'var(--color-surface)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)' }}>
+          <div className={styles.formCard}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Estado de Publicación</label>
             <select name="status" defaultValue={initialData?.status || "draft"} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(128,128,128,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', color: 'inherit' }}>
               <option value="draft">Borrador (Oculto)</option>

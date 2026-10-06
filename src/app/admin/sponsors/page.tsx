@@ -66,8 +66,8 @@ export default async function AdminSponsors({ searchParams }: { searchParams: Pr
         </ActionForm>
 
         {/* Lista */}
-        <div style={{ flex: '2 1 400px', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)', overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+        <div style={{ flex: '2 1 400px', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(128,128,128,0.2)', overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '380px' }}>
             <thead style={{ backgroundColor: 'rgba(128,128,128,0.05)', borderBottom: '1px solid rgba(128,128,128,0.2)' }}>
               <tr>
                 <th style={{ padding: '1rem' }}>Marca</th>

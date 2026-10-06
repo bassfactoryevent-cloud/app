@@ -84,7 +84,7 @@ export default function MerchOrdersClient({ initialOrders }: MerchOrdersClientPr
       {/* KPI METRICS BAR */}
       <div style={{ 
         display: "grid", 
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", 
+        gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", 
         gap: "1.25rem" 
       }}>
         <div style={{ backgroundColor: "rgba(34, 197, 94, 0.08)", border: "1px solid rgba(34, 197, 94, 0.25)", borderRadius: "1rem", padding: "1.25rem" }}>
@@ -248,7 +248,7 @@ export default function MerchOrdersClient({ initialOrders }: MerchOrdersClientPr
                 </div>
 
                 {/* Details Grid */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.75rem" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))", gap: "1.75rem" }}>
                   {/* Column 1: Cliente & Contacto */}
                   <div style={{ backgroundColor: "rgba(255,255,255,0.02)", padding: "1.25rem", borderRadius: "0.75rem", border: "1px solid rgba(255,255,255,0.05)" }}>
                     <h4 style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", fontWeight: 800, marginBottom: "0.75rem", letterSpacing: "0.05em" }}>

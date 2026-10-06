@@ -246,7 +246,7 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
         boxShadow: "0 10px 30px rgba(0,0,0,0.4)"
       }}>
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "680px" }}>
             <thead>
               <tr style={{ backgroundColor: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                 <th style={{ padding: "1.1rem 1.25rem", color: "var(--color-text-secondary)", fontWeight: 700, fontSize: "0.825rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Usuario / Contacto</th>
