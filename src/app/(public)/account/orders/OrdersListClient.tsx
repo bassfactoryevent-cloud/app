@@ -384,7 +384,7 @@ export default function OrdersListClient({ initialOrders, orderTicketsMap }: Ord
                 style={{
                   background: 'none',
                   border: '1px solid rgba(255,255,255,0.15)',
-                  color: '#00F0FF',
+                  color: 'rgba(255, 255, 255, 0.75)',
                   padding: '0.3rem 0.75rem',
                   borderRadius: '0.375rem',
                   fontSize: '0.75rem',
@@ -413,7 +413,7 @@ export default function OrdersListClient({ initialOrders, orderTicketsMap }: Ord
           borderRadius: '1rem',
           border: '1px dashed rgba(255,255,255,0.1)'
         }}>
-          <Filter size={40} style={{ opacity: 0.3, margin: '0 auto 1rem', color: '#00F0FF' }} />
+          <Filter size={36} style={{ opacity: 0.35, margin: '0 auto 1rem', color: 'rgba(255,255,255,0.6)' }} />
           <h3 style={{ color: 'white', fontWeight: 700, fontSize: '1.2rem', marginBottom: '0.5rem' }}>
             No se encontraron compras con los filtros seleccionados
           </h3>
@@ -474,8 +474,8 @@ export default function OrdersListClient({ initialOrders, orderTicketsMap }: Ord
                         Orden: #{order.id.slice(0, 8).toUpperCase()}
                       </div>
                       {order.payment_id && order.payment_id.startsWith("BF-FAC-") && (
-                        <div style={{ fontSize: '0.875rem', fontFamily: 'monospace', fontWeight: 800, color: '#00F0FF' }}>
-                          • Factura: {order.payment_id}
+                        <div style={{ fontSize: '0.875rem', fontFamily: 'monospace', fontWeight: 700, color: 'rgba(255, 255, 255, 0.7)' }}>
+                          • Factura: <span style={{ color: 'white', fontWeight: 800 }}>{order.payment_id}</span>
                         </div>
                       )}
                     </div>
@@ -589,20 +589,20 @@ export default function OrdersListClient({ initialOrders, orderTicketsMap }: Ord
                         <Link
                           href={`/orders/${order.id}/invoice`}
                           style={{
-                            fontSize: '0.85rem',
+                            fontSize: '0.825rem',
                             fontWeight: 700,
-                            color: '#00F0FF',
+                            color: 'rgba(255, 255, 255, 0.85)',
                             textDecoration: 'none',
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '0.4rem',
-                            padding: '0.4rem 0.85rem',
+                            gap: '0.45rem',
+                            padding: '0.45rem 0.95rem',
                             borderRadius: '0.375rem',
-                            backgroundColor: 'rgba(0, 240, 255, 0.08)',
-                            border: '1px solid rgba(0, 240, 255, 0.2)'
+                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                            border: '1px solid rgba(255, 255, 255, 0.12)'
                           }}
                         >
-                          <FileText size={15} /> Ver Factura Oficial
+                          <FileText size={14} style={{ opacity: 0.7 }} /> Ver Factura Oficial
                         </Link>
 
                         {tickets.length > 0 && (

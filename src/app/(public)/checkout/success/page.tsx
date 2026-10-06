@@ -301,7 +301,7 @@ export default async function CheckoutSuccessPage({
         }}>
           {invoiceNumber && (
             <div style={{ textAlign: 'left', paddingRight: '1rem', borderRight: '1px solid rgba(255,255,255,0.1)' }}>
-              <div style={{ fontSize: '0.75rem', color: '#00F0FF', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Factura Oficial N°
               </div>
               <div style={{ fontSize: '1.15rem', fontWeight: 900, fontFamily: 'monospace', color: 'white' }}>
@@ -355,7 +355,7 @@ export default async function CheckoutSuccessPage({
           marginBottom: '2rem'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-            <Truck size={22} style={{ color: '#00F0FF' }} />
+            <Truck size={22} style={{ color: 'rgba(255, 255, 255, 0.8)' }} />
             <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: 'white', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Información de Entrega y Envío
             </h3>
@@ -384,8 +384,8 @@ export default async function CheckoutSuccessPage({
                 display: 'inline-flex', 
                 alignItems: 'center', 
                 gap: '0.35rem', 
-                backgroundColor: 'rgba(0, 240, 255, 0.12)', 
-                color: '#00F0FF', 
+                backgroundColor: 'rgba(255, 255, 255, 0.08)', 
+                color: 'white', 
                 padding: '0.3rem 0.75rem', 
                 borderRadius: '1rem', 
                 fontSize: '0.8rem', 
@@ -437,10 +437,10 @@ export default async function CheckoutSuccessPage({
           {merchItems.map((item: any) => (
             <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.875rem 1rem', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.04)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <Package size={20} style={{ color: '#00F0FF' }} />
+                <Package size={20} style={{ color: 'rgba(255, 255, 255, 0.7)' }} />
                 <div>
                   <div style={{ fontWeight: 700, color: 'white', fontSize: '0.95rem' }}>{item.product_name}</div>
-                  {item.variant_name && <div style={{ fontSize: '0.8rem', color: '#00F0FF' }}>Talla / Variante: {item.variant_name}</div>}
+                  {item.variant_name && <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.7)' }}>Talla / Variante: {item.variant_name}</div>}
                   <div style={{ fontSize: '0.8rem', color: '#a1a1aa' }}>Cantidad: {item.quantity}</div>
                 </div>
               </div>
@@ -455,7 +455,7 @@ export default async function CheckoutSuccessPage({
         {order?.total_amount && (
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: '1.25rem', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.9rem', color: '#a1a1aa' }}>Total Facturado:</span>
-            <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#00F0FF' }}>
+            <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#22c55e', fontFamily: 'monospace' }}>
               ${Number(order.total_amount).toLocaleString('es-CO')} COP
             </span>
           </div>
@@ -507,9 +507,9 @@ export default async function CheckoutSuccessPage({
             style={{ 
               display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
               padding: '0.875rem 1.5rem', 
-              backgroundColor: 'rgba(0, 240, 255, 0.1)', 
-              border: '1px solid rgba(0, 240, 255, 0.3)',
-              color: '#00F0FF', 
+              backgroundColor: 'rgba(255, 255, 255, 0.06)', 
+              border: '1px solid rgba(255, 255, 255, 0.15)', 
+              color: 'white', 
               textDecoration: 'none', borderRadius: '0.5rem', 
               fontWeight: 700 
             }}

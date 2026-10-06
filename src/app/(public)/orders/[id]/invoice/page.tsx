@@ -293,7 +293,7 @@ export default async function OrderInvoicePage({
             }}>
               Factura de Venta Electrónica
             </div>
-            <h1 style={{ fontSize: '1.65rem', fontWeight: 900, fontFamily: 'monospace', margin: '0 0 0.35rem 0', color: '#00F0FF' }}>
+            <h1 style={{ fontSize: '1.65rem', fontWeight: 900, fontFamily: 'monospace', margin: '0 0 0.35rem 0', color: '#ffffff' }}>
               {invoiceNumber}
             </h1>
             <p style={{ margin: 0, fontSize: '0.8rem', color: '#a1a1aa' }}>
@@ -352,7 +352,7 @@ export default async function OrderInvoicePage({
                   {order.shipping_zip ? ` (CP: ${order.shipping_zip})` : ''}
                 </p>
                 {order.tracking_number && (
-                  <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: '#00F0FF', fontWeight: 700 }}>
+                  <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: '#ffffff', fontWeight: 700 }}>
                     Guía de Envío: {order.tracking_number}
                   </p>
                 )}
@@ -420,14 +420,14 @@ export default async function OrderInvoicePage({
                 return (
                   <tr key={item.id} style={{ borderBottom: '1px solid #1c1c22', backgroundColor: '#0e0e12' }}>
                     <td style={{ padding: '0.75rem 0.85rem', whiteSpace: 'nowrap' }}>
-                      <span style={{ fontSize: '0.7rem', fontWeight: 700, backgroundColor: 'rgba(0,240,255,0.15)', color: '#00F0FF', padding: '0.2rem 0.45rem', borderRadius: '0.25rem' }}>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 700, backgroundColor: 'rgba(255,255,255,0.08)', color: '#ffffff', padding: '0.2rem 0.45rem', borderRadius: '0.25rem' }}>
                         👕 Merch
                       </span>
                     </td>
                     <td style={{ padding: '0.75rem 0.85rem' }}>
                       <div style={{ fontWeight: 700, color: '#ffffff' }}>{item.product_name}</div>
                       {item.variant_name && (
-                        <div style={{ fontSize: '0.75rem', color: '#00F0FF', marginTop: '0.15rem' }}>
+                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', marginTop: '0.15rem' }}>
                           Variante / Talla: <strong>{item.variant_name}</strong>
                         </div>
                       )}
@@ -474,7 +474,7 @@ export default async function OrderInvoicePage({
               color: '#ffffff' 
             }}>
               <span>Total Pagado:</span>
-              <span style={{ color: '#00F0FF', fontFamily: 'monospace' }}>${totalAmount.toLocaleString('es-CO')} COP</span>
+              <span style={{ color: '#22c55e', fontFamily: 'monospace' }}>${totalAmount.toLocaleString('es-CO')} COP</span>
             </div>
           </div>
         </div>
