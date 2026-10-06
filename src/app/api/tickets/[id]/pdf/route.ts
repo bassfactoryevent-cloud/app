@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { renderToStream } from "@react-pdf/renderer";
 import { TicketPDF } from "@/components/pdf/TicketPDF";
 import QRCode from "qrcode";
 import React from "react";
-import sharp from "sharp";
+import fs from "fs";
+import path from "path";
 
 import { getAdminClient } from "@/utils/supabase/admin";
 
@@ -55,7 +55,7 @@ export async function GET(
 
     const ticket = rawTicket as any;
 
-    // Validar propiedad de la boleta o rol administrativo
+    // 3. Validar propiedad de la boleta o rol administrativo
     let isOwner = ticket.user_id === user.id || ticket.assigned_email?.toLowerCase() === user.email?.toLowerCase();
 
     if (!isOwner && ticket.order_id) {
@@ -69,17 +69,13 @@ export async function GET(
       }
     }
 
-    let isAdmin = false;
-    if (!isOwner) {
-      const { data: profile } = await adminSupabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-      if (profile && (profile.role === "admin" || profile.role === "superadmin")) {
-        isAdmin = true;
-      }
-    }
+    // Verificación independiente del rol de administrador
+    const { data: profile } = await adminSupabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    const isAdmin = profile?.role === "admin" || profile?.role === "superadmin";
 
     if (!isOwner && !isAdmin) {
       return NextResponse.json({ error: "Acceso denegado: No tienes permiso para descargar esta entrada." }, { status: 403 });
@@ -89,7 +85,7 @@ export async function GET(
       return NextResponse.json({ error: `La boleta no está activa (Estado: ${ticket.status})` }, { status: 400 });
     }
 
-    // Fetch tier and event details
+    // 4. Fetch tier and event details
     let tier: any = null;
     let event: any = null;
 
@@ -119,21 +115,20 @@ export async function GET(
       }
     }
 
-    // Check 24-hour activation rule:
+    // 5. Antifraud 24-hour activation rule
     const eventStartDate = event?.start_date ? new Date(event.start_date) : null;
     const isWithin24Hours = eventStartDate 
       ? (eventStartDate.getTime() - Date.now()) <= 24 * 60 * 60 * 1000 
       : false;
     const isEnabled = isWithin24Hours || ticket.qr_dispatched;
 
-    // Strict antifraud rule: Only allowed if within 24h OR dispatched OR user is admin testing
     if (!isEnabled && !isAdmin) {
       return NextResponse.json({
         error: "Por seguridad antifraude, la boleta oficial en PDF y el código QR de acceso solo están disponibles 1 día antes del evento."
       }, { status: 403 });
     }
 
-    // Fetch order details if available
+    // 6. Fetch order details if available
     let order: any = null;
     if (ticket.order_id) {
       const { data: orderData } = await adminSupabase
@@ -151,7 +146,7 @@ export async function GET(
     const customerName = ticket.assigned_name || order?.customer_name || user.user_metadata?.name || "Asistente Oficial";
     const orderId = order?.id || ticket.order_id || ticket.id;
 
-    // Generate QR Code data URI (using qr_hash or ticket id)
+    // 7. Generate QR Code data URI
     const qrDataUri = await QRCode.toDataURL(ticket.qr_hash || ticket.id, {
       errorCorrectionLevel: "H",
       margin: 1,
@@ -170,29 +165,37 @@ export async function GET(
         })
       : "Fecha por confirmar";
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bassfactory.co";
+    // 8. Read local logo as Base64 Data URI to prevent network/URL failures
+    let logoDataUri: string | undefined = undefined;
+    try {
+      const logoPath = path.join(process.cwd(), "public", "Bass-Factory-Blanco-Sin-Letras.png");
+      if (fs.existsSync(logoPath)) {
+        const logoBuffer = fs.readFileSync(logoPath);
+        logoDataUri = `data:image/png;base64,${logoBuffer.toString("base64")}`;
+      }
+    } catch (logoErr) {
+      console.error("Error reading logo file for ticket PDF:", logoErr);
+    }
 
-    // Pre-process cover image to ensure @react-pdf/renderer supports it (converting WebP/JPEG with sharp to base64 Data URI)
+    // 9. Process cover image safely without native sharp dependency
     let coverImageDataUri: string | undefined = undefined;
     if (event?.cover_image) {
       try {
         const imgRes = await fetch(event.cover_image);
         if (imgRes.ok) {
-          const imgBuffer = Buffer.from(await imgRes.arrayBuffer());
-          const convertedJpeg = await sharp(imgBuffer)
-            .resize(800, 350, { fit: "cover" })
-            .jpeg({ quality: 90 })
-            .toBuffer();
-          coverImageDataUri = `data:image/jpeg;base64,${convertedJpeg.toString("base64")}`;
+          const contentType = imgRes.headers.get("content-type") || "";
+          if (contentType.includes("png") || contentType.includes("jpeg") || contentType.includes("jpg")) {
+            const imgBuffer = Buffer.from(await imgRes.arrayBuffer());
+            coverImageDataUri = `data:${contentType};base64,${imgBuffer.toString("base64")}`;
+          }
         }
       } catch (imgErr) {
-        console.error("Error converting cover_image for PDF:", imgErr);
-        // Fallback to raw URL
-        coverImageDataUri = event.cover_image;
+        console.error("Error fetching cover_image for ticket PDF:", imgErr);
+        coverImageDataUri = undefined;
       }
     }
 
-    // Generate PDF stream using TicketPDF
+    // 10. Generate PDF stream using TicketPDF
     const pdfStream = await renderToStream(
       React.createElement(TicketPDF, {
         eventName: eventTitle,
@@ -203,7 +206,7 @@ export async function GET(
         qrDataUri: qrDataUri,
         eventDescription: event?.description || "",
         coverImageUrl: coverImageDataUri,
-        logoUrl: `${appUrl}/Bass-Factory-Blanco-Sin-Letras.png`,
+        logoDataUri: logoDataUri,
         orderId: String(orderId),
       }) as any
     );

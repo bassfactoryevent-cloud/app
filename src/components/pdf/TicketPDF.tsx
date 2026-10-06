@@ -144,7 +144,8 @@ interface TicketPDFProps {
   qrDataUri: string;
   eventDescription?: string;
   coverImageUrl?: string;
-  logoUrl: string;
+  logoUrl?: string;
+  logoDataUri?: string;
   orderId: string;
 }
 
@@ -158,13 +159,20 @@ export const TicketPDF = ({
   eventDescription,
   coverImageUrl,
   logoUrl,
+  logoDataUri,
   orderId
-}: TicketPDFProps) => (
+}: TicketPDFProps) => {
+  const displayLogo = logoDataUri || logoUrl;
+  return (
   <Document>
     <Page size="A4" style={styles.page}>
       
       <View style={styles.header}>
-        <Image src={logoUrl} style={styles.logo} />
+        {displayLogo ? (
+          <Image src={displayLogo} style={styles.logo} />
+        ) : (
+          <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#ffffff' }}>BASS FACTORY</Text>
+        )}
         <View style={styles.titleWrapper}>
           <Text style={styles.eventTitle}>{eventName}</Text>
           <Text style={styles.eventDate}>{eventDate.split(',')[0]}</Text>
@@ -256,7 +264,8 @@ export const TicketPDF = ({
           Bassfactory © {new Date().getFullYear()} - Todos los derechos reservados
         </Text>
       </View>
-
     </Page>
   </Document>
-);
+  );
+};
+
