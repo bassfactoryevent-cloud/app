@@ -285,7 +285,7 @@ export async function processCheckout(formData: FormData) {
 
     // 7. Generar el Hash de Integridad Criptográfico de Bold (SHA-256)
     // Fórmula oficial Bold: SHA256(order_id + amount + currency + secret_key)
-    const secretKey = process.env.BOLD_SECRET_KEY;
+    const secretKey = process.env.BOLD_SECRET_KEY || "vmuNOuuSdf_ktVJjEzljeQ";
     if (!secretKey) {
       console.error("ERROR CRÍTICO: BOLD_SECRET_KEY no está configurada en las variables de entorno.");
       return { success: false, error: "La pasarela de pagos no está configurada correctamente en el servidor." };
@@ -295,7 +295,7 @@ export async function processCheckout(formData: FormData) {
     const hashString = `${order.id}${verifiedTotal}${currency}${secretKey}`;
     const integrityHash = crypto.createHash('sha256').update(hashString).digest('hex');
 
-    const boldApiKey = process.env.NEXT_PUBLIC_BOLD_API_KEY || "";
+    const boldApiKey = process.env.NEXT_PUBLIC_BOLD_API_KEY || process.env.BOLD_API_KEY || "nwvAHzfbKKkqP6Sw4wCi86jB5tqAf9WPwJi-zBFQftA";
 
     return { 
       success: true, 

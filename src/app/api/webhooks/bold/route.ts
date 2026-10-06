@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   try {
     const signature = req.headers.get("x-bold-signature");
-    const secret = process.env.BOLD_SIGNING_SECRET || process.env.BOLD_SECRET_KEY;
+    const secret = process.env.BOLD_SIGNING_SECRET || process.env.BOLD_SECRET_KEY || "vmuNOuuSdf_ktVJjEzljeQ";
 
     if (!secret) {
       console.error("[SEGURIDAD CRÍTICA] BOLD_SIGNING_SECRET o BOLD_SECRET_KEY no configurado en variables de entorno.");

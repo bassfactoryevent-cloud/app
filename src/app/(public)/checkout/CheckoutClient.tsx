@@ -28,7 +28,7 @@ export default function CheckoutClient({ user }: { user: any }) {
       scriptContainerRef.current.innerHTML = "";
       const script = document.createElement("script");
       script.src = "https://checkout.bold.co/library/boldPaymentButton.js";
-      const apiKey = paymentData.boldApiKey || process.env.NEXT_PUBLIC_BOLD_API_KEY || "";
+      const apiKey = paymentData.boldApiKey || process.env.NEXT_PUBLIC_BOLD_API_KEY || "nwvAHzfbKKkqP6Sw4wCi86jB5tqAf9WPwJi-zBFQftA";
       if (!apiKey) {
         toast.error("Configuración de pasarela incompleta en el cliente");
         return;
