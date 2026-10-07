@@ -42,20 +42,20 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
   let transfers: any[] = [];
 
   if (tierIds.length > 0) {
-    // 3. Obtener boletas emitidas ÚNICAMENTE para las localidades de este evento (incluyendo quién la escaneó)
+    // 3. Obtener boletas emitidas ÚNICAMENTE para las localidades de este evento (incluyendo quién la escaneó y estado de QR)
     const { data: rawTickets } = await adminDb
       .from("tickets")
-      .select("id, tier_id, order_id, status, assigned_name, assigned_email, scanned_at, scanned_by, created_at")
+      .select("id, tier_id, order_id, status, assigned_name, assigned_email, scanned_at, scanned_by, created_at, qr_dispatched")
       .in("tier_id", tierIds);
 
     eventTickets = rawTickets || [];
 
-    // 4. Obtener órdenes asociadas ÚNICAMENTE a estas boletas
+    // 4. Obtener órdenes asociadas ÚNICAMENTE a estas boletas (incluye cortesías)
     const orderIds = Array.from(new Set(eventTickets.map((t: any) => t.order_id).filter(Boolean)));
     if (orderIds.length > 0) {
       const { data: rawOrders } = await adminDb
         .from("merch_orders")
-        .select("id, customer_name, customer_email, total_amount, created_at, status")
+        .select("id, customer_name, customer_email, total_amount, created_at, status, payment_provider, payment_id, shipping_city")
         .in("id", orderIds)
         .order("created_at", { ascending: false });
 

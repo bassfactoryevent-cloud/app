@@ -4,11 +4,14 @@ import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import { 
   ArrowLeft, DollarSign, Ticket, Users, Activity, ScanLine, 
-  CheckCircle2, Clock, Search, UserPlus, Power, Trash2, ShieldCheck, Smartphone, ExternalLink 
+  CheckCircle2, Clock, Search, UserPlus, Power, Trash2, ShieldCheck, Smartphone, ExternalLink,
+  Gift, Lock, Unlock, Sparkles
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 import { addStaffToEventAction, toggleStaffStatusAction, removeStaffAction } from "../staff/actions";
+import { IssueCourtesyModal } from "./IssueCourtesyModal";
+import { toggleCourtesyLock } from "./actions";
 
 interface EventDashboardClientProps {
   event: any;
@@ -39,8 +42,25 @@ export default function EventDashboardClient({
   const [selectedStaffUserId, setSelectedStaffUserId] = useState("");
   const [isStaffPending, startStaffTransition] = useTransition();
 
-  const [attendeeFilter, setAttendeeFilter] = useState<"all" | "active" | "pending">("active");
+  const [attendeeFilter, setAttendeeFilter] = useState<"all" | "active" | "pending" | "courtesy">("active");
   const [attendeeSearch, setAttendeeSearch] = useState("");
+  const [isCourtesyModalOpen, setIsCourtesyModalOpen] = useState(false);
+  const [isLockingTicketId, setIsLockingTicketId] = useState<string | null>(null);
+
+  const handleToggleTicketLock = async (ticketId: string, currentDispatched: boolean) => {
+    try {
+      setIsLockingTicketId(ticketId);
+      const res = await toggleCourtesyLock(ticketId, event.id, currentDispatched);
+      if (res.success) {
+        setTickets((prev) => prev.map(t => t.id === ticketId ? { ...t, qr_dispatched: res.isDispatched } : t));
+        toast.success(res.isDispatched ? "QR desbloqueado para el invitado" : "QR bloqueado hasta el evento");
+      } else {
+        toast.error(res.error || "Error al actualizar bloqueo");
+      }
+    } finally {
+      setIsLockingTicketId(null);
+    }
+  };
 
   const handleAssignStaff = () => {
     if (!selectedStaffUserId) {
@@ -140,15 +160,24 @@ export default function EventDashboardClient({
   const totalTiersCapacity = initialTiers.reduce((sum, t) => sum + (Number(t.quantity_available) || 0), 0);
   const totalAforo = Number(event.total_capacity) || totalTiersCapacity;
 
-  // Calculo de ingresos: suma de ordenes asociadas o suma del valor de las boletas vendidas
-  const ordersTotal = orders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
-  const ticketsValueTotal = tickets.reduce((sum, t) => {
+  // Identificar ordenes y tickets de cortesía
+  const courtesyOrdersMap = new Map<string, any>(
+    orders.filter(o => o.payment_provider === 'courtesy').map(o => [o.id, o])
+  );
+  const courtesyTickets = tickets.filter(t => courtesyOrdersMap.has(t.order_id));
+  const commercialTickets = tickets.filter(t => !courtesyOrdersMap.has(t.order_id));
+
+  // Calculo de ingresos: solo órdenes comerciales reales (las cortesías tienen total $0 COP)
+  const commercialOrdersTotal = orders
+    .filter(o => o.payment_provider !== 'courtesy')
+    .reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+  const commercialTicketsValueTotal = commercialTickets.reduce((sum, t) => {
     const tier = initialTiers.find(ti => ti.id === t.tier_id || ti.id === t.ticket_tier_id);
     return sum + (tier ? Number(tier.price || 0) : 0);
   }, 0);
-  const totalRevenue = Math.max(ordersTotal, ticketsValueTotal);
+  const totalRevenue = Math.max(commercialOrdersTotal, commercialTicketsValueTotal);
 
-  const totalTicketsSold = tickets.length;
+  const totalTicketsCount = tickets.length;
   const totalScanned = tickets.filter(t => t.status === 'scanned' || Boolean(t.scanned_at)).length;
 
   const formatCurrency = (val: number) => `$${val.toLocaleString('es-CO')}`;
@@ -157,7 +186,7 @@ export default function EventDashboardClient({
     <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
       
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "2rem" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "2rem", flexWrap: "wrap" }}>
         <Link href="/admin/events" style={{
           display: "flex", alignItems: "center", justifyContent: "center",
           width: "40px", height: "40px", backgroundColor: "rgba(255,255,255,0.05)",
@@ -165,7 +194,7 @@ export default function EventDashboardClient({
         }}>
           <ArrowLeft size={20} />
         </Link>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1, minWidth: "260px" }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Activity size={22} color="#3b82f6" />
             <h1 style={{ fontSize: "1.65rem", fontWeight: 800, margin: 0, color: "white" }}>
@@ -173,40 +202,63 @@ export default function EventDashboardClient({
             </h1>
           </div>
           <p style={{ color: "rgba(255,255,255,0.65)", margin: 0, fontSize: "0.85rem" }}>
-            Aforo y capacidad, lista de asistentes que han ingresado en vivo, personal de puerta asignado y ventas.
+            Aforo y capacidad, lista de asistentes en vivo, cortesías emitidas, personal de puerta y ventas.
           </p>
         </div>
-        <Link href={`/admin/events/${event.id}/staff`} style={{
-          display: 'flex', alignItems: 'center', gap: '0.5rem',
-          backgroundColor: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4',
-          border: '1px solid rgba(6, 182, 212, 0.3)',
-          padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-md)',
-          textDecoration: 'none', fontWeight: 700, transition: 'background-color 0.2s'
-        }}
-        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(6, 182, 212, 0.25)'}
-        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(6, 182, 212, 0.15)'}
-        >
-          <Users size={18} /> Personal de Puerta
-        </Link>
-        <Link href={`/admin/events/${event.id}/scan`} style={{
-          display: 'flex', alignItems: 'center', gap: '0.5rem',
-          backgroundColor: 'var(--color-magenta)', color: 'white',
-          padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-md)',
-          textDecoration: 'none', fontWeight: 600, transition: 'opacity 0.2s'
-        }}
-        onMouseOver={(e) => e.currentTarget.style.opacity = '0.9'}
-        onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
-        >
-          <ScanLine size={18} /> Abrir Escáner
-        </Link>
+
+        {/* Action Buttons */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+          <button
+            onClick={() => setIsCourtesyModalOpen(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.5rem',
+              backgroundColor: 'rgba(236, 72, 153, 0.15)', color: '#ec4899',
+              border: '1px solid rgba(236, 72, 153, 0.35)',
+              padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-md)',
+              fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+              fontSize: '0.875rem'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(236, 72, 153, 0.25)'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(236, 72, 153, 0.15)'}
+          >
+            <Gift size={18} /> + Emitir Cortesías
+          </button>
+
+          <Link href={`/admin/events/${event.id}/staff`} style={{
+            display: 'flex', alignItems: 'center', gap: '0.5rem',
+            backgroundColor: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4',
+            border: '1px solid rgba(6, 182, 212, 0.3)',
+            padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-md)',
+            textDecoration: 'none', fontWeight: 700, transition: 'background-color 0.2s',
+            fontSize: '0.875rem'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(6, 182, 212, 0.25)'}
+          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(6, 182, 212, 0.15)'}
+          >
+            <Users size={18} /> Personal de Puerta
+          </Link>
+
+          <Link href={`/admin/events/${event.id}/scan`} style={{
+            display: 'flex', alignItems: 'center', gap: '0.5rem',
+            backgroundColor: 'var(--color-magenta)', color: 'white',
+            padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-md)',
+            textDecoration: 'none', fontWeight: 600, transition: 'opacity 0.2s',
+            fontSize: '0.875rem'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.opacity = '0.9'}
+          onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
+          >
+            <ScanLine size={18} /> Abrir Escáner
+          </Link>
+        </div>
       </div>
 
       {/* KPI Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))", gap: "1rem", marginBottom: "2rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: "1rem", marginBottom: "2rem" }}>
         <div style={{ backgroundColor: "rgba(34, 197, 94, 0.1)", border: "1px solid rgba(34, 197, 94, 0.2)", borderRadius: "var(--radius-lg)", padding: "1.25rem", minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#22c55e", marginBottom: "0.5rem" }}>
             <DollarSign size={20} />
-            <h3 style={{ fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", margin: 0 }}>Ingresos Totales</h3>
+            <h3 style={{ fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", margin: 0 }}>Ingresos Ventas</h3>
           </div>
           <div style={{ fontSize: "clamp(1.5rem, 5vw, 2.5rem)", fontWeight: 800, color: "white", wordBreak: "break-word" }}>
             {formatCurrency(totalRevenue)}
@@ -216,20 +268,30 @@ export default function EventDashboardClient({
         <div style={{ backgroundColor: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.2)", borderRadius: "var(--radius-lg)", padding: "1.25rem", minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#3b82f6", marginBottom: "0.5rem" }}>
             <Ticket size={20} />
-            <h3 style={{ fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", margin: 0 }}>Boletas Vendidas</h3>
+            <h3 style={{ fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", margin: 0 }}>Ventas Comerciales</h3>
           </div>
           <div style={{ fontSize: "clamp(1.5rem, 5vw, 2.5rem)", fontWeight: 800, color: "white", wordBreak: "break-word" }}>
-            {totalTicketsSold}
+            {commercialTickets.length} <span style={{ fontSize: "0.95rem", opacity: 0.5, fontWeight: 500 }}>boletas</span>
+          </div>
+        </div>
+
+        <div style={{ backgroundColor: "rgba(168, 85, 247, 0.1)", border: "1px solid rgba(168, 85, 247, 0.25)", borderRadius: "var(--radius-lg)", padding: "1.25rem", minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#c084fc", marginBottom: "0.5rem" }}>
+            <Gift size={20} />
+            <h3 style={{ fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", margin: 0 }}>Cortesías Emitidas</h3>
+          </div>
+          <div style={{ fontSize: "clamp(1.5rem, 5vw, 2.5rem)", fontWeight: 800, color: "white", wordBreak: "break-word" }}>
+            {courtesyTickets.length} <span style={{ fontSize: "0.95rem", opacity: 0.5, fontWeight: 500 }}>invitados</span>
           </div>
         </div>
 
         <div style={{ backgroundColor: "rgba(236, 72, 153, 0.1)", border: "1px solid rgba(236, 72, 153, 0.2)", borderRadius: "var(--radius-lg)", padding: "1.25rem", minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#ec4899", marginBottom: "0.5rem" }}>
             <ScanLine size={20} />
-            <h3 style={{ fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", margin: 0 }}>Aforo Ingresado (Escaneado)</h3>
+            <h3 style={{ fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", margin: 0 }}>Aforo Ingresado (Puerta)</h3>
           </div>
           <div style={{ fontSize: "clamp(1.5rem, 5vw, 2.5rem)", fontWeight: 800, color: "white", wordBreak: "break-word" }}>
-            {totalScanned} <span style={{ fontSize: "1rem", opacity: 0.5, fontWeight: 500 }}>/ {totalAforo > 0 ? totalAforo : totalTicketsSold}</span>
+            {totalScanned} <span style={{ fontSize: "1rem", opacity: 0.5, fontWeight: 500 }}>/ {totalAforo > 0 ? totalAforo : totalTicketsCount}</span>
           </div>
         </div>
       </div>
@@ -245,7 +307,7 @@ export default function EventDashboardClient({
               </h3>
             </div>
             <p style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)", marginTop: "0.35rem", marginBottom: 0 }}>
-              Registro de boletas escaneadas en taquilla y verificación de asistentes activos en sala.
+              Registro de boletas comerciales y de cortesía, estado del QR antifraude y verificación en sala.
             </p>
           </div>
 
@@ -263,7 +325,7 @@ export default function EventDashboardClient({
               fontSize: "0.825rem"
             }}>
               <CheckCircle2 size={15} />
-              {totalScanned} / {totalAforo > 0 ? totalAforo : totalTicketsSold} Ingresados
+              {totalScanned} / {totalAforo > 0 ? totalAforo : totalTicketsCount} Ingresados
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.75rem", color: "#22c55e" }}>
@@ -275,7 +337,7 @@ export default function EventDashboardClient({
 
         {/* Filter & Search Bar */}
         <div style={{ padding: "1rem 1.5rem", backgroundColor: "rgba(255,255,255,0.015)", borderBottom: "1px solid var(--color-border, #333)", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
             <button
               onClick={() => setAttendeeFilter("all")}
               style={{
@@ -321,6 +383,21 @@ export default function EventDashboardClient({
             >
               🟡 Pendientes ({Math.max(0, tickets.length - totalScanned)})
             </button>
+            <button
+              onClick={() => setAttendeeFilter("courtesy")}
+              style={{
+                padding: "0.4rem 0.85rem",
+                borderRadius: "0.5rem",
+                border: attendeeFilter === "courtesy" ? "1px solid #a855f7" : "1px solid rgba(255,255,255,0.1)",
+                backgroundColor: attendeeFilter === "courtesy" ? "rgba(168, 85, 247, 0.2)" : "rgba(255,255,255,0.04)",
+                color: attendeeFilter === "courtesy" ? "#c084fc" : "rgba(255,255,255,0.6)",
+                fontWeight: 700,
+                fontSize: "0.8rem",
+                cursor: "pointer"
+              }}
+            >
+              🎁 Cortesías ({courtesyTickets.length})
+            </button>
           </div>
 
           <div style={{ position: "relative", minWidth: "260px" }}>
@@ -345,12 +422,13 @@ export default function EventDashboardClient({
 
         {/* Table of Attendees */}
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "680px" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "750px" }}>
             <thead>
               <tr style={{ backgroundColor: "rgba(255,255,255,0.02)", borderBottom: "1px solid var(--color-border, #333)" }}>
                 <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.85rem" }}>Asistente</th>
-                <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.85rem" }}>Localidad</th>
+                <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.85rem" }}>Localidad / Tipo</th>
                 <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.85rem" }}>Estado en Puerta</th>
+                <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.85rem" }}>Seguridad QR</th>
                 <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.85rem" }}>Hora de Ingreso</th>
                 <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.85rem" }}>Validado en Puerta Por</th>
                 <th style={{ padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600, fontSize: "0.85rem", textAlign: "right" }}>Ticket ID</th>
@@ -360,16 +438,19 @@ export default function EventDashboardClient({
               {(() => {
                 const filtered = tickets.filter(t => {
                   const isScanned = t.status === "scanned" || Boolean(t.scanned_at);
+                  const isCourtesy = courtesyOrdersMap.has(t.order_id);
                   if (attendeeFilter === "active" && !isScanned) return false;
                   if (attendeeFilter === "pending" && isScanned) return false;
+                  if (attendeeFilter === "courtesy" && !isCourtesy) return false;
 
                   if (attendeeSearch.trim()) {
                     const q = attendeeSearch.toLowerCase().trim();
                     const relatedOrder = orders.find(o => o.id === t.order_id);
                     const name = (t.assigned_name || relatedOrder?.customer_name || "").toLowerCase();
                     const email = (t.assigned_email || relatedOrder?.customer_email || "").toLowerCase();
+                    const reason = (relatedOrder?.shipping_city || "").toLowerCase();
                     const shortId = t.id.slice(0, 8).toLowerCase();
-                    return name.includes(q) || email.includes(q) || shortId.includes(q);
+                    return name.includes(q) || email.includes(q) || reason.includes(q) || shortId.includes(q);
                   }
                   return true;
                 });
@@ -377,7 +458,7 @@ export default function EventDashboardClient({
                 if (filtered.length === 0) {
                   return (
                     <tr>
-                      <td colSpan={6} style={{ padding: "2.5rem", textAlign: "center", color: "var(--color-text-secondary)" }}>
+                      <td colSpan={7} style={{ padding: "2.5rem", textAlign: "center", color: "var(--color-text-secondary)" }}>
                         {attendeeSearch ? "No se encontraron asistentes con ese criterio." : "No hay boletas en esta categoría."}
                       </td>
                     </tr>
@@ -387,32 +468,66 @@ export default function EventDashboardClient({
                 return filtered.map((t) => {
                   const isScanned = t.status === "scanned" || Boolean(t.scanned_at);
                   const relatedOrder = orders.find(o => o.id === t.order_id);
+                  const isCourtesy = courtesyOrdersMap.has(t.order_id);
                   const attendeeName = t.assigned_name || relatedOrder?.customer_name || "Titular de Cuenta";
                   const attendeeEmail = t.assigned_email || relatedOrder?.customer_email || "-";
                   const tier = initialTiers.find(ti => ti.id === t.tier_id || ti.id === t.ticket_tier_id);
                   const staffUser = t.scanned_by ? staffUsersMap[t.scanned_by] : null;
+                  const isQrLocked = t.qr_dispatched === false;
 
                   return (
                     <tr key={t.id} style={{
                       borderBottom: "1px solid var(--color-border, #333)",
-                      backgroundColor: isScanned ? "rgba(34, 197, 94, 0.04)" : "transparent"
+                      backgroundColor: isScanned ? "rgba(34, 197, 94, 0.04)" : isCourtesy ? "rgba(168, 85, 247, 0.02)" : "transparent"
                     }}>
                       <td style={{ padding: "1rem" }}>
-                        <div style={{ fontWeight: 700, color: "white" }}>{attendeeName}</div>
-                        <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>{attendeeEmail}</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <div>
+                            <div style={{ fontWeight: 700, color: "white" }}>{attendeeName}</div>
+                            <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>{attendeeEmail}</div>
+                            {isCourtesy && (
+                              <div style={{
+                                marginTop: "3px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px",
+                                fontSize: "0.7rem",
+                                fontWeight: 700,
+                                color: "#c084fc",
+                                backgroundColor: "rgba(168, 85, 247, 0.12)",
+                                padding: "2px 6px",
+                                borderRadius: "4px",
+                                border: "1px solid rgba(168, 85, 247, 0.25)"
+                              }}>
+                                🎁 Cortesía: {relatedOrder?.shipping_city || "Invitado"}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </td>
                       <td style={{ padding: "1rem" }}>
-                        <span style={{
-                          fontSize: "0.75rem",
-                          fontWeight: 700,
-                          padding: "0.2rem 0.5rem",
-                          borderRadius: "4px",
-                          backgroundColor: "rgba(0, 240, 255, 0.1)",
-                          color: "#00f0ff",
-                          border: "1px solid rgba(0, 240, 255, 0.25)"
-                        }}>
-                          {tier?.name || "General"}
-                        </span>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "3px", alignItems: "flex-start" }}>
+                          <span style={{
+                            fontSize: "0.75rem",
+                            fontWeight: 700,
+                            padding: "0.2rem 0.5rem",
+                            borderRadius: "4px",
+                            backgroundColor: "rgba(0, 240, 255, 0.1)",
+                            color: "#00f0ff",
+                            border: "1px solid rgba(0, 240, 255, 0.25)"
+                          }}>
+                            {tier?.name || "General"}
+                          </span>
+                          {isCourtesy ? (
+                            <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)" }}>
+                              Cortesía ($0 COP)
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)" }}>
+                              {formatCurrency(Number(tier?.price || 0))}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td style={{ padding: "1rem" }}>
                         {isScanned ? (
@@ -446,6 +561,66 @@ export default function EventDashboardClient({
                             <Clock size={13} /> PENDIENTE
                           </span>
                         )}
+                      </td>
+                      <td style={{ padding: "1rem" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                          {isQrLocked ? (
+                            <span style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              padding: "0.25rem 0.55rem",
+                              borderRadius: "999px",
+                              fontSize: "0.72rem",
+                              fontWeight: 700,
+                              backgroundColor: "rgba(245, 158, 11, 0.15)",
+                              color: "#f59e0b",
+                              border: "1px solid rgba(245, 158, 11, 0.3)"
+                            }} title="QR bloqueado hasta 24h antes del evento para prevenir fraudes">
+                              <Lock size={12} /> Bloqueado (24h)
+                            </span>
+                          ) : (
+                            <span style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              padding: "0.25rem 0.55rem",
+                              borderRadius: "999px",
+                              fontSize: "0.72rem",
+                              fontWeight: 700,
+                              backgroundColor: "rgba(34, 197, 94, 0.15)",
+                              color: "#22c55e",
+                              border: "1px solid rgba(34, 197, 94, 0.3)"
+                            }}>
+                              <CheckCircle2 size={12} /> QR Activo
+                            </span>
+                          )}
+
+                          <button
+                            onClick={() => handleToggleTicketLock(t.id, !isQrLocked)}
+                            disabled={isLockingTicketId === t.id}
+                            title={isQrLocked ? "Desbloquear QR ahora mismo" : "Bloquear QR por seguridad"}
+                            style={{
+                              padding: "0.2rem 0.45rem",
+                              borderRadius: "4px",
+                              backgroundColor: "rgba(255,255,255,0.06)",
+                              border: "1px solid rgba(255,255,255,0.15)",
+                              color: isQrLocked ? "#22c55e" : "#f59e0b",
+                              fontSize: "0.7rem",
+                              cursor: "pointer",
+                              display: "inline-flex",
+                              alignItems: "center"
+                            }}
+                          >
+                            {isLockingTicketId === t.id ? (
+                              "..."
+                            ) : isQrLocked ? (
+                              <Unlock size={12} />
+                            ) : (
+                              <Lock size={12} />
+                            )}
+                          </button>
+                        </div>
                       </td>
                       <td style={{ padding: "1rem", color: isScanned ? "white" : "var(--color-text-secondary)", fontSize: "0.85rem", fontFamily: isScanned ? "monospace" : "inherit" }}>
                         {t.scanned_at ? new Date(t.scanned_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Pendiente"}
@@ -839,6 +1014,14 @@ export default function EventDashboardClient({
           </table>
         </div>
       </div>
+
+      {/* Courtesy Tickets Issue Modal */}
+      <IssueCourtesyModal
+        isOpen={isCourtesyModalOpen}
+        onClose={() => setIsCourtesyModalOpen(false)}
+        event={event}
+        tiers={initialTiers}
+      />
     </div>
   );
 }

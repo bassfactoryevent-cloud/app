@@ -413,3 +413,50 @@ export const getSupabasePasswordResetTemplate = () => {
   `;
   return baseTemplate(`Restablece tu contraseña`, content);
 };
+
+export const getCourtesyInvitationEmail = (
+  recipientName: string,
+  eventTitle: string,
+  tierName: string,
+  eventDateStr: string,
+  locationName: string,
+  reasonLabel: string,
+  isLocked: boolean
+) => {
+  const content = `
+    <h1 style="color: #ec4899;">🎟️ Invitación Oficial: Cortesía</h1>
+    <p>Hola <strong>${recipientName}</strong>,</p>
+    <p>Has recibido una cortesía oficial de la organización para asistir a <strong>${eventTitle}</strong>.</p>
+    
+    <div style="background-color: #1a1a24; border: 1px solid #333344; border-radius: 8px; padding: 16px; margin: 20px 0;">
+      <p style="margin: 4px 0; color: #ffffff;"><strong>Evento:</strong> ${eventTitle}</p>
+      <p style="margin: 4px 0; color: #ffffff;"><strong>Localidad:</strong> ${tierName}</p>
+      <p style="margin: 4px 0; color: #ffffff;"><strong>Fecha:</strong> ${eventDateStr}</p>
+      <p style="margin: 4px 0; color: #ffffff;"><strong>Lugar:</strong> ${locationName}</p>
+      <p style="margin: 4px 0; color: #ec4899;"><strong>Distintivo:</strong> Cortesía (${reasonLabel})</p>
+    </div>
+
+    ${isLocked ? `
+      <div style="background-color: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; padding: 12px; margin: 16px 0;">
+        <p style="margin: 0; font-size: 14px; color: #fcd34d;">
+          🔒 <strong>Seguridad Antifraude Activada:</strong><br/>
+          Tu entrada ya está garantizada y registrada a tu nombre. Por políticas de seguridad, tu código QR digital se desbloqueará automáticamente <strong>24 horas antes del evento</strong> en tu perfil de Bassfactory.
+        </p>
+      </div>
+    ` : `
+      <p style="color: #4ade80;">✅ Tu código QR de acceso ya se encuentra listo y activado para el ingreso al evento.</p>
+    `}
+
+    <center style="margin-top: 25px;">
+      <a href="${APP_URL}/account/tickets" class="button" style="background-color: #ec4899; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block;">
+        Ver Mi Entrada en Bassfactory
+      </a>
+    </center>
+
+    <p style="font-size: 13px; color: #71717a; margin-top: 24px;">
+      ¿Deseas transferir o repartir esta entrada? Puedes transferirla a un amigo en cualquier momento desde tu cuenta en <a href="${APP_URL}/account/tickets" style="color: #ec4899;">bassfactory.co/account/tickets</a>.
+    </p>
+  `;
+  return baseTemplate(`Invitación Oficial: ${eventTitle}`, content);
+};
+
