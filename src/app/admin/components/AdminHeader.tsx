@@ -18,13 +18,35 @@ import {
   CheckCircle2,
   Activity,
   ExternalLink,
-  ChevronDown
+  ChevronDown,
+  DollarSign,
+  Package,
+  ArrowRightLeft,
+  CheckCheck
 } from "lucide-react";
 import { CommandPaletteModal } from "./CommandPaletteModal";
+import { getAdminLiveNotifications, AdminNotificationItem } from "../actions/getAdminNotifications";
 
 interface AdminHeaderProps {
   profile: any;
   onOpenMobileMenu: () => void;
+}
+
+function formatRelativeTime(dateStr: string): string {
+  try {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 1) return "Justo ahora";
+    if (minutes < 60) return `Hace ${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `Hace ${hours} h`;
+    const days = Math.floor(hours / 24);
+    if (days === 1) return "Ayer";
+    if (days < 7) return `Hace ${days} d`;
+    return new Date(dateStr).toLocaleDateString("es-CO", { day: "numeric", month: "short" });
+  } catch {
+    return "";
+  }
 }
 
 export function AdminHeader({ profile, onOpenMobileMenu }: AdminHeaderProps) {
@@ -35,6 +57,12 @@ export function AdminHeader({ profile, onOpenMobileMenu }: AdminHeaderProps) {
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState("");
+
+  // Notifications State
+  const [notifications, setNotifications] = useState<AdminNotificationItem[]>([]);
+  const [activeTab, setActiveTab] = useState<"all" | "sale" | "event" | "user">("all");
+  const [lastReadTime, setLastReadTime] = useState<number>(0);
+  const [isLoadingNotifs, setIsLoadingNotifs] = useState(false);
 
   // Live Clock (Colombia COT / UTC-5)
   useEffect(() => {
@@ -58,11 +86,62 @@ export function AdminHeader({ profile, onOpenMobileMenu }: AdminHeaderProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // Close dropdowns on route change or click outside
+  // Fetch Notifications on load & interval
+  const loadNotifications = async () => {
+    try {
+      setIsLoadingNotifs(true);
+      const data = await getAdminLiveNotifications();
+      setNotifications(data);
+    } catch (err) {
+      console.error("Error loading admin notifications:", err);
+    } finally {
+      setIsLoadingNotifs(false);
+    }
+  };
+
+  useEffect(() => {
+    loadNotifications();
+    const notifInterval = setInterval(loadNotifications, 45000);
+
+    // Read stored last read timestamp
+    try {
+      const stored = localStorage.getItem("bassfactory_admin_notifs_read");
+      if (stored) {
+        setLastReadTime(Number(stored));
+      }
+    } catch {}
+
+    return () => clearInterval(notifInterval);
+  }, []);
+
+  // Mark all as read
+  const handleMarkAsRead = () => {
+    const now = Date.now();
+    setLastReadTime(now);
+    try {
+      localStorage.setItem("bassfactory_admin_notifs_read", String(now));
+    } catch {}
+  };
+
+  // Close dropdowns on route change
   useEffect(() => {
     setIsQuickCreateOpen(false);
     setIsAlertsOpen(false);
   }, [pathname]);
+
+  // Count unread
+  const unreadCount = notifications.filter(
+    (n) => new Date(n.timestamp).getTime() > lastReadTime
+  ).length;
+
+  // Filtered Notifications
+  const filteredNotifs = notifications.filter((n) => {
+    if (activeTab === "all") return true;
+    if (activeTab === "sale") return n.category === "sale" || n.category === "shipping";
+    if (activeTab === "event") return n.category === "event" || n.category === "transfer";
+    if (activeTab === "user") return n.category === "user";
+    return true;
+  });
 
   // Dynamic Breadcrumb Resolver
   const getBreadcrumbs = () => {
@@ -275,7 +354,7 @@ export function AdminHeader({ profile, onOpenMobileMenu }: AdminHeaderProps) {
           </button>
         </div>
 
-        {/* RIGHT: Live Status + Clock + Quick Create Button + Notifications */}
+        {/* RIGHT: Live Status + Clock + Quick Create Button + Interactive Notifications */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexShrink: 0 }}>
           {/* Live System Health Badge */}
           <div
@@ -467,53 +546,86 @@ export function AdminHeader({ profile, onOpenMobileMenu }: AdminHeaderProps) {
             )}
           </div>
 
-          {/* Operational Alerts Bell */}
+          {/* Interactive Notifications Center Bell */}
           <div style={{ position: "relative" }}>
             <button
               onClick={() => {
-                setIsAlertsOpen(!isAlertsOpen);
+                const nextState = !isAlertsOpen;
+                setIsAlertsOpen(nextState);
                 setIsQuickCreateOpen(false);
+                if (nextState) {
+                  loadNotifications();
+                }
               }}
-              title="Notificaciones y Estado del Sistema"
+              title="Centro de Notificaciones y Actividad"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: "34px",
-                height: "34px",
-                borderRadius: "0.5rem",
-                backgroundColor: "rgba(255, 255, 255, 0.04)",
+                width: "36px",
+                height: "36px",
+                borderRadius: "0.55rem",
+                backgroundColor: isAlertsOpen ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.04)",
                 border: "1px solid rgba(255, 255, 255, 0.08)",
-                color: "rgba(255, 255, 255, 0.7)",
+                color: isAlertsOpen ? "#FFFFFF" : "rgba(255, 255, 255, 0.75)",
                 cursor: "pointer",
                 position: "relative",
                 transition: "all 0.2s"
               }}
               onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.08)";
+                e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.09)";
                 e.currentTarget.style.color = "#FFFFFF";
               }}
               onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.04)";
-                e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
+                if (!isAlertsOpen) {
+                  e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.04)";
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 0.75)";
+                }
               }}
             >
-              <Bell size={16} />
-              {/* Green indicator dot */}
-              <span
-                style={{
-                  position: "absolute",
-                  top: "6px",
-                  right: "6px",
-                  width: "6px",
-                  height: "6px",
-                  borderRadius: "50%",
-                  backgroundColor: "#22c55e",
-                  boxShadow: "0 0 6px #22c55e"
-                }}
-              />
+              <Bell size={17} />
+              
+              {/* Dynamic Unread Badge */}
+              {unreadCount > 0 ? (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "-4px",
+                    right: "-4px",
+                    minWidth: "18px",
+                    height: "18px",
+                    padding: "0 4px",
+                    borderRadius: "999px",
+                    backgroundColor: "var(--color-magenta, #ec4899)",
+                    color: "white",
+                    fontSize: "0.65rem",
+                    fontWeight: 900,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 0 10px rgba(236, 72, 153, 0.6)",
+                    border: "2px solid #0c0c10"
+                  }}
+                >
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              ) : (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "7px",
+                    right: "7px",
+                    width: "6px",
+                    height: "6px",
+                    borderRadius: "50%",
+                    backgroundColor: "#22c55e",
+                    boxShadow: "0 0 6px #22c55e"
+                  }}
+                />
+              )}
             </button>
 
+            {/* Notifications Dropdown Panel */}
             {isAlertsOpen && (
               <div
                 style={{
@@ -521,45 +633,190 @@ export function AdminHeader({ profile, onOpenMobileMenu }: AdminHeaderProps) {
                   right: 0,
                   top: "100%",
                   marginTop: "0.5rem",
-                  width: "290px",
-                  backgroundColor: "rgba(18, 18, 22, 0.98)",
+                  width: "380px",
+                  maxWidth: "92vw",
+                  backgroundColor: "rgba(18, 18, 24, 0.98)",
                   border: "1px solid rgba(255, 255, 255, 0.12)",
-                  borderRadius: "0.75rem",
-                  boxShadow: "0 15px 35px rgba(0, 0, 0, 0.6)",
-                  padding: "0.85rem",
-                  zIndex: 50
+                  borderRadius: "1rem",
+                  boxShadow: "0 25px 60px -10px rgba(0, 0, 0, 0.8)",
+                  overflow: "hidden",
+                  zIndex: 60
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.65rem" }}>
-                  <span style={{ fontSize: "0.8rem", fontWeight: 800, color: "#FFFFFF", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    Estado del Ecosistema
-                  </span>
-                  <span style={{ fontSize: "0.7rem", color: "#4ade80", fontWeight: 700 }}>
-                    100% Operativo
-                  </span>
+                {/* Header */}
+                <div style={{
+                  padding: "0.9rem 1.1rem",
+                  borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between"
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <span style={{ fontSize: "0.875rem", fontWeight: 800, color: "#FFFFFF" }}>
+                      Actividad en Vivo
+                    </span>
+                    {unreadCount > 0 && (
+                      <span style={{
+                        fontSize: "0.68rem",
+                        fontWeight: 800,
+                        padding: "0.1rem 0.45rem",
+                        borderRadius: "999px",
+                        backgroundColor: "rgba(236, 72, 153, 0.2)",
+                        color: "var(--color-magenta, #ec4899)",
+                        border: "1px solid rgba(236, 72, 153, 0.4)"
+                      }}>
+                        {unreadCount} nuevas
+                      </span>
+                    )}
+                  </div>
+
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={handleMarkAsRead}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        color: "rgba(255, 255, 255, 0.5)",
+                        fontSize: "0.72rem",
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        fontWeight: 600
+                      }}
+                      onMouseOver={(e) => (e.currentTarget.style.color = "#FFFFFF")}
+                      onMouseOut={(e) => (e.currentTarget.style.color = "rgba(255, 255, 255, 0.5)")}
+                    >
+                      <CheckCheck size={13} />
+                      Marcar leídas
+                    </button>
+                  )}
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", fontSize: "0.76rem" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "rgba(255, 255, 255, 0.8)" }}>
-                    <CheckCircle2 size={13} color="#22c55e" />
-                    <span>Pasarela Bold (Producción)</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "rgba(255, 255, 255, 0.8)" }}>
-                    <CheckCircle2 size={13} color="#22c55e" />
-                    <span>Base de Datos Supabase (Sync)</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "rgba(255, 255, 255, 0.8)" }}>
-                    <CheckCircle2 size={13} color="#22c55e" />
-                    <span>Servicio de Correos Resend</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "rgba(255, 255, 255, 0.8)" }}>
-                    <CheckCircle2 size={13} color="#22c55e" />
-                    <span>Control de Escáner Puerta</span>
-                  </div>
+                {/* Filter Tabs */}
+                <div style={{
+                  display: "flex",
+                  gap: "0.3rem",
+                  padding: "0.5rem 0.85rem",
+                  backgroundColor: "rgba(0, 0, 0, 0.3)",
+                  borderBottom: "1px solid rgba(255, 255, 255, 0.05)"
+                }}>
+                  {[
+                    { id: "all", label: `Todas (${notifications.length})` },
+                    { id: "sale", label: "💰 Ventas" },
+                    { id: "event", label: "🎪 Eventos" },
+                    { id: "user", label: "👤 Usuarios" },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id as any)}
+                      style={{
+                        padding: "0.3rem 0.6rem",
+                        borderRadius: "0.4rem",
+                        fontSize: "0.74rem",
+                        fontWeight: activeTab === tab.id ? 700 : 500,
+                        backgroundColor: activeTab === tab.id ? "rgba(255, 255, 255, 0.12)" : "transparent",
+                        color: activeTab === tab.id ? "#FFFFFF" : "rgba(255, 255, 255, 0.55)",
+                        border: "none",
+                        cursor: "pointer",
+                        transition: "all 0.15s ease"
+                      }}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
                 </div>
 
-                <div style={{ marginTop: "0.75rem", paddingTop: "0.6rem", borderTop: "1px solid rgba(255, 255, 255, 0.08)", fontSize: "0.7rem", color: "rgba(255, 255, 255, 0.45)", textAlign: "center" }}>
-                  Transacciones en tiempo real activas
+                {/* Notifications Scroll List */}
+                <div style={{ maxHeight: "360px", overflowY: "auto", padding: "0.4rem" }}>
+                  {filteredNotifs.length === 0 ? (
+                    <div style={{ padding: "2.5rem 1rem", textAlign: "center", color: "rgba(255, 255, 255, 0.4)", fontSize: "0.825rem" }}>
+                      {isLoadingNotifs ? "Cargando actividad..." : "No hay notificaciones recientes en esta sección."}
+                    </div>
+                  ) : (
+                    filteredNotifs.map((item) => {
+                      const isUnread = new Date(item.timestamp).getTime() > lastReadTime;
+
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() => {
+                            setIsAlertsOpen(false);
+                            router.push(item.href);
+                          }}
+                          style={{
+                            padding: "0.7rem 0.85rem",
+                            borderRadius: "0.6rem",
+                            backgroundColor: isUnread ? "rgba(236, 72, 153, 0.06)" : "transparent",
+                            border: `1px solid ${isUnread ? "rgba(236, 72, 153, 0.15)" : "transparent"}`,
+                            marginBottom: "0.35rem",
+                            cursor: "pointer",
+                            transition: "all 0.15s ease"
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.06)";
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.backgroundColor = isUnread ? "rgba(236, 72, 153, 0.06)" : "transparent";
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "0.5rem", marginBottom: "0.2rem" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", minWidth: 0 }}>
+                              <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "#FFFFFF", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {item.title}
+                              </span>
+                            </div>
+
+                            <span style={{ fontSize: "0.68rem", color: "rgba(255, 255, 255, 0.4)", whiteSpace: "nowrap", flexShrink: 0 }}>
+                              {formatRelativeTime(item.timestamp)}
+                            </span>
+                          </div>
+
+                          <p style={{ margin: "0 0 0.4rem 0", fontSize: "0.75rem", color: "rgba(255, 255, 255, 0.65)", lineHeight: 1.35 }}>
+                            {item.description}
+                          </p>
+
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            {item.badge && (
+                              <span style={{
+                                fontSize: "0.65rem",
+                                fontWeight: 800,
+                                padding: "0.15rem 0.45rem",
+                                borderRadius: "4px",
+                                backgroundColor: item.badgeColor ? `${item.badgeColor}22` : "rgba(255, 255, 255, 0.08)",
+                                color: item.badgeColor || "#FFFFFF",
+                                border: `1px solid ${item.badgeColor ? `${item.badgeColor}55` : "rgba(255, 255, 255, 0.15)"}`
+                              }}>
+                                {item.badge}
+                              </span>
+                            )}
+
+                            <span style={{ fontSize: "0.7rem", color: "var(--color-magenta, #ec4899)", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "2px" }}>
+                              Ver detalles →
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Footer Status */}
+                <div style={{
+                  padding: "0.6rem 0.9rem",
+                  backgroundColor: "rgba(0, 0, 0, 0.4)",
+                  borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  fontSize: "0.7rem",
+                  color: "rgba(255, 255, 255, 0.45)"
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                    <CheckCircle2 size={12} color="#22c55e" />
+                    <span>Bold, Supabase y Resend online</span>
+                  </div>
+                  <span>Sincronización en vivo</span>
                 </div>
               </div>
             )}
