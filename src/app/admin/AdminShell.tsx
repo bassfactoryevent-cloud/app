@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 import styles from "./AdminLayout.module.css";
 import { signOut } from "../(auth)/actions";
+import { AdminHeader } from "./components/AdminHeader";
+import { AdminFooter } from "./components/AdminFooter";
 
 interface AdminShellProps {
   profile: any;
@@ -162,16 +164,6 @@ export function AdminShell({ profile, children }: AdminShellProps) {
         },
       ],
     },
-  ];
-
-  // Quick tabs for Topbar Navbar (Desktop)
-  const topbarQuickLinks = [
-    { name: "Dashboard", href: "/admin", exact: true },
-    { name: "Eventos", href: "/admin/events" },
-    { name: "Finanzas", href: "/admin/finances" },
-    { name: "Merch", href: "/admin/merch" },
-    { name: "Usuarios", href: "/admin/users" },
-    { name: "DJs", href: "/admin/djs" },
   ];
 
   // Mobile Bottom Navigation Key Items
@@ -409,134 +401,22 @@ export function AdminShell({ profile, children }: AdminShellProps) {
 
       {/* 2. MAIN VIEW AREA */}
       <div className={styles.mainContent}>
-        {/* TOPBAR NAVBAR */}
-        <header className={styles.topbar}>
-          {/* Left: Mobile Menu Trigger + Logo + Desktop Nav */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-            {/* Hamburger button (Mobile only) */}
-            <button
-              onClick={() => setIsDrawerOpen(true)}
-              className={styles.mobileMenuButton}
-              aria-label="Abrir menú de administración"
-            >
-              <Menu size={22} />
-            </button>
+        {/* EXECUTIVE ADMIN HEADER */}
+        <AdminHeader
+          profile={profile}
+          onOpenMobileMenu={() => setIsDrawerOpen(true)}
+        />
 
-            {/* Logo Link */}
-            <Link href="/admin" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
-              <Image
-                src="/Bass-Factory-Blanco-Sin-Letras.png"
-                alt="Bassfactory Admin Logo"
-                width={120}
-                height={38}
-                style={{ width: "105px", height: "auto", objectFit: "contain" }}
-                priority
-              />
-              <span className={styles.adminBadge}>
-                ADMIN
-              </span>
-            </Link>
-
-            {/* Desktop Navbar Links next to logo */}
-            <nav className={styles.topbarNav}>
-              {topbarQuickLinks.map((item) => {
-                const active = isLinkActive(item.href, item.exact);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`${styles.topbarLink} ${active ? styles.topbarLinkActive : ""}`}
-                  >
-                    {item.name}
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
-
-          {/* Right: Store Link & User Profile */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            {/* Link to public store */}
-            <Link
-              href="/"
-              className={styles.storeLink}
-              title="Ir a la tienda y eventos públicos"
-            >
-              <ExternalLink size={15} />
-              <span className={styles.hideOnMobile}>Ver Tienda</span>
-            </Link>
-
-            {/* User Avatar Chip */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                padding: "0.3rem 0.6rem",
-                borderRadius: "999px",
-                backgroundColor: "rgba(255, 255, 255, 0.05)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-              }}
-            >
-              <div
-                style={{
-                  width: "28px",
-                  height: "28px",
-                  borderRadius: "50%",
-                  background: "linear-gradient(135deg, var(--color-magenta), #b90010)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: 800,
-                  fontSize: "0.75rem",
-                  color: "white",
-                }}
-              >
-                {(profile?.full_name || "A")[0].toUpperCase()}
-              </div>
-              <span
-                className={styles.hideOnMobile}
-                style={{ fontSize: "0.825rem", fontWeight: 600, color: "white" }}
-              >
-                {profile?.full_name?.split(" ")[0] || "Admin"}
-              </span>
+        {/* CONTENT AREA WITH INTEGRATED TECHNICAL FOOTER */}
+        <main className={styles.contentArea}>
+          <div style={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>
+            <div style={{ flex: 1, paddingBottom: "2rem" }}>
+              {children}
             </div>
 
-            {/* Logout button (Desktop) */}
-            <button
-              onClick={() => signOut()}
-              title="Cerrar sesión"
-              className={styles.hideOnMobile}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "34px",
-                height: "34px",
-                borderRadius: "var(--radius-md)",
-                backgroundColor: "transparent",
-                color: "rgba(255, 255, 255, 0.6)",
-                border: "none",
-                cursor: "pointer",
-                transition: "all 0.2s",
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.color = "#ff4d4d";
-                e.currentTarget.style.backgroundColor = "rgba(255, 77, 77, 0.1)";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.color = "rgba(255, 255, 255, 0.6)";
-                e.currentTarget.style.backgroundColor = "transparent";
-              }}
-            >
-              <LogOut size={16} />
-            </button>
+            {/* TECHNICAL ADMIN FOOTER */}
+            <AdminFooter profile={profile} />
           </div>
-        </header>
-
-        {/* CONTENT AREA */}
-        <main className={styles.contentArea}>
-          {children}
         </main>
       </div>
 
