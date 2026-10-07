@@ -96,14 +96,15 @@ export async function issueCourtesyTickets(params: IssueCourtesyParams) {
       }
     }
 
-    // 3. Buscar si el usuario ya existe en profiles
-    const { data: recipientProfile } = await adminDb
-      .from("profiles")
-      .select("id")
-      .eq("email", cleanEmail)
-      .maybeSingle();
-
-    const recipientUserId = recipientProfile?.id || null;
+    // 3. Buscar si el usuario ya existe en auth
+    let recipientUserId: string | null = null;
+    try {
+      const { data: authUsers } = await adminDb.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      const match = authUsers?.users?.find(u => u.email?.toLowerCase() === cleanEmail);
+      if (match) recipientUserId = match.id;
+    } catch {
+      // Ignorar si no se puede listar
+    }
 
     // 4. Crear Orden de Cortesía ($0 COP) en merch_orders
     const courtesyOrderId = crypto.randomUUID();

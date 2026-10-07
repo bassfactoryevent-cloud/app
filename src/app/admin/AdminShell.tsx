@@ -26,6 +26,7 @@ import {
   ChevronRight,
   ShieldCheck,
   Sparkles,
+  Crown,
 } from "lucide-react";
 import styles from "./AdminLayout.module.css";
 import { signOut } from "../(auth)/actions";
@@ -60,6 +61,7 @@ export function AdminShell({ profile, children }: AdminShellProps) {
 
   const isSuperAdmin =
     profile?.role === "superadmin" ||
+    profile?.email === "danielopzj@gmail.com" ||
     profile?.email === "admin@admin.com" ||
     profile?.email === "admin@admin";
 
@@ -227,16 +229,24 @@ export function AdminShell({ profile, children }: AdminShellProps) {
               marginTop: "0.5rem",
               padding: "0.2rem 0.55rem",
               borderRadius: "999px",
-              backgroundColor: "rgba(229, 9, 20, 0.12)",
-              border: "1px solid rgba(229, 9, 20, 0.3)",
-              color: "var(--color-magenta, #E50914)",
+              backgroundColor: isSuperAdmin ? "rgba(234, 179, 8, 0.15)" : "rgba(229, 9, 20, 0.12)",
+              border: isSuperAdmin ? "1px solid rgba(234, 179, 8, 0.35)" : "1px solid rgba(229, 9, 20, 0.3)",
+              color: isSuperAdmin ? "#eab308" : "var(--color-magenta, #E50914)",
               fontSize: "0.68rem",
               fontWeight: 800,
               letterSpacing: "0.06em",
               textTransform: "uppercase",
             }}
           >
-            <ShieldCheck size={11} /> Admin B2B
+            {isSuperAdmin ? (
+              <>
+                <Crown size={11} /> Super Admin
+              </>
+            ) : (
+              <>
+                <ShieldCheck size={11} /> Admin B2B
+              </>
+            )}
           </div>
         </div>
 

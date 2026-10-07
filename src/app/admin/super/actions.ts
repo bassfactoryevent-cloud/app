@@ -17,15 +17,20 @@ export async function checkSuperAdmin() {
   }
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, email, full_name")
+    .select("role, full_name")
     .eq("id", user.id)
     .single();
 
-  const isSuper = profile?.role === "superadmin" || user.email === "admin@admin.com" || user.email === "admin@admin";
+  const isSuper =
+    profile?.role === "superadmin" ||
+    user.email === "danielopzj@gmail.com" ||
+    user.email === "admin@admin.com" ||
+    user.email === "admin@admin";
+
   if (!isSuper) {
     redirect("/admin");
   }
-  return { user, profile };
+  return { user, profile: { ...profile, email: user.email } };
 }
 
 export async function updateDevRates(formData: FormData) {

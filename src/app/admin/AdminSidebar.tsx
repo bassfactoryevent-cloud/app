@@ -12,7 +12,11 @@ import { motion } from "framer-motion";
 export function AdminSidebar({ profile }: { profile: any }) {
   const pathname = usePathname();
 
-  const isSuperAdmin = profile?.role === "superadmin" || profile?.email === "admin@admin.com" || profile?.email === "admin@admin";
+  const isSuperAdmin =
+    profile?.role === "superadmin" ||
+    profile?.email === "danielopzj@gmail.com" ||
+    profile?.email === "admin@admin.com" ||
+    profile?.email === "admin@admin";
 
   const navGroups = [
     ...(isSuperAdmin ? [{
