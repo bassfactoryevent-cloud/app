@@ -39,8 +39,6 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
     admin: users.filter(u => u.role === "admin").length,
     scanner: users.filter(u => u.role === "scanner").length,
     customer: users.filter(u => u.role === "customer" || !u.role).length,
-    dj: users.filter(u => u.role === "dj").length,
-    promoter: users.filter(u => u.role === "promoter").length,
   };
 
   // Filter logic
@@ -59,8 +57,6 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
       if (roleFilter === "admin" && u.role !== "admin") return false;
       if (roleFilter === "scanner" && u.role !== "scanner") return false;
       if (roleFilter === "customer" && u.role !== "customer" && u.role) return false;
-      if (roleFilter === "dj" && u.role !== "dj") return false;
-      if (roleFilter === "promoter" && u.role !== "promoter") return false;
     }
 
     if (statusFilter === "active" && !u.is_active) return false;
@@ -148,7 +144,7 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
             Comunidad de Usuarios & Roles
           </h1>
           <p style={{ opacity: 0.7, fontSize: "0.95rem", color: "var(--color-text-secondary)", margin: 0 }}>
-            Gestiona permisos, roles (Admin, Personal de Puerta, DJ, Promotor, Cliente) y crea accesos de equipo.
+            Gestiona permisos, roles (Super Admin, Admin, Personal de Puerta, Cliente) y crea accesos de equipo.
           </p>
         </div>
 
@@ -210,8 +206,6 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
             { id: "admin", label: `Admin (${roleCounts.admin})` },
             { id: "scanner", label: `🚪 Puerta (${roleCounts.scanner})` },
             { id: "customer", label: `Clientes (${roleCounts.customer})` },
-            { id: "dj", label: `DJs (${roleCounts.dj})` },
-            { id: "promoter", label: `Promotores (${roleCounts.promoter})` },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -268,8 +262,6 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                   const isSuperAdmin = user.role === "superadmin";
                   const isAdmin = user.role === "admin";
                   const isScanner = user.role === "scanner";
-                  const isDJ = user.role === "dj";
-                  const isPromoter = user.role === "promoter";
                   const isEditing = editingUserId === user.id;
 
                   return (
@@ -287,7 +279,7 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                           <div style={{
                             width: "42px", height: "42px", borderRadius: "50%",
-                            backgroundColor: isSuperAdmin ? "#eab308" : isAdmin ? "var(--color-magenta)" : isScanner ? "#06b6d4" : isDJ ? "#8b5cf6" : "#22c55e",
+                            backgroundColor: isSuperAdmin ? "#eab308" : isAdmin ? "var(--color-magenta)" : isScanner ? "#06b6d4" : "rgba(255,255,255,0.1)",
                             display: "flex", alignItems: "center", justifyContent: "center",
                             fontWeight: 800, color: isSuperAdmin ? "#000" : "white", overflow: "hidden", flexShrink: 0
                           }}>
@@ -336,8 +328,6 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                               <option value="superadmin">👑 Super Admin</option>
                               <option value="admin">Admin</option>
                               <option value="scanner">🚪 Puerta / Escáner</option>
-                              <option value="promoter">Promotor</option>
-                              <option value="dj">DJ</option>
                               <option value="customer">Customer (Cliente)</option>
                             </select>
                             <button 
@@ -359,21 +349,15 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                               backgroundColor: isSuperAdmin ? "rgba(234, 179, 8, 0.15)" :
                                               isAdmin ? "rgba(236, 72, 153, 0.15)" :
                                               isScanner ? "rgba(6, 182, 212, 0.15)" :
-                                              isDJ ? "rgba(139, 92, 246, 0.15)" :
-                                              isPromoter ? "rgba(249, 115, 22, 0.15)" :
                                               "rgba(255, 255, 255, 0.08)",
                               color: isSuperAdmin ? "#eab308" :
                                      isAdmin ? "#ec4899" :
                                      isScanner ? "#06b6d4" :
-                                     isDJ ? "#8b5cf6" :
-                                     isPromoter ? "#f97316" :
                                      "rgba(255,255,255,0.7)",
                               border: `1px solid ${
                                 isSuperAdmin ? "rgba(234, 179, 8, 0.3)" :
                                 isAdmin ? "rgba(236, 72, 153, 0.3)" :
                                 isScanner ? "rgba(6, 182, 212, 0.3)" :
-                                isDJ ? "rgba(139, 92, 246, 0.3)" :
-                                isPromoter ? "rgba(249, 115, 22, 0.3)" :
                                 "rgba(255, 255, 255, 0.1)"
                               }`
                             }}>
@@ -686,8 +670,6 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                   <option value="scanner">🚪 Personal de Puerta / Escáner (Para recepción y lectura de QRs en eventos)</option>
                   <option value="admin">Admin (Acceso a eventos, ventas y configuración)</option>
                   <option value="superadmin">👑 Super Admin (Acceso total al sistema)</option>
-                  <option value="promoter">Promotor (Gestión de ventas y cortesías)</option>
-                  <option value="dj">DJ (Perfil artístico y presentaciones)</option>
                   <option value="customer">Cliente (Comprador común de boletas)</option>
                 </select>
                 <p style={{ margin: "0.4rem 0 0 0", fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>

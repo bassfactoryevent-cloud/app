@@ -7,7 +7,7 @@ const adminDb = getAdminClient();
 
 export async function updateUserRole(userId: string, newRole: string) {
   try {
-    const validRoles = ["superadmin", "admin", "dj", "promoter", "scanner", "customer"];
+    const validRoles = ["superadmin", "admin", "scanner", "customer"];
     if (!validRoles.includes(newRole)) {
       return { success: false, error: "Rol no válido" };
     }
@@ -29,11 +29,10 @@ export async function updateUserRole(userId: string, newRole: string) {
         .eq("id", userId);
 
       if (scannerErr) {
-        // Si el enum de Postgres aún no tiene 'scanner', usamos 'promoter' como fallback en DB
-        // mientras la app lo identifica como 'scanner' por auth metadata
+        // Fallback a 'customer' en la columna enum de Postgres si no admite 'scanner'
         await adminDb
           .from("profiles")
-          .update({ role: "promoter", updated_at: new Date().toISOString() })
+          .update({ role: "customer", updated_at: new Date().toISOString() })
           .eq("id", userId);
       }
     } else {
@@ -117,11 +116,11 @@ export async function createUserAction(formData: {
         });
 
         if (testErr) {
-          // Fallback a 'promoter' en la columna enum de Postgres si no admite 'scanner'
+          // Fallback a 'customer' en la columna enum de Postgres si no admite 'scanner'
           await adminDb.from("profiles").upsert({
             id: newUserId,
             full_name: cleanName,
-            role: "promoter",
+            role: "customer",
             is_active: true,
             updated_at: new Date().toISOString()
           });
