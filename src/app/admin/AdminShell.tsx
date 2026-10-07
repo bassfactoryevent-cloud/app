@@ -318,6 +318,39 @@ export function AdminShell({ profile, children }: AdminShellProps) {
           ))}
         </nav>
 
+        {/* Quick External Link (Desktop) */}
+        <div style={{ padding: "0 0.85rem 0.75rem 0.85rem" }}>
+          <Link
+            href="/"
+            target="_blank"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.6rem",
+              padding: "0.5rem 0.75rem",
+              borderRadius: "var(--radius-md)",
+              color: "rgba(255, 255, 255, 0.65)",
+              textDecoration: "none",
+              fontSize: "0.8rem",
+              fontWeight: 600,
+              backgroundColor: "rgba(255, 255, 255, 0.04)",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              transition: "all 0.2s ease",
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.color = "#FFFFFF";
+              e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.08)";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.color = "rgba(255, 255, 255, 0.65)";
+              e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.04)";
+            }}
+          >
+            <ExternalLink size={15} />
+            <span>Ver Tienda Pública</span>
+          </Link>
+        </div>
+
         {/* User Card & Signout (Desktop) */}
         <div style={{ padding: "1.25rem 1rem", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.85rem", padding: "0.25rem 0.5rem" }}>
