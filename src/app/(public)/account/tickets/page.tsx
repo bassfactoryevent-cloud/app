@@ -28,6 +28,7 @@ export default async function AccountTicketsPage() {
   // 2. Query tickets by user_id OR assigned_email OR order_id
   let query = adminDb.from("tickets").select(`
     id,
+    user_id,
     order_id,
     qr_hash,
     status,
@@ -58,6 +59,17 @@ export default async function AccountTicketsPage() {
 
   if (ticketsError) {
     console.error("Error fetching tickets for user:", ticketsError);
+  }
+
+  // Auto-vincular tickets que hayan sido emitidos como cortesía antes de que el usuario creara su cuenta
+  if (rawTickets && rawTickets.length > 0) {
+    const unlinkedTicketIds = rawTickets
+      .filter((t: any) => t.user_id !== user.id && t.assigned_email?.toLowerCase() === user.email?.toLowerCase())
+      .map((t: any) => t.id);
+
+    if (unlinkedTicketIds.length > 0) {
+      adminDb.from("tickets").update({ user_id: user.id }).in("id", unlinkedTicketIds).then();
+    }
   }
 
   // 3. Fetch tiers & events separately

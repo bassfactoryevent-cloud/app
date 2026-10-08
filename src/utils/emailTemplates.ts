@@ -453,7 +453,13 @@ export const getCourtesyInvitationEmail = (
       </a>
     </center>
 
-    <p style="font-size: 13px; color: #71717a; margin-top: 24px;">
+    <p style="font-size: 13px; color: #a1a1aa; margin-top: 20px; line-height: 1.5; background-color: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; border: 1px solid #27272a;">
+      💡 <strong>¿Cómo acceder a tu entrada?</strong><br/>
+      • <strong>Si ya tienes cuenta:</strong> Inicia sesión en <a href="${APP_URL}/login" style="color: #ec4899;">bassfactory.co/login</a> y ve a Mis Tickets.<br/>
+      • <strong>Si eres nuevo:</strong> Regístrate gratis en <a href="${APP_URL}/register" style="color: #ec4899;">bassfactory.co/register</a> usando este mismo correo electrónico. Tu boleta se vinculará de inmediato a tu perfil.
+    </p>
+
+    <p style="font-size: 13px; color: #71717a; margin-top: 16px;">
       ¿Deseas transferir o repartir esta entrada? Puedes transferirla a un amigo en cualquier momento desde tu cuenta en <a href="${APP_URL}/account/tickets" style="color: #ec4899;">bassfactory.co/account/tickets</a>.
     </p>
   `;

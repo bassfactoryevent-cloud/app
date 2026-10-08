@@ -96,14 +96,14 @@ export async function issueCourtesyTickets(params: IssueCourtesyParams) {
       }
     }
 
-    // 3. Buscar si el usuario ya existe en auth o crearlo para que tenga cuenta lista
+    // 3. Buscar si el usuario ya está registrado en la plataforma
     let recipientUserId: string | null = null;
     try {
       const { data: authUsers } = await adminDb.auth.admin.listUsers({ page: 1, perPage: 1000 });
       const match = authUsers?.users?.find(u => u.email?.toLowerCase() === cleanEmail);
       if (match) {
         recipientUserId = match.id;
-        // Garantizar que exista en profiles
+        // Garantizar que tenga registro en profiles
         const { data: prof } = await adminDb.from("profiles").select("id").eq("id", match.id).maybeSingle();
         if (!prof) {
           await adminDb.from("profiles").insert({
@@ -112,33 +112,15 @@ export async function issueCourtesyTickets(params: IssueCourtesyParams) {
             role: "customer"
           });
         }
-      } else {
-        // Si no existe, crear usuario en auth para que pueda iniciar sesión y ver su boleta
-        try {
-          const { data: newUser } = await adminDb.auth.admin.createUser({
-            email: cleanEmail,
-            email_confirm: true,
-            user_metadata: { full_name: cleanName }
-          });
-          if (newUser?.user) {
-            recipientUserId = newUser.user.id;
-            await adminDb.from("profiles").upsert({
-              id: newUser.user.id,
-              full_name: cleanName,
-              role: "customer"
-            });
-          }
-        } catch (createErr) {
-          console.warn("Could not auto-create auth user:", createErr);
-        }
       }
     } catch (e) {
       console.warn("Error resolving auth user:", e);
     }
 
-    // Fallback de seguridad: Si por alguna razón no se pudo obtener o crear ID de destinatario,
-    // usamos el ID del admin emisor para cumplir la restricción NOT NULL de tickets.user_id.
-    // El invitado verá su boleta de todas formas gracias a assigned_email = cleanEmail.
+    // Si el usuario aún no está registrado, asociamos el ticket inicialmente con el ID del admin
+    // para cumplir la restricción NOT NULL de la base de datos.
+    // El ticket queda asignado a su correo (assigned_email = cleanEmail), y cuando el invitado
+    // se registre con su propia contraseña en /register, su panel de /account/tickets lo reclamará automáticamente.
     const effectiveUserId = recipientUserId || user.id;
 
     // 4. Crear Orden de Cortesía ($0 COP) en merch_orders
