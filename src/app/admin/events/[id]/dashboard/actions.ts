@@ -96,15 +96,50 @@ export async function issueCourtesyTickets(params: IssueCourtesyParams) {
       }
     }
 
-    // 3. Buscar si el usuario ya existe en auth
+    // 3. Buscar si el usuario ya existe en auth o crearlo para que tenga cuenta lista
     let recipientUserId: string | null = null;
     try {
       const { data: authUsers } = await adminDb.auth.admin.listUsers({ page: 1, perPage: 1000 });
       const match = authUsers?.users?.find(u => u.email?.toLowerCase() === cleanEmail);
-      if (match) recipientUserId = match.id;
-    } catch {
-      // Ignorar si no se puede listar
+      if (match) {
+        recipientUserId = match.id;
+        // Garantizar que exista en profiles
+        const { data: prof } = await adminDb.from("profiles").select("id").eq("id", match.id).maybeSingle();
+        if (!prof) {
+          await adminDb.from("profiles").insert({
+            id: match.id,
+            full_name: cleanName,
+            role: "customer"
+          });
+        }
+      } else {
+        // Si no existe, crear usuario en auth para que pueda iniciar sesión y ver su boleta
+        try {
+          const { data: newUser } = await adminDb.auth.admin.createUser({
+            email: cleanEmail,
+            email_confirm: true,
+            user_metadata: { full_name: cleanName }
+          });
+          if (newUser?.user) {
+            recipientUserId = newUser.user.id;
+            await adminDb.from("profiles").upsert({
+              id: newUser.user.id,
+              full_name: cleanName,
+              role: "customer"
+            });
+          }
+        } catch (createErr) {
+          console.warn("Could not auto-create auth user:", createErr);
+        }
+      }
+    } catch (e) {
+      console.warn("Error resolving auth user:", e);
     }
+
+    // Fallback de seguridad: Si por alguna razón no se pudo obtener o crear ID de destinatario,
+    // usamos el ID del admin emisor para cumplir la restricción NOT NULL de tickets.user_id.
+    // El invitado verá su boleta de todas formas gracias a assigned_email = cleanEmail.
+    const effectiveUserId = recipientUserId || user.id;
 
     // 4. Crear Orden de Cortesía ($0 COP) en merch_orders
     const courtesyOrderId = crypto.randomUUID();
@@ -115,20 +150,23 @@ export async function issueCourtesyTickets(params: IssueCourtesyParams) {
 
     const { error: orderError } = await adminDb.from("merch_orders").insert({
       id: courtesyOrderId,
-      user_id: recipientUserId,
+      user_id: recipientUserId || effectiveUserId,
       customer_name: cleanName,
       customer_email: cleanEmail,
       total_amount: 0,
+      subtotal_amount: 0,
+      shipping_cost: 0,
       status: "paid",
       payment_provider: "courtesy",
       payment_id: paymentId,
-      shipping_city: cleanReasonTag,
-      shipping_address: `Emitido por admin: ${user.email}`
+      shipping_city: cleanReasonTag.slice(0, 99),
+      shipping_country: "Colombia",
+      shipping_address: `Emitido por admin: ${user.email}`.slice(0, 255)
     });
 
     if (orderError) {
       console.error("Error creating courtesy order:", orderError);
-      return { success: false, error: "Error al registrar la orden de cortesía en el sistema." };
+      return { success: false, error: `Error al registrar orden de cortesía: ${orderError.message}` };
     }
 
     // 5. Generar los Tickets Criptográficos
@@ -144,7 +182,7 @@ export async function issueCourtesyTickets(params: IssueCourtesyParams) {
         status: "valid",
         assigned_name: cleanName,
         assigned_email: cleanEmail,
-        user_id: recipientUserId,
+        user_id: effectiveUserId,
         qr_dispatched: !lockUntilEvent // Si lockUntilEvent es true, qr_dispatched = false (bloqueado)
       });
     }
@@ -152,7 +190,7 @@ export async function issueCourtesyTickets(params: IssueCourtesyParams) {
     const { error: ticketsError } = await adminDb.from("tickets").insert(ticketsToInsert);
     if (ticketsError) {
       console.error("Error inserting courtesy tickets:", ticketsError);
-      return { success: false, error: "Error al registrar las entradas de cortesía." };
+      return { success: false, error: `Error al registrar las entradas de cortesía: ${ticketsError.message}` };
     }
 
     // 6. Descontar del Aforo de la Localidad (si está configurado)
