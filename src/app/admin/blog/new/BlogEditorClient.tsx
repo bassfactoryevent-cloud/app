@@ -31,26 +31,25 @@ export default function BlogEditorClient({
       const { optimizeImage } = await import("@/utils/imageOptimizer");
       const compressedFile = await optimizeImage(file);
 
-      const fileExt = compressedFile.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      const filePath = `blog_images/${fileName}`;
+      const formData = new FormData();
+      formData.append("file", compressedFile);
+      formData.append("bucket", "blog-media");
 
-      const { data, error } = await supabase.storage
-        .from("blog-media")
-        .upload(filePath, compressedFile);
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-      if (error) {
-        toast.error("Error subiendo imagen: " + error.message);
-        throw error;
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || `Error del servidor (${res.status})`);
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("blog-media")
-        .getPublicUrl(filePath);
-
-      return publicUrl;
-    } catch (err) {
+      const { url } = await res.json();
+      return url;
+    } catch (err: any) {
       console.error(err);
+      toast.error("Error subiendo imagen: " + (err?.message || "Error desconocido"));
       throw err;
     }
   };

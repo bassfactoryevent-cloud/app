@@ -11,12 +11,21 @@ interface ImageUploadProps {
   onUploadSuccess?: (url: string) => void;
   label?: string;
   name?: string; // If provided, renders a hidden input with this name
+  accept?: string;
 }
 
-export default function ImageUpload({ bucket, defaultImage, onUploadSuccess, label = "Subir Imagen", name }: ImageUploadProps) {
+export default function ImageUpload({ 
+  bucket, 
+  defaultImage, 
+  onUploadSuccess, 
+  label = "Subir Imagen", 
+  name,
+  accept
+}: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(defaultImage || null);
-  const supabase = createClient();
+
+  const resolvedAccept = accept || (bucket === "ads" ? "image/*,video/mp4,video/webm" : "image/*");
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -25,35 +34,38 @@ export default function ImageUpload({ bucket, defaultImage, onUploadSuccess, lab
     setIsUploading(true);
 
     try {
-      // 1. Optimize Image
-      const compressedFile = await optimizeImage(file);
+      // 1. Optimize Image (solo para imágenes, videos se suben directos)
+      const isVideo = file.type.startsWith("video/") || file.name.endsWith(".mp4") || file.name.endsWith(".webm");
+      const uploadFile = isVideo ? file : await optimizeImage(file);
 
-      // 2. Prepare for Upload
-      const fileExt = compressedFile.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      // 2. Subir a través de la API segura del servidor (evita restricciones de RLS anónimo)
+      const formData = new FormData();
+      formData.append("file", uploadFile);
+      formData.append("bucket", bucket);
 
-      // 3. Upload to Supabase
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, compressedFile);
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-      if (error) throw error;
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error || `Error del servidor (${res.status})`);
+      }
 
-      // 4. Get Public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath);
-
-      setPreviewUrl(publicUrl);
-      if (onUploadSuccess) onUploadSuccess(publicUrl);
-    } catch (error) {
+      const { url } = await res.json();
+      setPreviewUrl(url);
+      if (onUploadSuccess) onUploadSuccess(url);
+      toast.success("Recurso subido exitosamente.");
+    } catch (error: any) {
       console.error("Error uploading image:", error);
-      toast.error("Error al subir la imagen. Por favor, inténtalo de nuevo.");
+      toast.error(error?.message || "Error al subir la imagen. Por favor, inténtalo de nuevo.");
     } finally {
       setIsUploading(false);
     }
   };
+
+  const isVideoPreview = previewUrl?.toLowerCase().endsWith(".mp4") || previewUrl?.toLowerCase().endsWith(".webm");
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
@@ -62,15 +74,19 @@ export default function ImageUpload({ bucket, defaultImage, onUploadSuccess, lab
       
       {previewUrl && (
         <div style={{ marginBottom: "0.5rem", borderRadius: "8px", overflow: "hidden", maxWidth: "300px", border: "1px solid var(--color-border)" }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={previewUrl} alt="Preview" style={{ width: "100%", height: "auto", display: "block" }} />
+          {isVideoPreview ? (
+            <video src={previewUrl} autoPlay loop muted playsInline style={{ width: "100%", height: "auto", display: "block" }} />
+          ) : (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={previewUrl} alt="Preview" style={{ width: "100%", height: "auto", display: "block" }} />
+          )}
         </div>
       )}
 
       <div style={{ position: "relative" }}>
         <input 
           type="file" 
-          accept="image/*" 
+          accept={resolvedAccept} 
           onChange={handleFileChange} 
           disabled={isUploading}
           style={{
