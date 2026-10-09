@@ -118,15 +118,23 @@ export default async function AdminFinancesPage() {
     const isTicket = isCourtesy || ticketOrderIds.has(order.id) || (order.shipping_address && order.shipping_address.toLowerCase().includes("digital"));
     
     let description = "Compra de Tienda";
+    let orderStatus = order.status;
+
     if (isTicket) {
       // Buscar qué evento compró
       const orderTicket = (tickets || []).find((t: any) => t.order_id === order.id);
       const tier = orderTicket ? tierMap.get(orderTicket.tier_id) : null;
       const event = tier ? eventMap.get(tier.event_id) : null;
+      const isScanned = orderTicket?.status === "scanned" || Boolean(orderTicket?.scanned_at);
+
       if (isCourtesy) {
         description = event ? `Cortesía: ${event.title} (${tier?.name || "General"})` : "Cortesía Entrada Oficial";
+        orderStatus = isScanned ? "scanned" : "delivered";
       } else {
         description = event ? `Boleta: ${event.title} (${tier?.name || "General"})` : "Entrada Oficial a Evento";
+        if (isScanned) {
+          orderStatus = "scanned";
+        }
       }
     } else if (order.merch_order_items && order.merch_order_items.length > 0) {
       description = order.merch_order_items.map((it: any) => `${it.quantity}x ${it.product_name}`).join(", ");
@@ -139,7 +147,7 @@ export default async function AdminFinancesPage() {
       customer_name: order.customer_name,
       customer_email: order.customer_email,
       total_amount: isCourtesy ? 0 : Number(order.total_amount || 0),
-      status: isCourtesy ? "courtesy" : order.status,
+      status: orderStatus,
       created_at: order.created_at
     });
   });

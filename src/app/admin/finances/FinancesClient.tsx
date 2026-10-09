@@ -482,17 +482,79 @@ export default function FinancesClient({
                       {formatCOP(Number(tx.total_amount || 0))}
                     </td>
                     <td style={{ padding: "1rem", textAlign: "center" }}>
-                      {tx.type === "courtesy" || tx.status === "courtesy" ? (
+                      {tx.type === "courtesy" ? (
+                        tx.status === "scanned" ? (
+                          <span style={{
+                            padding: "0.2rem 0.6rem",
+                            borderRadius: "999px",
+                            fontSize: "0.72rem",
+                            fontWeight: 800,
+                            backgroundColor: "rgba(34, 197, 94, 0.15)",
+                            color: "#22c55e",
+                            border: "1px solid rgba(34, 197, 94, 0.3)"
+                          }}>
+                            INGRESADO
+                          </span>
+                        ) : (
+                          <span style={{
+                            padding: "0.2rem 0.6rem",
+                            borderRadius: "999px",
+                            fontSize: "0.72rem",
+                            fontWeight: 800,
+                            backgroundColor: "rgba(16, 185, 129, 0.15)",
+                            color: "#10b981",
+                            border: "1px solid rgba(16, 185, 129, 0.3)"
+                          }}>
+                            ENTREGADA
+                          </span>
+                        )
+                      ) : tx.status === "scanned" ? (
                         <span style={{
                           padding: "0.2rem 0.6rem",
                           borderRadius: "999px",
                           fontSize: "0.72rem",
                           fontWeight: 800,
-                          backgroundColor: "rgba(168, 85, 247, 0.15)",
-                          color: "#c084fc",
-                          border: "1px solid rgba(168, 85, 247, 0.3)"
+                          backgroundColor: "rgba(34, 197, 94, 0.15)",
+                          color: "#22c55e",
+                          border: "1px solid rgba(34, 197, 94, 0.3)"
                         }}>
-                          CORTESÍA
+                          INGRESADO
+                        </span>
+                      ) : tx.status === "delivered" ? (
+                        <span style={{
+                          padding: "0.2rem 0.6rem",
+                          borderRadius: "999px",
+                          fontSize: "0.72rem",
+                          fontWeight: 800,
+                          backgroundColor: "rgba(34, 197, 94, 0.15)",
+                          color: "#22c55e",
+                          border: "1px solid rgba(34, 197, 94, 0.3)"
+                        }}>
+                          ENTREGADO
+                        </span>
+                      ) : tx.status === "shipped" ? (
+                        <span style={{
+                          padding: "0.2rem 0.6rem",
+                          borderRadius: "999px",
+                          fontSize: "0.72rem",
+                          fontWeight: 800,
+                          backgroundColor: "rgba(59, 130, 246, 0.15)",
+                          color: "#3b82f6",
+                          border: "1px solid rgba(59, 130, 246, 0.3)"
+                        }}>
+                          ENVIADO
+                        </span>
+                      ) : tx.status === "paid" ? (
+                        <span style={{
+                          padding: "0.2rem 0.6rem",
+                          borderRadius: "999px",
+                          fontSize: "0.72rem",
+                          fontWeight: 800,
+                          backgroundColor: "rgba(34, 197, 94, 0.15)",
+                          color: "#22c55e",
+                          border: "1px solid rgba(34, 197, 94, 0.3)"
+                        }}>
+                          PAGADO
                         </span>
                       ) : (
                         <span style={{
@@ -500,11 +562,11 @@ export default function FinancesClient({
                           borderRadius: "999px",
                           fontSize: "0.72rem",
                           fontWeight: 800,
-                          backgroundColor: tx.status === "paid" ? "rgba(34, 197, 94, 0.15)" : "rgba(245, 158, 11, 0.15)",
-                          color: tx.status === "paid" ? "#22c55e" : "#f59e0b",
-                          border: `1px solid ${tx.status === "paid" ? "rgba(34, 197, 94, 0.3)" : "rgba(245, 158, 11, 0.3)"}`
+                          backgroundColor: "rgba(245, 158, 11, 0.15)",
+                          color: "#f59e0b",
+                          border: "1px solid rgba(245, 158, 11, 0.3)"
                         }}>
-                          {tx.status === "paid" ? "PAGADO" : tx.status?.toUpperCase()}
+                          {tx.status?.toUpperCase() || "PENDIENTE"}
                         </span>
                       )}
                     </td>

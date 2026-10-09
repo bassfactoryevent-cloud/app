@@ -143,7 +143,7 @@ export default function DashboardRecentTables({
                         backgroundColor: t.isCourtesy ? "rgba(168, 85, 247, 0.15)" : "rgba(34, 197, 94, 0.15)",
                         color: t.isCourtesy ? "#c084fc" : "#22c55e"
                       }}>
-                        <CheckCircle2 size={12} /> {t.isCourtesy ? "CORTESÍA" : t.status.toUpperCase()}
+                        <CheckCircle2 size={12} /> {t.isCourtesy ? (t.status === "scanned" ? "INGRESADO" : "EMITIDA") : (t.status === "valid" ? "VÁLIDA" : t.status.toUpperCase())}
                       </span>
                     </td>
                     <td style={{ padding: "1rem 1.25rem", textAlign: "right" }}>

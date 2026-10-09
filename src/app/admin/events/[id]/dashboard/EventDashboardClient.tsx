@@ -940,10 +940,10 @@ export default function EventDashboardClient({
                         {order.payment_provider === 'courtesy' ? (
                           <span style={{
                             padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.75rem", fontWeight: 700,
-                            backgroundColor: 'rgba(168, 85, 247, 0.2)',
-                            color: '#c084fc', textTransform: "uppercase"
+                            backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                            color: '#10b981', textTransform: "uppercase"
                           }}>
-                            CORTESÍA
+                            ENTREGADA
                           </span>
                         ) : (
                           <span style={{
