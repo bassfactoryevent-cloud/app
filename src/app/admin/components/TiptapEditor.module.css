@@ -2,8 +2,8 @@
   border: 1px solid rgba(128, 128, 128, 0.2);
   border-radius: var(--radius-md);
   overflow: hidden;
-  background-color: var(--color-surface);
-  color: black;
+  background-color: var(--color-surface, #111116);
+  color: var(--color-text, #ffffff);
   display: flex;
   flex-direction: column;
 }
@@ -13,7 +13,7 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.5rem;
-  background-color: rgba(128, 128, 128, 0.05);
+  background-color: rgba(255, 255, 255, 0.03);
   border-bottom: 1px solid rgba(128, 128, 128, 0.2);
   flex-wrap: wrap;
 }
@@ -28,12 +28,13 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #333;
+  color: #d4d4d8;
   transition: all 0.2s;
 }
 
 .toolbarBtn:hover:not(:disabled) {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
 }
 
 .toolbarBtn:disabled {
@@ -42,8 +43,8 @@
 }
 
 .isActive {
-  background-color: rgba(0, 0, 0, 0.1);
-  color: var(--color-magenta);
+  background-color: rgba(217, 4, 22, 0.2);
+  color: #ff4d4d;
 }
 
 .divider {
@@ -60,10 +61,11 @@
   outline: none;
   font-family: inherit;
   line-height: 1.6;
+  color: #f4f4f5;
 }
 
 .prose :global(p.is-editor-empty:first-child::before) {
-  color: rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.35);
   content: attr(data-placeholder);
   float: left;
   height: 0;
