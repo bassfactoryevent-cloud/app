@@ -937,13 +937,23 @@ export default function EventDashboardClient({
                         {new Date(order.created_at).toLocaleString()}
                       </td>
                       <td style={{ padding: "1rem" }}>
-                        <span style={{
-                          padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.75rem", fontWeight: 600,
-                          backgroundColor: order.status === 'paid' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                          color: order.status === 'paid' ? '#22c55e' : '#f59e0b', textTransform: "uppercase"
-                        }}>
-                          {order.status}
-                        </span>
+                        {order.payment_provider === 'courtesy' ? (
+                          <span style={{
+                            padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.75rem", fontWeight: 700,
+                            backgroundColor: 'rgba(168, 85, 247, 0.2)',
+                            color: '#c084fc', textTransform: "uppercase"
+                          }}>
+                            CORTESÍA
+                          </span>
+                        ) : (
+                          <span style={{
+                            padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.75rem", fontWeight: 600,
+                            backgroundColor: order.status === 'paid' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                            color: order.status === 'paid' ? '#22c55e' : '#f59e0b', textTransform: "uppercase"
+                          }}>
+                            {order.status === 'paid' ? 'PAGADO' : order.status}
+                          </span>
+                        )}
                       </td>
                       <td style={{ padding: "1rem", textAlign: "right", fontWeight: 700, color: "white" }}>
                         {formatCurrency(Number(order.total_amount))}

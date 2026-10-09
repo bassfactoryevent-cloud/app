@@ -139,7 +139,7 @@ export default async function AdminFinancesPage() {
       customer_name: order.customer_name,
       customer_email: order.customer_email,
       total_amount: isCourtesy ? 0 : Number(order.total_amount || 0),
-      status: order.status,
+      status: isCourtesy ? "courtesy" : order.status,
       created_at: order.created_at
     });
   });

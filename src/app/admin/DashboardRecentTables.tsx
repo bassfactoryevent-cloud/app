@@ -140,10 +140,10 @@ export default function DashboardRecentTables({
                         borderRadius: "999px",
                         fontSize: "0.72rem",
                         fontWeight: 700,
-                        backgroundColor: "rgba(34, 197, 94, 0.15)",
-                        color: "#22c55e"
+                        backgroundColor: t.isCourtesy ? "rgba(168, 85, 247, 0.15)" : "rgba(34, 197, 94, 0.15)",
+                        color: t.isCourtesy ? "#c084fc" : "#22c55e"
                       }}>
-                        <CheckCircle2 size={12} /> {t.status.toUpperCase()}
+                        <CheckCircle2 size={12} /> {t.isCourtesy ? "CORTESÍA" : t.status.toUpperCase()}
                       </span>
                     </td>
                     <td style={{ padding: "1rem 1.25rem", textAlign: "right" }}>

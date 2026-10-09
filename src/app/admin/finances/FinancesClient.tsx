@@ -482,17 +482,31 @@ export default function FinancesClient({
                       {formatCOP(Number(tx.total_amount || 0))}
                     </td>
                     <td style={{ padding: "1rem", textAlign: "center" }}>
-                      <span style={{
-                        padding: "0.2rem 0.55rem",
-                        borderRadius: "999px",
-                        fontSize: "0.72rem",
-                        fontWeight: 800,
-                        backgroundColor: tx.status === "paid" ? "rgba(34, 197, 94, 0.15)" : "rgba(245, 158, 11, 0.15)",
-                        color: tx.status === "paid" ? "#22c55e" : "#f59e0b",
-                        border: `1px solid ${tx.status === "paid" ? "rgba(34, 197, 94, 0.3)" : "rgba(245, 158, 11, 0.3)"}`
-                      }}>
-                        {tx.status?.toUpperCase()}
-                      </span>
+                      {tx.type === "courtesy" || tx.status === "courtesy" ? (
+                        <span style={{
+                          padding: "0.2rem 0.6rem",
+                          borderRadius: "999px",
+                          fontSize: "0.72rem",
+                          fontWeight: 800,
+                          backgroundColor: "rgba(168, 85, 247, 0.15)",
+                          color: "#c084fc",
+                          border: "1px solid rgba(168, 85, 247, 0.3)"
+                        }}>
+                          CORTESÍA
+                        </span>
+                      ) : (
+                        <span style={{
+                          padding: "0.2rem 0.55rem",
+                          borderRadius: "999px",
+                          fontSize: "0.72rem",
+                          fontWeight: 800,
+                          backgroundColor: tx.status === "paid" ? "rgba(34, 197, 94, 0.15)" : "rgba(245, 158, 11, 0.15)",
+                          color: tx.status === "paid" ? "#22c55e" : "#f59e0b",
+                          border: `1px solid ${tx.status === "paid" ? "rgba(34, 197, 94, 0.3)" : "rgba(245, 158, 11, 0.3)"}`
+                        }}>
+                          {tx.status === "paid" ? "PAGADO" : tx.status?.toUpperCase()}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))

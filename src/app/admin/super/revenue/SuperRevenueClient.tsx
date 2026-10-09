@@ -553,12 +553,12 @@ export default function SuperRevenueClient({
                         fontSize: "0.75rem",
                         padding: "0.2rem 0.5rem",
                         borderRadius: "0.25rem",
-                        backgroundColor: "rgba(34, 197, 94, 0.1)",
-                        color: "#22c55e",
+                        backgroundColor: tx.type === "courtesy" ? "rgba(168, 85, 247, 0.15)" : "rgba(34, 197, 94, 0.1)",
+                        color: tx.type === "courtesy" ? "#c084fc" : "#22c55e",
                         fontWeight: 600,
                         textTransform: "uppercase"
                       }}>
-                        {tx.status}
+                        {tx.type === "courtesy" ? "CORTESÍA" : tx.status}
                       </span>
                     </td>
                   </tr>
