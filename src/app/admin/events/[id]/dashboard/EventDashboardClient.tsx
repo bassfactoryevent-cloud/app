@@ -486,20 +486,32 @@ export default function EventDashboardClient({
                             <div style={{ fontWeight: 700, color: "white" }}>{attendeeName}</div>
                             <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>{attendeeEmail}</div>
                             {isCourtesy && (
-                              <div style={{
-                                marginTop: "3px",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "4px",
-                                fontSize: "0.7rem",
-                                fontWeight: 700,
-                                color: "#c084fc",
-                                backgroundColor: "rgba(168, 85, 247, 0.12)",
-                                padding: "2px 6px",
-                                borderRadius: "4px",
-                                border: "1px solid rgba(168, 85, 247, 0.25)"
-                              }}>
-                                🎁 Cortesía: {relatedOrder?.shipping_city || "Invitado"}
+                              <div style={{ display: "flex", flexDirection: "column", gap: "2px", marginTop: "3px" }}>
+                                <div style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                  fontSize: "0.7rem",
+                                  fontWeight: 700,
+                                  color: "#c084fc",
+                                  backgroundColor: "rgba(168, 85, 247, 0.12)",
+                                  padding: "2px 6px",
+                                  borderRadius: "4px",
+                                  border: "1px solid rgba(168, 85, 247, 0.25)",
+                                  width: "fit-content"
+                                }}>
+                                  🎁 Cortesía: {relatedOrder?.shipping_city || "Invitado"}
+                                </div>
+                                {relatedOrder?.shipping_address && (
+                                  <div style={{
+                                    fontSize: "0.68rem",
+                                    color: "#a1a1aa",
+                                    fontWeight: 500,
+                                    marginTop: "1px"
+                                  }}>
+                                    👤 {relatedOrder.shipping_address.replace("Emitido por admin:", "Autorizado por:").trim()}
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>

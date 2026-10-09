@@ -152,7 +152,8 @@ export async function sendOrderConfirmationEmail(orderId: string, customEmail?: 
       }
     }
 
-    const shippingDetails = order.shipping_address ? {
+    const isCourtesyOrDigital = order.payment_provider === "courtesy" || !hasMerch || Boolean(order.shipping_address && order.shipping_address.includes("admin:"));
+    const shippingDetails = (!isCourtesyOrDigital && order.shipping_address) ? {
       address: order.shipping_address,
       city: order.shipping_city,
       country: order.shipping_country,

@@ -180,6 +180,9 @@ export default async function OrderInvoicePage({
   const shippingCost = Number(order.shipping_cost || 0);
   const totalAmount = Number(order.total_amount || (subtotal + shippingCost));
 
+  const hasPhysicalMerch = Boolean(merchItems && merchItems.length > 0);
+  const isCourtesyOrder = order.payment_provider === 'courtesy' || Boolean(order.shipping_address && order.shipping_address.includes('admin:'));
+
   return (
     <div style={{ maxWidth: '850px', margin: '2rem auto', padding: '0 1.25rem' }}>
       <style>{`
@@ -307,13 +310,13 @@ export default async function OrderInvoicePage({
                 display: 'inline-block',
                 padding: '0.2rem 0.65rem',
                 borderRadius: '0.35rem',
-                backgroundColor: order.status === 'paid' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(234, 179, 8, 0.15)',
-                border: order.status === 'paid' ? '1px solid rgba(34, 197, 94, 0.35)' : '1px solid rgba(234, 179, 8, 0.35)',
-                color: order.status === 'paid' ? '#22c55e' : '#eab308',
+                backgroundColor: isCourtesyOrder ? 'rgba(16, 185, 129, 0.15)' : (order.status === 'paid' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(234, 179, 8, 0.15)'),
+                border: isCourtesyOrder ? '1px solid rgba(16, 185, 129, 0.35)' : (order.status === 'paid' ? '1px solid rgba(34, 197, 94, 0.35)' : '1px solid rgba(234, 179, 8, 0.35)'),
+                color: isCourtesyOrder ? '#10b981' : (order.status === 'paid' ? '#22c55e' : '#eab308'),
                 fontSize: '0.72rem',
                 fontWeight: 700
               }}>
-                {order.status === 'paid' ? '✓ PAGADA / APROBADA' : 'PENDIENTE DE PAGO'}
+                {isCourtesyOrder ? '✓ CORTESÍA ENTREGADA' : (order.status === 'paid' ? '✓ PAGADA / APROBADA' : 'PENDIENTE DE PAGO')}
               </span>
             </div>
           </div>
@@ -340,9 +343,9 @@ export default async function OrderInvoicePage({
 
           <div>
             <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#71717a', fontWeight: 800 }}>
-              {order.shipping_address ? 'Destino de Despacho:' : 'Modalidad de Entrega:'}
+              {!isCourtesyOrder && hasPhysicalMerch && order.shipping_address ? 'Destino de Despacho:' : 'Modalidad de Entrega:'}
             </h4>
-            {order.shipping_address ? (
+            {!isCourtesyOrder && hasPhysicalMerch && order.shipping_address ? (
               <>
                 <p style={{ margin: '0 0 0.2rem 0', fontWeight: 600, fontSize: '0.9rem', color: '#ffffff' }}>
                   {order.shipping_address}
@@ -369,10 +372,10 @@ export default async function OrderInvoicePage({
               Forma y Medio de Pago:
             </h4>
             <p style={{ margin: '0 0 0.2rem 0', fontWeight: 600, fontSize: '0.9rem', color: '#ffffff' }}>
-              Bold Pasarela de Pagos (En línea)
+              {isCourtesyOrder ? 'Cortesía Institucional' : 'Bold Pasarela de Pagos (En línea)'}
             </p>
             <p style={{ margin: 0, fontSize: '0.8rem', color: '#a1a1aa' }}>
-              PSE / Tarjetas de Crédito y Débito
+              {isCourtesyOrder ? 'Invitación Especial (Sin costo comercial)' : 'PSE / Tarjetas de Crédito y Débito'}
             </p>
           </div>
         </div>

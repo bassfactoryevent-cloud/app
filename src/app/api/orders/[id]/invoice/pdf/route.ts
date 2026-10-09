@@ -189,6 +189,9 @@ export async function GET(
     const shippingCost = Number(order.shipping_cost || 0);
     const totalAmount = Number(order.total_amount || (subtotal + shippingCost));
 
+    const isCourtesy = order.payment_provider === "courtesy" || Boolean(order.shipping_address && order.shipping_address.includes("admin:"));
+    const hasPhysicalMerch = items.some((it: any) => it.type === "merch");
+
     // 6. Generate PDF stream
     const pdfStream = await renderToStream(
       React.createElement(InvoicePDF, {
@@ -198,11 +201,11 @@ export async function GET(
         customerName: order.customer_name || "Cliente",
         customerEmail: order.customer_email,
         customerPhone: order.customer_phone || undefined,
-        shippingAddress: order.shipping_address || undefined,
-        shippingCity: order.shipping_city || undefined,
-        shippingCountry: order.shipping_country || undefined,
-        shippingZip: order.shipping_zip || undefined,
-        paymentProvider: "Bold Pasarela de Pagos (En línea)",
+        shippingAddress: (!isCourtesy && hasPhysicalMerch) ? (order.shipping_address || undefined) : undefined,
+        shippingCity: (!isCourtesy && hasPhysicalMerch) ? (order.shipping_city || undefined) : undefined,
+        shippingCountry: (!isCourtesy && hasPhysicalMerch) ? (order.shipping_country || undefined) : undefined,
+        shippingZip: (!isCourtesy && hasPhysicalMerch) ? (order.shipping_zip || undefined) : undefined,
+        paymentProvider: isCourtesy ? "Cortesía Oficial (Entregada)" : "Bold Pasarela de Pagos (En línea)",
         subtotal: subtotal > 0 ? subtotal : (totalAmount - shippingCost),
         shippingCost: shippingCost,
         totalAmount: totalAmount,
