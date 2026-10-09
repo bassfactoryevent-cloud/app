@@ -872,7 +872,7 @@ export default function EventDashboardClient({
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "2rem", alignItems: "start" }}>
+      <div style={{ marginTop: "2.5rem", display: "grid", gridTemplateColumns: "1fr 2fr", gap: "2rem", alignItems: "start" }}>
         
         {/* Inventory Control */}
         <div style={{ backgroundColor: "var(--color-surface, #111)", border: "1px solid var(--color-border, #333)", borderRadius: "var(--radius-lg)", padding: "1.5rem" }}>
@@ -932,65 +932,41 @@ export default function EventDashboardClient({
                 </tr>
               </thead>
               <tbody>
-                {orders.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "var(--color-text-secondary)" }}>
-                      Aún no hay ventas para este evento.
-                    </td>
-                  </tr>
-                ) : (
-                  orders.map((order, i) => (
+                {(() => {
+                  const commercialPurchases = orders.filter(order => order.payment_provider !== 'courtesy');
+                  if (commercialPurchases.length === 0) {
+                    return (
+                      <tr>
+                        <td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "var(--color-text-secondary)" }}>
+                          Aún no hay compras pagadas para este evento.
+                        </td>
+                      </tr>
+                    );
+                  }
+                  return commercialPurchases.map((order, i) => (
                     <tr key={order.id} style={{ borderBottom: "1px solid var(--color-border, #333)", backgroundColor: i === 0 ? "rgba(34, 197, 94, 0.05)" : "transparent" }}>
                       <td style={{ padding: "1rem" }}>
                         <div style={{ fontWeight: 600, color: "white" }}>{order.customer_name}</div>
                         <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>{order.customer_email}</div>
-                        {order.payment_provider === 'courtesy' && (
-                          <div style={{ marginTop: '0.35rem', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-                            <span style={{
-                              padding: '0.1rem 0.4rem',
-                              borderRadius: '4px',
-                              backgroundColor: 'rgba(168, 85, 247, 0.15)',
-                              color: '#c084fc',
-                              fontWeight: 700
-                            }}>
-                              👤 {order.shipping_address ? order.shipping_address.replace("Emitido por admin:", "Autorizado por:").trim() : "Autorizado por admin"}
-                            </span>
-                            {order.shipping_city && (
-                              <span style={{ color: 'rgba(255, 255, 255, 0.6)', fontWeight: 500 }}>
-                                • {order.shipping_city}
-                              </span>
-                            )}
-                          </div>
-                        )}
                       </td>
                       <td style={{ padding: "1rem", color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
-                        {new Date(order.created_at).toLocaleString()}
+                        {new Date(order.created_at).toLocaleString("es-CO")}
                       </td>
                       <td style={{ padding: "1rem" }}>
-                        {order.payment_provider === 'courtesy' ? (
-                          <span style={{
-                            padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.75rem", fontWeight: 700,
-                            backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                            color: '#10b981', textTransform: "uppercase"
-                          }}>
-                            ENTREGADA
-                          </span>
-                        ) : (
-                          <span style={{
-                            padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.75rem", fontWeight: 600,
-                            backgroundColor: order.status === 'paid' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                            color: order.status === 'paid' ? '#22c55e' : '#f59e0b', textTransform: "uppercase"
-                          }}>
-                            {order.status === 'paid' ? 'PAGADO' : order.status}
-                          </span>
-                        )}
+                        <span style={{
+                          padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.75rem", fontWeight: 600,
+                          backgroundColor: order.status === 'paid' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                          color: order.status === 'paid' ? '#22c55e' : '#f59e0b', textTransform: "uppercase"
+                        }}>
+                          {order.status === 'paid' ? 'PAGADO' : order.status}
+                        </span>
                       </td>
                       <td style={{ padding: "1rem", textAlign: "right", fontWeight: 700, color: "white" }}>
                         {formatCurrency(Number(order.total_amount))}
                       </td>
                     </tr>
-                  ))
-                )}
+                  ));
+                })()}
               </tbody>
             </table>
           </div>
