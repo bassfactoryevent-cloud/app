@@ -4,6 +4,7 @@ import { renderToStream } from "@react-pdf/renderer";
 import { TicketPDF } from "@/components/pdf/TicketPDF";
 import QRCode from "qrcode";
 import React from "react";
+import { getAppUrl } from "@/utils/emailTemplates";
 
 import { getAdminClient } from "@/utils/supabase/admin";
 
@@ -98,7 +99,7 @@ export async function GET(req: Request) {
             qrDataUri: qrDataUri,
             eventDescription: event.description,
             coverImageUrl: event.cover_image,
-            logoUrl: process.env.NEXT_PUBLIC_APP_URL ? `${process.env.NEXT_PUBLIC_APP_URL}/Bass-Factory-Blanco-Sin-Letras.png` : "https://bassfactory.co/Bass-Factory-Blanco-Sin-Letras.png",
+            logoUrl: `${getAppUrl()}/Bass-Factory-Blanco-Sin-Letras.png`,
             orderId: orderId || ticket.id
           }) as any
         );

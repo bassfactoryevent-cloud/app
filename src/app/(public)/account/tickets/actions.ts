@@ -4,13 +4,13 @@ import { createClient } from "@/utils/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
-import { getTransferInitiatedEmail } from "@/utils/emailTemplates";
+import { getTransferInitiatedEmail, getAppUrl } from "@/utils/emailTemplates";
 
 import { getAdminClient } from "@/utils/supabase/admin";
 
 const adminDb = getAdminClient();
 const resend = new Resend(process.env.RESEND_API_KEY || "");
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://bassfactory.co";
+const APP_URL = getAppUrl();
 
 export async function initiateTransfer(ticketId: string, name: string, email: string): Promise<{ success: boolean; error?: string }> {
   try {

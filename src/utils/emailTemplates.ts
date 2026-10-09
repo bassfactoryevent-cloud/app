@@ -1,4 +1,12 @@
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://bassfactory.co";
+export function getAppUrl(): string {
+  const envUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (envUrl && (envUrl.startsWith("https://") || envUrl.startsWith("http://"))) {
+    return envUrl.replace(/\/$/, "");
+  }
+  return "https://bassfactory.co";
+}
+
+const APP_URL = getAppUrl();
 const LOGO_URL = `${APP_URL}/Bass-Factory-Blanco-Sin-Letras.png`;
 
 const baseTemplate = (title: string, contentHtml: string) => `
