@@ -65,13 +65,19 @@ export async function createBlogPost(formData: FormData) {
   };
 
   if (is_principal) {
-    let query = supabase.from("posts").select("id").eq("is_principal", true);
+    // Si se marca como principal (Hero), desmarcar automáticamente cualquier otro artículo previo
+    let unmarkQuery = supabase
+      .from("posts")
+      .update({ is_principal: false })
+      .eq("is_principal", true);
+
     if (post_id) {
-      query = query.neq("id", post_id);
+      unmarkQuery = unmarkQuery.neq("id", post_id);
     }
-    const { data: existingPrincipal } = await query.limit(1);
-    if (existingPrincipal && existingPrincipal.length > 0) {
-      throw new Error("Ya existe un artículo principal activo. Debes desactivarlo primero antes de marcar uno nuevo como principal.");
+
+    const { error: unmarkError } = await unmarkQuery;
+    if (unmarkError) {
+      console.warn("Advertencia al desmarcar principal anterior:", unmarkError);
     }
   }
 
@@ -122,6 +128,7 @@ export async function deleteBlogPost(id: string) {
 
   revalidatePath("/admin/blog");
   revalidatePath("/blog");
+  revalidatePath("/");
 }
 
 export async function createGenre(formData: FormData) {

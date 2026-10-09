@@ -13,6 +13,17 @@ export default async function AdminBlogList() {
       .select("*")
       .order("created_at", { ascending: false });
     
+    // Si existen múltiples artículos marcados como principal, conservar solo el más reciente y desmarcar los demás
+    if (data && data.length > 0) {
+      const principals = data.filter((p: any) => p.is_principal);
+      if (principals.length > 1) {
+        const [latest, ...duplicates] = principals;
+        const duplicateIds = duplicates.map((d: any) => d.id);
+        await supabase.from("posts").update({ is_principal: false }).in("id", duplicateIds);
+        duplicates.forEach((d: any) => { d.is_principal = false; });
+      }
+    }
+
     posts = data;
     if (error) errorMsg = error.message;
   } catch (err: any) {
@@ -88,7 +99,27 @@ export default async function AdminBlogList() {
             ) : (
               posts.map((post) => (
                 <tr key={post.id} style={{ borderBottom: '1px solid rgba(128,128,128,0.1)' }}>
-                  <td style={{ padding: '1rem', fontWeight: 500 }}>{post.title}</td>
+                  <td style={{ padding: '1rem', fontWeight: 500 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                      <span>{post.title}</span>
+                      {post.is_principal && (
+                        <span style={{ 
+                          padding: '0.15rem 0.5rem', 
+                          borderRadius: '4px', 
+                          fontSize: '0.7rem', 
+                          fontWeight: 800,
+                          backgroundColor: 'rgba(217, 4, 22, 0.15)',
+                          color: '#ff4d4d',
+                          border: '1px solid rgba(217, 4, 22, 0.35)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.25rem'
+                        }}>
+                          👑 Principal (Hero)
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td style={{ padding: '1rem' }}>
                     <span style={{ 
                       padding: '0.25rem 0.5rem', 

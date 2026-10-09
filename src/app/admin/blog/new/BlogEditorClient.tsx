@@ -149,9 +149,14 @@ export default function BlogEditorClient({
             <label htmlFor="is_published" style={{ fontWeight: 500 }}>Publicar Inmediatamente</label>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-            <input type="checkbox" id="is_principal" name="is_principal" style={{ width: '1.2rem', height: '1.2rem', accentColor: 'var(--color-magenta)' }} defaultChecked={initialData ? initialData.is_principal : false} />
-            <label htmlFor="is_principal" style={{ fontWeight: 500 }}>Establecer como Artículo Principal (Hero)</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <input type="checkbox" id="is_principal" name="is_principal" style={{ width: '1.2rem', height: '1.2rem', accentColor: 'var(--color-magenta)' }} defaultChecked={initialData ? initialData.is_principal : false} />
+              <label htmlFor="is_principal" style={{ fontWeight: 500, cursor: 'pointer' }}>Establecer como Artículo Principal (Hero)</label>
+            </div>
+            <p style={{ margin: '0.15rem 0 0 1.7rem', fontSize: '0.75rem', color: '#a1a1aa', lineHeight: 1.3 }}>
+              Al marcar este artículo, el que estaba anteriormente se desmarcará automáticamente para evitar duplicados.
+            </p>
           </div>
 
           <SubmitButton 
