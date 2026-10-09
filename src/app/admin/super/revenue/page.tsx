@@ -29,7 +29,7 @@ export default async function SuperRevenuePage() {
     adminDb.from("ticket_tiers").select("id, event_id, name, price"),
     adminDb.from("tickets").select("id, tier_id, order_id, status, created_at"),
     adminDb.from("merch_orders").select(`
-      id, customer_name, customer_email, total_amount, status, created_at, shipping_address,
+      id, customer_name, customer_email, total_amount, payment_provider, status, created_at, shipping_address,
       merch_order_items (
         id, product_name, variant_name, quantity, unit_price, total_price
       )
@@ -39,14 +39,20 @@ export default async function SuperRevenuePage() {
 
   const tierMap = new Map((tiers || []).map((t: any) => [t.id, t]));
   const eventMap = new Map((events || []).map((e: any) => [e.id, e]));
+  const orderMetaMap = new Map((merchOrders || []).map((o: any) => [o.id, o]));
 
   // Conjunto de IDs de órdenes correspondientes a tickets
   const ticketOrderIds = new Set((tickets || []).map((t: any) => t.order_id).filter(Boolean));
 
-  // 3. Cálculos de Boletería
-  // Filtrar boletas válidas o escaneadas
+  // 3. Cálculos de Boletería (Excluyendo cortesías $0 de la tarifa de desarrollo)
+  const isTicketCourtesy = (t: any) => {
+    const order = orderMetaMap.get(t.order_id);
+    return order?.payment_provider === "courtesy";
+  };
+
   const validTickets = (tickets || []).filter((t: any) => t.status === "valid" || t.status === "scanned");
-  const totalTicketsSold = validTickets.length;
+  const commercialValidTickets = validTickets.filter((t: any) => !isTicketCourtesy(t));
+  const totalTicketsSold = commercialValidTickets.length;
   const devTicketRevenue = totalTicketsSold * devFeePerTicket;
 
   // Agrupar tickets por orden para visualización en el libro contable
@@ -62,7 +68,8 @@ export default async function SuperRevenuePage() {
   // 4. Cálculos de Merch
   let totalMerchVolume = 0;
   const paidMerchOrders = (merchOrders || []).filter((order: any) => {
-    const isTicketOrder = ticketOrderIds.has(order.id) || (order.shipping_address && order.shipping_address.toLowerCase().includes("digital"));
+    const isCourtesy = order.payment_provider === "courtesy";
+    const isTicketOrder = isCourtesy || ticketOrderIds.has(order.id) || (order.shipping_address && order.shipping_address.toLowerCase().includes("digital"));
     const isPaid = order.status === "paid" || order.status === "shipped" || order.status === "delivered";
     if (!isTicketOrder && isPaid) {
       totalMerchVolume += Number(order.total_amount || 0);
@@ -88,19 +95,21 @@ export default async function SuperRevenuePage() {
     const firstTicket = orderTickets[0];
     const tier = tierMap.get(firstTicket.tier_id);
     const event = tier ? eventMap.get(tier.event_id) : null;
-    const ticketCount = orderTickets.length;
-    const totalOrderValue = ticketCount * Number(tier?.price || 0);
-    const devShare = ticketCount * devFeePerTicket;
+    const orderMeta = orderMetaMap.get(orderId);
+    const isCourtesy = orderMeta?.payment_provider === "courtesy";
 
-    // Buscar datos de cliente si existe la orden en merch_orders
-    const orderMeta = (merchOrders || []).find((o: any) => o.id === orderId);
+    const ticketCount = orderTickets.length;
+    const totalOrderValue = isCourtesy ? 0 : ticketCount * Number(tier?.price || 0);
+    const devShare = isCourtesy ? 0 : ticketCount * devFeePerTicket;
 
     transactions.push({
       id: orderId,
-      type: "ticket",
+      type: (isCourtesy ? "courtesy" : "ticket") as any,
       date: firstTicket.created_at,
-      concept: `Boletería: ${event?.title || "Evento Oficial"}`,
-      details: `${ticketCount}x ${tier?.name || "Boleto"} (${devFeePerTicket.toLocaleString("es-CO")} COP c/u)`,
+      concept: isCourtesy ? `Cortesía: ${event?.title || "Evento Oficial"}` : `Boletería: ${event?.title || "Evento Oficial"}`,
+      details: isCourtesy 
+        ? `${ticketCount}x ${tier?.name || "Boleto"} (Cortesía $0 COP - Sin comisión)`
+        : `${ticketCount}x ${tier?.name || "Boleto"} (${devFeePerTicket.toLocaleString("es-CO")} COP c/u)`,
       customer: orderMeta?.customer_name || orderMeta?.customer_email || "Usuario App",
       grossAmount: totalOrderValue,
       devShare,

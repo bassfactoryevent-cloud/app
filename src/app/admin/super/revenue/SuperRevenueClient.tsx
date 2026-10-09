@@ -24,7 +24,7 @@ interface SuperRevenueClientProps {
   };
   transactions: {
     id: string;
-    type: "ticket" | "merch" | "ad";
+    type: "ticket" | "merch" | "ad" | "courtesy";
     date: string;
     concept: string;
     customer: string;
@@ -44,7 +44,7 @@ export default function SuperRevenueClient({
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [typeFilter, setTypeFilter] = useState<"all" | "ticket" | "merch" | "ad">("all");
+  const [typeFilter, setTypeFilter] = useState<"all" | "ticket" | "courtesy" | "merch" | "ad">("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [showConfig, setShowConfig] = useState(false);
 
@@ -436,7 +436,7 @@ export default function SuperRevenueClient({
 
             {/* Selector Tipo */}
             <div style={{ display: "flex", gap: "0.25rem", backgroundColor: "rgba(0,0,0,0.4)", padding: "0.25rem", borderRadius: "0.5rem" }}>
-              {(["all", "ticket", "merch", "ad"] as const).map((t) => (
+              {(["all", "ticket", "courtesy", "merch", "ad"] as const).map((t) => (
                 <button
                   key={t}
                   onClick={() => setTypeFilter(t)}
@@ -452,7 +452,7 @@ export default function SuperRevenueClient({
                     transition: "all 0.2s"
                   }}
                 >
-                  {t === "all" ? "Todos" : t === "ticket" ? "Boletas" : t === "merch" ? "Merch" : "Pautas"}
+                  {t === "all" ? "Todos" : t === "ticket" ? "Boletas" : t === "courtesy" ? "Cortesías" : t === "merch" ? "Merch" : "Pautas"}
                 </button>
               ))}
             </div>
@@ -492,20 +492,36 @@ export default function SuperRevenueClient({
                     onMouseOut={(e) => e.currentTarget.style.backgroundColor = "transparent"}
                   >
                     <td style={{ padding: "1rem 1.5rem" }}>
-                      <span style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "0.35rem",
-                        padding: "0.25rem 0.6rem",
-                        borderRadius: "9999px",
-                        fontSize: "0.75rem",
-                        fontWeight: 700,
-                        backgroundColor: tx.type === "ticket" ? "rgba(0, 240, 255, 0.15)" : tx.type === "merch" ? "rgba(236, 72, 153, 0.15)" : "rgba(234, 179, 8, 0.15)",
-                        color: tx.type === "ticket" ? "#00f0ff" : tx.type === "merch" ? "#ec4899" : "#eab308"
-                      }}>
-                        {tx.type === "ticket" ? <Ticket size={12} /> : tx.type === "merch" ? <ShoppingBag size={12} /> : <Megaphone size={12} />}
-                        {tx.type === "ticket" ? "Boleto" : tx.type === "merch" ? "Merch" : "Pauta"}
-                      </span>
+                      {tx.type === "courtesy" ? (
+                        <span style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.35rem",
+                          padding: "0.25rem 0.6rem",
+                          borderRadius: "9999px",
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                          backgroundColor: "rgba(168, 85, 247, 0.15)",
+                          color: "#c084fc"
+                        }}>
+                          <Ticket size={12} /> Cortesía
+                        </span>
+                      ) : (
+                        <span style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.35rem",
+                          padding: "0.25rem 0.6rem",
+                          borderRadius: "9999px",
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                          backgroundColor: tx.type === "ticket" ? "rgba(0, 240, 255, 0.15)" : tx.type === "merch" ? "rgba(236, 72, 153, 0.15)" : "rgba(234, 179, 8, 0.15)",
+                          color: tx.type === "ticket" ? "#00f0ff" : tx.type === "merch" ? "#ec4899" : "#eab308"
+                        }}>
+                          {tx.type === "ticket" ? <Ticket size={12} /> : tx.type === "merch" ? <ShoppingBag size={12} /> : <Megaphone size={12} />}
+                          {tx.type === "ticket" ? "Boleto" : tx.type === "merch" ? "Merch" : "Pauta"}
+                        </span>
+                      )}
                     </td>
                     <td style={{ padding: "1rem 1.5rem" }}>
                       <div style={{ fontWeight: 700, color: "white" }}>{tx.concept}</div>

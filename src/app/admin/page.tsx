@@ -35,25 +35,29 @@ export default async function AdminDashboard() {
     adminDb.from("events").select("id, title"),
     adminDb.from("tickets").select("id, tier_id, order_id, status, assigned_name, assigned_email, created_at").order("created_at", { ascending: false }).limit(6),
     adminDb.from("merch_orders").select(`
-      id, customer_name, customer_email, shipping_city, shipping_address, total_amount, status, created_at,
+      id, customer_name, customer_email, shipping_city, shipping_address, total_amount, payment_provider, status, created_at,
       merch_order_items ( id, product_name, quantity, total_price )
     `).order("created_at", { ascending: false })
   ]);
 
   const tierMap = new Map((allTiers || []).map((t: any) => [t.id, t]));
   const eventMap = new Map((allEvents || []).map((e: any) => [e.id, e]));
+  const orderMap = new Map((allOrders || []).map((o: any) => [o.id, o]));
   const ticketOrderIds = new Set((rawTickets || []).map((t: any) => t.order_id).filter(Boolean));
 
   // 2. Mapeo de Boletas Recientes para la tabla interactiva
   const recentTickets = (rawTickets || []).map((t: any) => {
     const tier = tierMap.get(t.tier_id);
     const event = tier ? eventMap.get(tier.event_id) : null;
+    const order = orderMap.get(t.order_id);
+    const isCourtesy = order?.payment_provider === "courtesy";
     return {
       id: t.id,
       eventTitle: event?.title || "Evento Bassfactory",
       eventId: tier?.event_id || "",
       tierName: tier?.name || "General",
-      price: Number(tier?.price || 0),
+      price: isCourtesy ? 0 : Number(tier?.price || 0),
+      isCourtesy: Boolean(isCourtesy),
       buyerName: t.assigned_name || "Titular",
       buyerEmail: t.assigned_email || "",
       status: t.status || "valid",
@@ -64,7 +68,8 @@ export default async function AdminDashboard() {
   // 3. Mapeo de Pedidos de Merch Recientes (filtrando boletería electrónica)
   const recentMerchOrders = (allOrders || [])
     .filter((order: any) => {
-      const isTicket = ticketOrderIds.has(order.id) || (order.shipping_address && order.shipping_address.toLowerCase().includes("digital"));
+      const isCourtesy = order.payment_provider === "courtesy";
+      const isTicket = isCourtesy || ticketOrderIds.has(order.id) || (order.shipping_address && order.shipping_address.toLowerCase().includes("digital"));
       return !isTicket && order.merch_order_items && order.merch_order_items.length > 0;
     })
     .slice(0, 5)
@@ -81,7 +86,7 @@ export default async function AdminDashboard() {
 
   // 4. Ventas Totales Consolidadas
   const totalSales = (allOrders || [])
-    .filter((o: any) => o.status === "paid" || o.status === "shipped" || o.status === "delivered")
+    .filter((o: any) => o.payment_provider !== "courtesy" && (o.status === "paid" || o.status === "shipped" || o.status === "delivered"))
     .reduce((sum: number, o: any) => sum + Number(o.total_amount || 0), 0);
 
   const stats = [

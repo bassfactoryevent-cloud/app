@@ -15,7 +15,7 @@ export default async function AdminFinancesPage() {
     adminDb.from("ticket_tiers").select("id, event_id, name, price, quantity_available"),
     adminDb.from("tickets").select("id, tier_id, order_id, status, scanned_at, created_at"),
     adminDb.from("merch_orders").select(`
-      id, customer_name, customer_email, total_amount, status, created_at, shipping_address,
+      id, customer_name, customer_email, total_amount, payment_provider, status, created_at, shipping_address,
       merch_order_items (
         id, product_name, variant_name, quantity, unit_price, total_price
       )
@@ -24,12 +24,13 @@ export default async function AdminFinancesPage() {
 
   const tierMap = new Map((tiers || []).map((t: any) => [t.id, t]));
   const eventMap = new Map((events || []).map((e: any) => [e.id, e]));
+  const orderMap = new Map((allOrders || []).map((o: any) => [o.id, o]));
 
   // Identificar qué órdenes corresponden a boletería
   const ticketOrderIds = new Set((tickets || []).map((t: any) => t.order_id).filter(Boolean));
 
   // 2. Calcular métricas por Evento
-  const eventStatsMap = new Map<string, { id: string; title: string; start_date: string; location_name: string; cover_image: string; ticketsSold: number; scannedCount: number; totalCapacity: number; totalRevenue: number }>();
+  const eventStatsMap = new Map<string, { id: string; title: string; start_date: string; location_name: string; cover_image: string; ticketsSold: number; courtesyCount: number; scannedCount: number; totalCapacity: number; totalRevenue: number }>();
 
   (events || []).forEach((ev: any) => {
     const eventTiers = (tiers || []).filter((t: any) => t.event_id === ev.id);
@@ -43,6 +44,7 @@ export default async function AdminFinancesPage() {
       location_name: ev.location_name,
       cover_image: ev.cover_image,
       ticketsSold: 0,
+      courtesyCount: 0,
       scannedCount: 0,
       totalCapacity,
       totalRevenue: 0
@@ -53,11 +55,21 @@ export default async function AdminFinancesPage() {
     const tier = tierMap.get(ticket.tier_id);
     if (tier && tier.event_id && eventStatsMap.has(tier.event_id)) {
       const stat = eventStatsMap.get(tier.event_id)!;
-      stat.ticketsSold += 1;
+      const order = orderMap.get(ticket.order_id);
+      const isCourtesy = order?.payment_provider === "courtesy";
+
+      if (isCourtesy) {
+        stat.courtesyCount = (stat.courtesyCount || 0) + 1;
+      } else {
+        stat.ticketsSold += 1;
+      }
+
       if (ticket.status === "scanned" || Boolean(ticket.scanned_at)) {
         stat.scannedCount += 1;
       }
-      if (ticket.status === "valid" || ticket.status === "scanned") {
+
+      // Solo sumar ingresos de boletas comerciales pagadas (cortesías son 100% $0 COP)
+      if (!isCourtesy && (ticket.status === "valid" || ticket.status === "scanned")) {
         stat.totalRevenue += Number(tier.price || 0);
       }
     }
@@ -71,7 +83,8 @@ export default async function AdminFinancesPage() {
   let merchRevenue = 0;
 
   (allOrders || []).forEach((order: any) => {
-    const isTicketOrder = ticketOrderIds.has(order.id) || (order.shipping_address && order.shipping_address.toLowerCase().includes("digital"));
+    const isCourtesy = order.payment_provider === "courtesy";
+    const isTicketOrder = isCourtesy || ticketOrderIds.has(order.id) || (order.shipping_address && order.shipping_address.toLowerCase().includes("digital"));
     
     if (!isTicketOrder && order.merch_order_items && order.merch_order_items.length > 0) {
       if (order.status === "paid" || order.status === "shipped" || order.status === "delivered") {
@@ -92,13 +105,17 @@ export default async function AdminFinancesPage() {
 
   const productStats = Array.from(productStatsMap.values());
   const totalRevenue = ticketRevenue + merchRevenue;
-  const totalTransactions = (allOrders || []).filter((o: any) => o.status === "paid" || o.status === "shipped" || o.status === "delivered").length;
+  const totalTransactions = (allOrders || []).filter((o: any) => 
+    o.payment_provider !== "courtesy" && 
+    (o.status === "paid" || o.status === "shipped" || o.status === "delivered")
+  ).length;
 
   // 4. Preparar el Libro Maestro de Transacciones Unificado
   const transactions: any[] = [];
 
   (allOrders || []).forEach((order: any) => {
-    const isTicket = ticketOrderIds.has(order.id) || (order.shipping_address && order.shipping_address.toLowerCase().includes("digital"));
+    const isCourtesy = order.payment_provider === "courtesy";
+    const isTicket = isCourtesy || ticketOrderIds.has(order.id) || (order.shipping_address && order.shipping_address.toLowerCase().includes("digital"));
     
     let description = "Compra de Tienda";
     if (isTicket) {
@@ -106,18 +123,22 @@ export default async function AdminFinancesPage() {
       const orderTicket = (tickets || []).find((t: any) => t.order_id === order.id);
       const tier = orderTicket ? tierMap.get(orderTicket.tier_id) : null;
       const event = tier ? eventMap.get(tier.event_id) : null;
-      description = event ? `Boleta: ${event.title} (${tier?.name || "General"})` : "Entrada Oficial a Evento";
+      if (isCourtesy) {
+        description = event ? `Cortesía: ${event.title} (${tier?.name || "General"})` : "Cortesía Entrada Oficial";
+      } else {
+        description = event ? `Boleta: ${event.title} (${tier?.name || "General"})` : "Entrada Oficial a Evento";
+      }
     } else if (order.merch_order_items && order.merch_order_items.length > 0) {
       description = order.merch_order_items.map((it: any) => `${it.quantity}x ${it.product_name}`).join(", ");
     }
 
     transactions.push({
       id: order.id,
-      type: isTicket ? "ticket" : "merch",
+      type: isCourtesy ? "courtesy" : (isTicket ? "ticket" : "merch"),
       description,
       customer_name: order.customer_name,
       customer_email: order.customer_email,
-      total_amount: order.total_amount,
+      total_amount: isCourtesy ? 0 : Number(order.total_amount || 0),
       status: order.status,
       created_at: order.created_at
     });

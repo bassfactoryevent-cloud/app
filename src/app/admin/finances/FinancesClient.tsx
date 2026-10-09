@@ -44,6 +44,7 @@ export default function FinancesClient({
     if (!matchesSearch) return false;
 
     if (txTypeFilter === "ticket") return tx.type === "ticket";
+    if (txTypeFilter === "courtesy") return tx.type === "courtesy";
     if (txTypeFilter === "merch") return tx.type === "merch";
 
     return true;
@@ -229,10 +230,24 @@ export default function FinancesClient({
                         {ev.start_date ? new Date(ev.start_date).toLocaleDateString("es-CO") : "Por confirmar"}
                       </td>
                       <td style={{ padding: "1rem", textAlign: "center", fontWeight: 700, color: "white" }}>
-                        {ev.ticketsSold}
+                        <div>{ev.ticketsSold}</div>
+                        {ev.courtesyCount > 0 && (
+                          <span style={{
+                            display: "inline-block",
+                            fontSize: "0.72rem",
+                            fontWeight: 700,
+                            padding: "0.15rem 0.45rem",
+                            borderRadius: "999px",
+                            backgroundColor: "rgba(168, 85, 247, 0.15)",
+                            color: "#c084fc",
+                            marginTop: "0.25rem"
+                          }}>
+                            +{ev.courtesyCount} cortesía{ev.courtesyCount > 1 ? "s" : ""}
+                          </span>
+                        )}
                       </td>
                       <td style={{ padding: "1rem", textAlign: "center", color: "var(--color-accent, #00f0ff)", fontWeight: 700 }}>
-                        {ev.scannedCount} <span style={{ fontSize: "0.75rem", opacity: 0.6, color: "var(--color-text-secondary)" }}>/ {ev.totalCapacity > 0 ? ev.totalCapacity : ev.ticketsSold}</span>
+                        {ev.scannedCount} <span style={{ fontSize: "0.75rem", opacity: 0.6, color: "var(--color-text-secondary)" }}>/ {ev.totalCapacity > 0 ? ev.totalCapacity : (ev.ticketsSold + (ev.courtesyCount || 0))}</span>
                       </td>
                       <td style={{ padding: "1rem", textAlign: "right", fontWeight: 800, color: ev.totalRevenue > 0 ? "#22c55e" : "rgba(255,255,255,0.4)", fontSize: "1rem", fontFamily: "monospace" }}>
                         {formatCOP(ev.totalRevenue)}
@@ -358,6 +373,7 @@ export default function FinancesClient({
               {[
                 { id: "all", label: "Todas" },
                 { id: "ticket", label: "Boletería" },
+                { id: "courtesy", label: "Cortesías" },
                 { id: "merch", label: "Merch" },
               ].map((pill) => (
                 <button
@@ -408,20 +424,49 @@ export default function FinancesClient({
                       #{tx.id.slice(0, 8).toUpperCase()}
                     </td>
                     <td style={{ padding: "1rem" }}>
-                      <span style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "4px",
-                        padding: "0.25rem 0.55rem",
-                        borderRadius: "4px",
-                        fontSize: "0.75rem",
-                        fontWeight: 700,
-                        backgroundColor: tx.type === "ticket" ? "rgba(0, 240, 255, 0.12)" : "rgba(236, 72, 153, 0.12)",
-                        color: tx.type === "ticket" ? "var(--color-accent, #00f0ff)" : "#ec4899"
-                      }}>
-                        {tx.type === "ticket" ? <Ticket size={12} /> : <ShoppingBag size={12} />}
-                        {tx.type === "ticket" ? "Boletería" : "Merch"}
-                      </span>
+                      {tx.type === "courtesy" ? (
+                        <span style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          padding: "0.25rem 0.55rem",
+                          borderRadius: "4px",
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                          backgroundColor: "rgba(168, 85, 247, 0.15)",
+                          color: "#c084fc"
+                        }}>
+                          <Ticket size={12} /> Cortesía
+                        </span>
+                      ) : tx.type === "ticket" ? (
+                        <span style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          padding: "0.25rem 0.55rem",
+                          borderRadius: "4px",
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                          backgroundColor: "rgba(0, 240, 255, 0.12)",
+                          color: "var(--color-accent, #00f0ff)"
+                        }}>
+                          <Ticket size={12} /> Boletería
+                        </span>
+                      ) : (
+                        <span style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          padding: "0.25rem 0.55rem",
+                          borderRadius: "4px",
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                          backgroundColor: "rgba(236, 72, 153, 0.12)",
+                          color: "#ec4899"
+                        }}>
+                          <ShoppingBag size={12} /> Merch
+                        </span>
+                      )}
                     </td>
                     <td style={{ padding: "1rem", fontSize: "0.85rem", color: "white", fontWeight: 600 }}>
                       {tx.description}

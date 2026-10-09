@@ -9,6 +9,7 @@ interface RecentTicket {
   eventId: string;
   tierName: string;
   price: number;
+  isCourtesy?: boolean;
   buyerName: string;
   buyerEmail: string;
   status: string;
@@ -59,7 +60,7 @@ export default function DashboardRecentTables({
           <div>
             <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: "white", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
               <Ticket size={20} style={{ color: "var(--color-accent, #00f0ff)" }} />
-              Últimas Boletas Vendidas (Boletería)
+              Últimas Boletas Emitidas (Boletería y Cortesías)
             </h3>
             <p style={{ color: "var(--color-text-secondary)", fontSize: "0.825rem", margin: "4px 0 0 0" }}>
               Monitoreo en tiempo real de accesos y entradas emitidas. Haz clic en una fila para ir al evento.
@@ -114,18 +115,18 @@ export default function DashboardRecentTables({
                         borderRadius: "4px",
                         fontSize: "0.75rem",
                         fontWeight: 700,
-                        backgroundColor: "rgba(0, 240, 255, 0.1)",
-                        color: "var(--color-accent, #00f0ff)"
+                        backgroundColor: t.isCourtesy ? "rgba(168, 85, 247, 0.15)" : "rgba(0, 240, 255, 0.1)",
+                        color: t.isCourtesy ? "#c084fc" : "var(--color-accent, #00f0ff)"
                       }}>
-                        {t.tierName}
+                        {t.tierName} {t.isCourtesy && "• Cortesía"}
                       </span>
                     </td>
                     <td style={{ padding: "1rem 1.25rem" }}>
                       <div style={{ color: "white", fontWeight: 600, fontSize: "0.875rem" }}>{t.buyerName}</div>
                       <div style={{ color: "var(--color-text-secondary)", fontSize: "0.75rem" }}>{t.buyerEmail}</div>
                     </td>
-                    <td style={{ padding: "1rem 1.25rem", textAlign: "right", fontWeight: 800, color: "white", fontFamily: "monospace" }}>
-                      {formatCOP(t.price)}
+                    <td style={{ padding: "1rem 1.25rem", textAlign: "right", fontWeight: 800, color: t.isCourtesy ? "#c084fc" : "white", fontFamily: "monospace" }}>
+                      {t.isCourtesy ? "$0 (Cortesía)" : formatCOP(t.price)}
                     </td>
                     <td style={{ padding: "1rem 1.25rem", color: "var(--color-text-secondary)", fontSize: "0.8rem" }}>
                       {new Date(t.createdAt).toLocaleDateString("es-CO")}
