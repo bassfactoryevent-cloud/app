@@ -932,6 +932,24 @@ export default function EventDashboardClient({
                       <td style={{ padding: "1rem" }}>
                         <div style={{ fontWeight: 600, color: "white" }}>{order.customer_name}</div>
                         <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>{order.customer_email}</div>
+                        {order.payment_provider === 'courtesy' && (
+                          <div style={{ marginTop: '0.35rem', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                            <span style={{
+                              padding: '0.1rem 0.4rem',
+                              borderRadius: '4px',
+                              backgroundColor: 'rgba(168, 85, 247, 0.15)',
+                              color: '#c084fc',
+                              fontWeight: 700
+                            }}>
+                              👤 {order.shipping_address ? order.shipping_address.replace("Emitido por admin:", "Autorizado por:").trim() : "Autorizado por admin"}
+                            </span>
+                            {order.shipping_city && (
+                              <span style={{ color: 'rgba(255, 255, 255, 0.6)', fontWeight: 500 }}>
+                                • {order.shipping_city}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </td>
                       <td style={{ padding: "1rem", color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
                         {new Date(order.created_at).toLocaleString()}

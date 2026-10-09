@@ -15,7 +15,7 @@ export default async function AdminFinancesPage() {
     adminDb.from("ticket_tiers").select("id, event_id, name, price, quantity_available"),
     adminDb.from("tickets").select("id, tier_id, order_id, status, scanned_at, created_at"),
     adminDb.from("merch_orders").select(`
-      id, customer_name, customer_email, total_amount, payment_provider, status, created_at, shipping_address,
+      id, customer_name, customer_email, total_amount, payment_provider, status, created_at, shipping_address, shipping_city,
       merch_order_items (
         id, product_name, variant_name, quantity, unit_price, total_price
       )
@@ -140,6 +140,18 @@ export default async function AdminFinancesPage() {
       description = order.merch_order_items.map((it: any) => `${it.quantity}x ${it.product_name}`).join(", ");
     }
 
+    // Identificar qué administrador autorizó la cortesía y bajo qué motivo
+    let issuerAdmin: string | null = null;
+    let courtesyReason: string | null = null;
+    if (isCourtesy) {
+      if (order.shipping_address && order.shipping_address.includes("Emitido por admin:")) {
+        issuerAdmin = order.shipping_address.replace("Emitido por admin:", "").trim();
+      } else if (order.shipping_address) {
+        issuerAdmin = order.shipping_address.trim();
+      }
+      courtesyReason = order.shipping_city || "Invitación";
+    }
+
     transactions.push({
       id: order.id,
       type: isCourtesy ? "courtesy" : (isTicket ? "ticket" : "merch"),
@@ -148,6 +160,8 @@ export default async function AdminFinancesPage() {
       customer_email: order.customer_email,
       total_amount: isCourtesy ? 0 : Number(order.total_amount || 0),
       status: orderStatus,
+      issuerAdmin,
+      courtesyReason,
       created_at: order.created_at
     });
   });

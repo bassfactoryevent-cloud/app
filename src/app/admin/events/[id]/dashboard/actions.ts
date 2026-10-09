@@ -34,7 +34,7 @@ export async function issueCourtesyTickets(params: IssueCourtesyParams) {
     // Validar rol de administrador
     const { data: profile } = await adminDb
       .from("profiles")
-      .select("role")
+      .select("role, full_name")
       .eq("id", user.id)
       .single();
 
@@ -143,7 +143,7 @@ export async function issueCourtesyTickets(params: IssueCourtesyParams) {
       payment_id: paymentId,
       shipping_city: cleanReasonTag.slice(0, 99),
       shipping_country: "Colombia",
-      shipping_address: `Emitido por admin: ${user.email}`.slice(0, 255)
+      shipping_address: `Emitido por admin: ${profile?.full_name ? `${profile.full_name} (${user.email})` : user.email}`.slice(0, 255)
     });
 
     if (orderError) {

@@ -102,13 +102,15 @@ export default async function SuperRevenuePage() {
     const totalOrderValue = isCourtesy ? 0 : ticketCount * Number(tier?.price || 0);
     const devShare = isCourtesy ? 0 : ticketCount * devFeePerTicket;
 
+    const issuerTag = isCourtesy && orderMeta?.shipping_address ? ` • ${orderMeta.shipping_address.replace("Emitido por admin:", "Autorizado por:").trim()}` : "";
+
     transactions.push({
       id: orderId,
       type: (isCourtesy ? "courtesy" : "ticket") as any,
       date: firstTicket.created_at,
       concept: isCourtesy ? `Cortesía: ${event?.title || "Evento Oficial"}` : `Boletería: ${event?.title || "Evento Oficial"}`,
       details: isCourtesy 
-        ? `${ticketCount}x ${tier?.name || "Boleto"} (Cortesía $0 COP - Sin comisión)`
+        ? `${ticketCount}x ${tier?.name || "Boleto"} (Cortesía $0 COP)${issuerTag}`
         : `${ticketCount}x ${tier?.name || "Boleto"} (${devFeePerTicket.toLocaleString("es-CO")} COP c/u)`,
       customer: orderMeta?.customer_name || orderMeta?.customer_email || "Usuario App",
       grossAmount: totalOrderValue,

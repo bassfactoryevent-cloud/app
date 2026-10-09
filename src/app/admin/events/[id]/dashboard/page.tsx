@@ -55,7 +55,7 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
     if (orderIds.length > 0) {
       const { data: rawOrders } = await adminDb
         .from("merch_orders")
-        .select("id, customer_name, customer_email, total_amount, created_at, status, payment_provider, payment_id, shipping_city")
+        .select("id, customer_name, customer_email, total_amount, created_at, status, payment_provider, payment_id, shipping_city, shipping_address")
         .in("id", orderIds)
         .order("created_at", { ascending: false });
 

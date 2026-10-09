@@ -468,8 +468,30 @@ export default function FinancesClient({
                         </span>
                       )}
                     </td>
-                    <td style={{ padding: "1rem", fontSize: "0.85rem", color: "white", fontWeight: 600 }}>
-                      {tx.description}
+                    <td style={{ padding: "1rem" }}>
+                      <div style={{ fontSize: "0.85rem", color: "white", fontWeight: 600 }}>{tx.description}</div>
+                      {tx.issuerAdmin && (
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.74rem", marginTop: "0.3rem", flexWrap: "wrap" }}>
+                          <span style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "3px",
+                            padding: "0.15rem 0.45rem",
+                            borderRadius: "4px",
+                            backgroundColor: "rgba(168, 85, 247, 0.15)",
+                            color: "#c084fc",
+                            fontSize: "0.72rem",
+                            fontWeight: 700
+                          }}>
+                            👤 Autorizado por: {tx.issuerAdmin}
+                          </span>
+                          {tx.courtesyReason && (
+                            <span style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "0.72rem", fontWeight: 500 }}>
+                              • Motivo: {tx.courtesyReason}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td style={{ padding: "1rem" }}>
                       <div style={{ color: "white", fontWeight: 600, fontSize: "0.85rem" }}>{tx.customer_name}</div>
