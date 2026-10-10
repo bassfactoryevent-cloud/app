@@ -196,6 +196,9 @@ export function AdminHeader({ profile, onOpenMobileMenu }: AdminHeaderProps) {
         { label: "Consumo Vercel & BD", href: "/admin/super/infrastructure", isCurrent: true }
       ];
     }
+    if (pathname.startsWith("/admin/analytics")) {
+      return [{ label: "Analíticas & Tráfico En Vivo", href: "/admin/analytics", isCurrent: true }];
+    }
 
     const cleanSegment = pathname.replace("/admin/", "").replace(/-/g, " ");
     return [{ label: cleanSegment, href: pathname, isCurrent: true }];
@@ -355,7 +358,40 @@ export function AdminHeader({ profile, onOpenMobileMenu }: AdminHeaderProps) {
         </div>
 
         {/* RIGHT: Live Status + Clock + Quick Create Button + Interactive Notifications */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", flexShrink: 0 }}>
+          {/* Quick Analytics & Real-Time Traffic Access */}
+          <Link
+            href="/admin/analytics"
+            className="header-analytics-badge"
+            title="Analíticas de tráfico 100% en vivo"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "0.32rem 0.7rem",
+              borderRadius: "0.5rem",
+              backgroundColor: pathname === "/admin/analytics" ? "rgba(217, 4, 22, 0.16)" : "rgba(255, 255, 255, 0.04)",
+              border: `1px solid ${pathname === "/admin/analytics" ? "rgba(217, 4, 22, 0.5)" : "rgba(255, 255, 255, 0.08)"}`,
+              fontSize: "0.74rem",
+              fontWeight: 700,
+              color: pathname === "/admin/analytics" ? "#ff4d5a" : "#FFFFFF",
+              textDecoration: "none",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <Activity size={13} style={{ color: "#D90416" }} />
+            <span>Tráfico en Vivo</span>
+            <span
+              style={{
+                width: "6px",
+                height: "6px",
+                borderRadius: "50%",
+                backgroundColor: "#22c55e",
+                boxShadow: "0 0 6px #22c55e"
+              }}
+            />
+          </Link>
+
           {/* Live System Health Badge */}
           <div
             title="Infraestructura Operativa: Supabase DB OK • Pasarela Bold OK"

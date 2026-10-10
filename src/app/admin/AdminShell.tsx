@@ -130,6 +130,11 @@ export function AdminShell({ profile, children }: AdminShellProps) {
       title: "Marketing & Tienda",
       items: [
         {
+          name: "Analíticas & Tráfico",
+          href: "/admin/analytics",
+          icon: <Activity size={19} />,
+        },
+        {
           name: "Pautas (Ads)",
           href: "/admin/ads",
           icon: <Megaphone size={19} />,
