@@ -37,6 +37,8 @@ export const viewport = {
 };
 
 import { Toaster } from "sonner";
+import { Suspense } from "react";
+import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 
 export default function RootLayout({
   children,
@@ -47,6 +49,9 @@ export default function RootLayout({
     <html lang="es" className={`dark ${geistSans.variable} ${geistMono.variable}`} style={{ colorScheme: "dark", backgroundColor: "#000000" }} suppressHydrationWarning>
       <body style={{ backgroundColor: "#000000", color: "#FFFFFF" }}>
         <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark" enableSystem={false} disableTransitionOnChange>
+          <Suspense fallback={null}>
+            <AnalyticsTracker />
+          </Suspense>
           <Toaster richColors position="top-right" theme="dark" />
           {children}
         </ThemeProvider>
