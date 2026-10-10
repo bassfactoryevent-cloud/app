@@ -103,6 +103,104 @@ function getFriendlyPath(path: string, eventMap: Record<string, string>): string
   return path;
 }
 
+// Colombia Department / Region codes
+const COLOMBIA_REGIONS: Record<string, string> = {
+  RIS: "Risaralda",
+  ANT: "Antioquia",
+  DC: "Bogotá D.C.",
+  CUN: "Cundinamarca",
+  VAL: "Valle del Cauca",
+  CAL: "Caldas",
+  QUI: "Quindío",
+  SAN: "Santander",
+  NSA: "Norte de Santander",
+  ATL: "Atlántico",
+  BOL: "Bolívar",
+  TOL: "Tolima",
+  HUI: "Huila",
+  BOY: "Boyacá",
+  MAG: "Magdalena",
+  CES: "Cesar",
+  COR: "Córdoba",
+  SUC: "Sucre",
+  CAU: "Cauca",
+  NAR: "Nariño",
+  MET: "Meta",
+};
+
+function getRegionName(code?: string | null): string {
+  if (!code) return "";
+  const upper = code.toUpperCase();
+  return COLOMBIA_REGIONS[upper] || code;
+}
+
+export function formatLocationInfo(city: string, region?: string | null) {
+  const regName = getRegionName(region);
+  const lowerCity = (city || "").toLowerCase().trim();
+
+  if (lowerCity === "pereira" || (regName === "Risaralda" && lowerCity.includes("pereira"))) {
+    return {
+      title: "Pereira (Risaralda)",
+      subtext: "Área Metro: Santa Rosa de Cabal, Dosquebradas",
+      short: "Pereira, Risaralda",
+    };
+  }
+  if (lowerCity.includes("santa rosa")) {
+    return {
+      title: "Santa Rosa de Cabal (Risaralda)",
+      subtext: "Eje Cafetero",
+      short: "Santa Rosa de Cabal",
+    };
+  }
+  if (lowerCity === "medellin" || lowerCity === "medellín") {
+    return {
+      title: "Medellín (Antioquia)",
+      subtext: "Valle de Aburrá: Envigado, Bello, Itagüí",
+      short: "Medellín, Antioquia",
+    };
+  }
+  if (lowerCity === "bogota" || lowerCity === "bogotá") {
+    return {
+      title: "Bogotá D.C.",
+      subtext: "Distrito Capital & Sabana",
+      short: "Bogotá D.C.",
+    };
+  }
+  if (lowerCity === "cali") {
+    return {
+      title: "Cali (Valle del Cauca)",
+      subtext: "Área Metropolitana",
+      short: "Cali, Valle",
+    };
+  }
+  if (lowerCity === "manizales") {
+    return {
+      title: "Manizales (Caldas)",
+      subtext: "Eje Cafetero",
+      short: "Manizales, Caldas",
+    };
+  }
+  if (lowerCity === "armenia") {
+    return {
+      title: "Armenia (Quindío)",
+      subtext: "Eje Cafetero",
+      short: "Armenia, Quindío",
+    };
+  }
+  if (regName && !lowerCity.includes(regName.toLowerCase())) {
+    return {
+      title: `${city} (${regName})`,
+      subtext: `Departamento de ${regName}`,
+      short: `${city}, ${regName}`,
+    };
+  }
+  return {
+    title: city || "Colombia",
+    subtext: regName || "Colombia",
+    short: city || "Colombia",
+  };
+}
+
 export default function AnalyticsDashboardClient({ initialPageviews, eventMap }: AnalyticsProps) {
   const [pageviews, setPageviews] = useState<PageViewItem[]>(initialPageviews);
   const [timeRange, setTimeRange] = useState<"24h" | "7d" | "30d" | "all">("7d");
@@ -158,15 +256,28 @@ export default function AnalyticsDashboardClient({ initialPageviews, eventMap }:
     return new Set(recent.map((v) => v.session_id).filter(Boolean)).size || recent.length;
   }, [pageviews]);
 
-  // Cities aggregation
+  // Cities aggregation with location info
   const cityCounts = useMemo(() => {
-    const map: Record<string, number> = {};
+    const map: Record<string, { count: number; region: string | null; rawCity: string }> = {};
     filteredViews.forEach((v) => {
       const city = v.city || "Bogotá";
-      map[city] = (map[city] || 0) + 1;
+      if (!map[city]) {
+        map[city] = { count: 0, region: v.region, rawCity: city };
+      }
+      map[city].count++;
     });
     return Object.entries(map)
-      .map(([name, count]) => ({ name, count, percent: totalViews > 0 ? (count / totalViews) * 100 : 0 }))
+      .map(([name, data]) => {
+        const loc = formatLocationInfo(data.rawCity, data.region);
+        return {
+          name,
+          title: loc.title,
+          subtext: loc.subtext,
+          short: loc.short,
+          count: data.count,
+          percent: totalViews > 0 ? (data.count / totalViews) * 100 : 0,
+        };
+      })
       .sort((a, b) => b.count - a.count);
   }, [filteredViews, totalViews]);
 
@@ -484,15 +595,15 @@ export default function AnalyticsDashboardClient({ initialPageviews, eventMap }:
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "#a1a1aa" }}>
             <span style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Ciudad Principal
+              Zona / Ciudad Principal
             </span>
             <MapPin size={16} style={{ color: "#D90416" }} />
           </div>
           <div style={{ fontSize: "1.45rem", fontWeight: 900, color: "#ffffff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {cityCounts[0]?.name || "Esperando datos..."}
+            {cityCounts[0]?.title || "Esperando datos..."}
           </div>
-          <div style={{ fontSize: "0.75rem", color: "#a1a1aa" }}>
-            {cityCounts[0] ? `${Math.round(cityCounts[0].percent)}% del tráfico total` : "Sin visitas aún"}
+          <div style={{ fontSize: "0.74rem", color: "#a1a1aa", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {cityCounts[0] ? `${Math.round(cityCounts[0].percent)}% del tráfico total • ${cityCounts[0].subtext}` : "Sin visitas aún"}
           </div>
         </div>
 
@@ -681,12 +792,15 @@ export default function AnalyticsDashboardClient({ initialPageviews, eventMap }:
             <div style={{ display: "flex", flexDirection: "column", gap: "0.9rem" }}>
               {cityCounts.slice(0, 7).map((c, i) => (
                 <div key={c.name}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.82rem", marginBottom: "0.3rem" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <span style={{ color: "#71717a", fontSize: "0.72rem", fontFamily: "monospace", width: "16px" }}>#{i + 1}</span>
-                      <span style={{ fontWeight: 700, color: "#ffffff" }}>📍 {c.name}</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", fontSize: "0.82rem", marginBottom: "0.3rem" }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem" }}>
+                      <span style={{ color: "#71717a", fontSize: "0.72rem", fontFamily: "monospace", width: "16px", marginTop: "2px" }}>#{i + 1}</span>
+                      <div>
+                        <div style={{ fontWeight: 700, color: "#ffffff" }}>📍 {c.title}</div>
+                        <div style={{ fontSize: "0.7rem", color: "#71717a", marginTop: "1px" }}>{c.subtext}</div>
+                      </div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexShrink: 0 }}>
                       <span style={{ color: "#a1a1aa", fontSize: "0.78rem" }}>{c.count} visitas</span>
                       <span style={{ fontWeight: 800, color: "#ffffff", fontSize: "0.82rem", width: "38px", textAlign: "right" }}>
                         {Math.round(c.percent)}%
@@ -698,6 +812,20 @@ export default function AnalyticsDashboardClient({ initialPageviews, eventMap }:
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Explanatory note on municipality geolocation */}
+            <div style={{
+              marginTop: "1.1rem",
+              padding: "0.6rem 0.8rem",
+              borderRadius: "0.45rem",
+              backgroundColor: "rgba(255, 255, 255, 0.02)",
+              border: "1px solid #27272a",
+              fontSize: "0.72rem",
+              color: "#a1a1aa",
+              lineHeight: 1.45
+            }}>
+              💡 <strong style={{ color: "#ffffff" }}>Nota sobre municipios en Colombia:</strong> Las redes de telecomunicaciones (Claro, Tigo, Movistar, etc.) agrupan la salida IP de municipios vecinos (como <em>Santa Rosa de Cabal</em> y <em>Dosquebradas</em>) a través del nodo central departamental de Risaralda (<strong>Pereira</strong>).
             </div>
           </div>
 
@@ -935,8 +1063,21 @@ export default function AnalyticsDashboardClient({ initialPageviews, eventMap }:
                   const dateObj = new Date(view.created_at);
                   return (
                     <tr key={view.id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.04)" }}>
-                      <td style={{ padding: "0.75rem 1.25rem", fontWeight: 700, color: "#ffffff" }}>
-                        🇨🇴 {view.city || "Bogotá"}, {view.country || "Colombia"}
+                      <td style={{ padding: "0.75rem 1.25rem" }}>
+                        {(() => {
+                          const loc = formatLocationInfo(view.city, view.region);
+                          return (
+                            <div>
+                              <div style={{ fontWeight: 700, color: "#ffffff", display: "flex", alignItems: "center", gap: "4px" }}>
+                                <span>🇨🇴</span>
+                                <span>{loc.title}</span>
+                              </div>
+                              <div style={{ fontSize: "0.7rem", color: "#71717a", marginTop: "1px" }}>
+                                {loc.subtext}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td style={{ padding: "0.75rem 1.25rem" }}>
                         <div style={{ fontWeight: 600, color: "#ffffff" }}>
