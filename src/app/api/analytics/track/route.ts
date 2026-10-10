@@ -138,6 +138,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ignored: true });
     }
 
+    // Ignore automated bots, search spiders and preview crawlers (e.g. Googlebot, Bingbot, Meta crawler)
+    const userAgent = req.headers.get("user-agent") || "";
+    if (
+      !userAgent ||
+      /bot|spider|crawler|crawling|slurp|facebookexternalhit|petalbot|semrush|ahrefs|bingbot|googlebot|headless/i.test(userAgent)
+    ) {
+      return NextResponse.json({ ignored: true, reason: "bot" });
+    }
+
     // Geolocation headers provided automatically by Vercel Edge Network
     const countryCode = (req.headers.get("x-vercel-ip-country") || "CO").toUpperCase();
     const rawCity = req.headers.get("x-vercel-ip-city");
@@ -146,7 +155,6 @@ export async function POST(req: NextRequest) {
     const city = cleanCity(rawCity);
 
     // User agent parsing
-    const userAgent = req.headers.get("user-agent") || "";
     const { device_type, os, browser } = parseUserAgent(userAgent);
 
     // Source detection

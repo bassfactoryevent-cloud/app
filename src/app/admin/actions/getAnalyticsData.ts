@@ -26,9 +26,9 @@ export async function getLiveAnalyticsPageviews(): Promise<PageViewItem[]> {
     const adminDb = getAdminClient();
     const { data, error } = await adminDb
       .from("page_views")
-      .select("*")
+      .select("id, created_at, pathname, referrer, source, country, country_code, city, region, device_type, browser, os, session_id, utm_source, utm_medium, utm_campaign")
       .order("created_at", { ascending: false })
-      .limit(5000);
+      .limit(3000);
 
     if (error) {
       console.error("Error fetching live pageviews:", error);
