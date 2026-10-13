@@ -479,32 +479,35 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
               </div>
               
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-                {/* Previews de Banners Arrastrables */}
+                {/* Preview de Carátula Principal (1 sola representativa) */}
                 {Array.isArray(camp?.ads) && camp.ads.length > 0 && typeof camp.ads[0]?.count !== 'number' && (
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                    {camp.ads.map((ad: any, idx: number) => {
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    {(() => {
+                      const ad = camp.ads[0];
                       const isVid = ad.image_url?.toLowerCase().endsWith('.mp4') || ad.image_url?.toLowerCase().endsWith('.webm');
                       const pName = Array.isArray(ad.ad_placements) ? ad.ad_placements[0]?.name : ad.ad_placements?.name;
                       const placementLabel = ALL_PLACEMENTS.find(p => p.id === pName)?.label;
                       return (
                         <div
-                          key={ad.id || idx}
                           draggable
                           onDragStart={(e) => handleDragAd(e, camp, ad)}
                           onDragEnd={handleDragEnd}
-                          title={placementLabel ? `Ubicado en: ${placementLabel} (Arrastra a otra zona para reasignar)` : "Banner disponible (Arrastra al mapa para posicionar)"}
+                          title={placementLabel ? `Banner de campaña (Actualmente en: ${placementLabel}). Arrastra al mapa para reasignar.` : "Banner de campaña. Arrastra al mapa para asignar."}
                           style={{
                             position: 'relative',
-                            width: '54px',
-                            height: '34px',
-                            borderRadius: '4px',
+                            width: '68px',
+                            height: '42px',
+                            borderRadius: '6px',
                             overflow: 'hidden',
                             backgroundColor: '#000',
                             border: '1px solid rgba(255,255,255,0.2)',
                             cursor: 'grab',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.4)',
-                            flexShrink: 0
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
+                            flexShrink: 0,
+                            transition: 'transform 0.15s, border-color 0.15s'
                           }}
+                          onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--color-magenta)')}
+                          onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)')}
                         >
                           {isVid ? (
                             <video src={ad.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} muted />
@@ -516,7 +519,7 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
                           )}
                         </div>
                       );
-                    })}
+                    })()}
                   </div>
                 )}
 

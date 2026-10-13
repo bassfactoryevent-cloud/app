@@ -7,12 +7,20 @@ import DeleteEventButton from "./DeleteEventButton";
 
 export default function EventsClient({ initialEvents, error }: { initialEvents: any[], error: any }) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("published"); // Por defecto muestra los publicados 'de una'
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
 
+  // Conteo por estado
+  const counts = {
+    all: initialEvents?.length || 0,
+    published: initialEvents?.filter(e => e.status === 'published').length || 0,
+    draft: initialEvents?.filter(e => e.status === 'draft').length || 0,
+    archived: initialEvents?.filter(e => e.status === 'archived').length || 0,
+  };
+
   // Filtrado
-  const filteredEvents = initialEvents.filter((event) => {
+  const filteredEvents = (initialEvents || []).filter((event) => {
     const matchesSearch = 
       (event.title?.toLowerCase() || "").includes(searchTerm.toLowerCase()) || 
       (event.location_name?.toLowerCase() || "").includes(searchTerm.toLowerCase());
@@ -33,8 +41,8 @@ export default function EventsClient({ initialEvents, error }: { initialEvents: 
     setCurrentPage(1);
   };
 
-  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setStatusFilter(e.target.value);
+  const handleStatusChange = (newStatus: string) => {
+    setStatusFilter(newStatus);
     setCurrentPage(1);
   };
 
@@ -55,6 +63,109 @@ export default function EventsClient({ initialEvents, error }: { initialEvents: 
           }}>
             <Plus size={18} /> Crear Evento
           </Link>
+        </div>
+
+        {/* Pestañas Rápidas de Estados (Públicos de una, Borradores, Archivados, Todos) */}
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+          <button
+            type="button"
+            onClick={() => handleStatusChange("published")}
+            style={{
+              padding: "0.5rem 1.1rem",
+              borderRadius: "99px",
+              border: "1px solid",
+              borderColor: statusFilter === "published" ? "#10b981" : "rgba(255,255,255,0.1)",
+              backgroundColor: statusFilter === "published" ? "rgba(16, 185, 129, 0.2)" : "rgba(255,255,255,0.04)",
+              color: statusFilter === "published" ? "#34d399" : "rgba(255,255,255,0.7)",
+              cursor: "pointer",
+              fontWeight: 600,
+              fontSize: "0.875rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              transition: "all 0.2s"
+            }}
+          >
+            <span>Públicos</span>
+            <span style={{ fontSize: "0.75rem", padding: "0.1rem 0.5rem", borderRadius: "10px", backgroundColor: statusFilter === "published" ? "rgba(16, 185, 129, 0.4)" : "rgba(255,255,255,0.1)", color: "white" }}>
+              {counts.published}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleStatusChange("draft")}
+            style={{
+              padding: "0.5rem 1.1rem",
+              borderRadius: "99px",
+              border: "1px solid",
+              borderColor: statusFilter === "draft" ? "var(--color-magenta)" : "rgba(255,255,255,0.1)",
+              backgroundColor: statusFilter === "draft" ? "rgba(255, 0, 128, 0.2)" : "rgba(255,255,255,0.04)",
+              color: statusFilter === "draft" ? "white" : "rgba(255,255,255,0.7)",
+              cursor: "pointer",
+              fontWeight: 600,
+              fontSize: "0.875rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              transition: "all 0.2s"
+            }}
+          >
+            <span>Borradores</span>
+            <span style={{ fontSize: "0.75rem", padding: "0.1rem 0.5rem", borderRadius: "10px", backgroundColor: statusFilter === "draft" ? "var(--color-magenta)" : "rgba(255,255,255,0.1)", color: "white" }}>
+              {counts.draft}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleStatusChange("archived")}
+            style={{
+              padding: "0.5rem 1.1rem",
+              borderRadius: "99px",
+              border: "1px solid",
+              borderColor: statusFilter === "archived" ? "#f59e0b" : "rgba(255,255,255,0.1)",
+              backgroundColor: statusFilter === "archived" ? "rgba(245, 158, 11, 0.2)" : "rgba(255,255,255,0.04)",
+              color: statusFilter === "archived" ? "#fbbf24" : "rgba(255,255,255,0.7)",
+              cursor: "pointer",
+              fontWeight: 600,
+              fontSize: "0.875rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              transition: "all 0.2s"
+            }}
+          >
+            <span>Archivados</span>
+            <span style={{ fontSize: "0.75rem", padding: "0.1rem 0.5rem", borderRadius: "10px", backgroundColor: statusFilter === "archived" ? "rgba(245, 158, 11, 0.4)" : "rgba(255,255,255,0.1)", color: "white" }}>
+              {counts.archived}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleStatusChange("all")}
+            style={{
+              padding: "0.5rem 1.1rem",
+              borderRadius: "99px",
+              border: "1px solid",
+              borderColor: statusFilter === "all" ? "white" : "rgba(255,255,255,0.1)",
+              backgroundColor: statusFilter === "all" ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.04)",
+              color: statusFilter === "all" ? "white" : "rgba(255,255,255,0.7)",
+              cursor: "pointer",
+              fontWeight: 600,
+              fontSize: "0.875rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              transition: "all 0.2s"
+            }}
+          >
+            <span>Todos</span>
+            <span style={{ fontSize: "0.75rem", padding: "0.1rem 0.5rem", borderRadius: "10px", backgroundColor: statusFilter === "all" ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.1)", color: "white" }}>
+              {counts.all}
+            </span>
+          </button>
         </div>
 
         {/* Buscador y Filtros */}
@@ -78,19 +189,19 @@ export default function EventsClient({ initialEvents, error }: { initialEvents: 
             <Filter size={18} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-secondary)" }} />
             <select
               value={statusFilter}
-              onChange={handleStatusChange}
+              onChange={(e) => handleStatusChange(e.target.value)}
               style={{
                 width: "100%", padding: "0.75rem 1rem 0.75rem 2.5rem",
                 backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
                 borderRadius: "var(--radius-md)", color: "white", outline: "none", appearance: "none", cursor: "pointer"
               }}
             >
-              <option value="all" style={{ backgroundColor: "#111" }}>Todos los estados</option>
               <option value="published" style={{ backgroundColor: "#111" }}>Publicados (Published)</option>
               <option value="draft" style={{ backgroundColor: "#111" }}>Borradores (Draft)</option>
+              <option value="archived" style={{ backgroundColor: "#111" }}>Archivados</option>
+              <option value="all" style={{ backgroundColor: "#111" }}>Todos los estados</option>
               <option value="postponed" style={{ backgroundColor: "#111" }}>Aplazados</option>
               <option value="cancelled" style={{ backgroundColor: "#111" }}>Cancelados</option>
-              <option value="archived" style={{ backgroundColor: "#111" }}>Archivados</option>
             </select>
           </div>
         </div>
