@@ -12,7 +12,14 @@ export default async function AdminAdsPage() {
       .from("ad_campaigns")
       .select(`
         *,
-        ads (count)
+        ads (
+          id,
+          image_url,
+          target_url,
+          order_index,
+          is_active,
+          ad_placements (id, name)
+        )
       `)
       .order("created_at", { ascending: false });
 

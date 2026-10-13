@@ -237,17 +237,21 @@ export async function updateAdPlacement(adId: string, placementName: string) {
   
   // Find or create placement
   let placement_id;
-  const { data: existingPlacement } = await supabase.from("ad_placements").select("id").eq("name", placementName).single();
+  const { data: existingPlacement } = await supabase.from("ad_placements").select("id, is_vip").eq("name", placementName).single();
   
   if (existingPlacement) {
     placement_id = existingPlacement.id;
+    if (!existingPlacement.is_vip) {
+      // For non-VIP placements, push other ads back so this newly assigned ad is top occupant
+      await supabase.from("ads").update({ order_index: 10 }).eq("placement_id", placement_id);
+    }
   } else {
     const { data: newPlacement, error: pError } = await supabase.from("ad_placements").insert([{ name: placementName }]).select("id").single();
     if (pError) throw new Error(pError.message);
     placement_id = newPlacement.id;
   }
 
-  const { error } = await supabase.from("ads").update({ placement_id }).eq("id", adId);
+  const { error } = await supabase.from("ads").update({ placement_id, order_index: 0, is_active: true }).eq("id", adId);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/ads");
 }

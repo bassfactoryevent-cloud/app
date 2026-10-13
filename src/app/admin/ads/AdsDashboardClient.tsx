@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Megaphone, PlusCircle, Building2, Calendar as CalendarIcon, GripVertical, X } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { deleteCampaign, addAdToCampaign, togglePlacementVip, updateAdsOrder, removeAdFromPlacement, togglePlacementActive, updateAdPlacement } from "./actions";
+import { deleteCampaign, togglePlacementVip, updateAdsOrder, removeAdFromPlacement, togglePlacementActive, updateAdPlacement } from "./actions";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 
 const ALL_PLACEMENTS = [
@@ -21,13 +21,11 @@ const ALL_PLACEMENTS = [
 ];
 
 export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacements }: { campaigns: any[], validActiveAds: any[], dbPlacements?: any[] }) {
+  const [activeAds, setActiveAds] = useState<any[]>(validActiveAds || []);
   const [draggedCampaign, setDraggedCampaign] = useState<any | null>(null);
-  const [dropTarget, setDropTarget] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalCampaign, setModalCampaign] = useState<any | null>(null);
+  const [draggedAd, setDraggedAd] = useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [bannerAssignMode, setBannerAssignMode] = useState<"new" | "existing">("new");
 
   // VIP Management State
   const [vipModalPlacement, setVipModalPlacement] = useState<string | null>(null);
@@ -46,8 +44,16 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  useEffect(() => {
+    setActiveAds(validActiveAds || []);
+  }, [validActiveAds]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const handleOpenVipModal = (placementId: string) => {
-    const occupants = validActiveAds.filter((ad: any) => {
+    const occupants = activeAds.filter((ad: any) => {
       const pName = Array.isArray(ad?.ad_placements) ? ad.ad_placements[0]?.name : ad?.ad_placements?.name;
       return pName === placementId;
     });
@@ -55,66 +61,105 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
     setVipModalPlacement(placementId);
   };
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   // Drag Handlers
-  const handleDragStart = (e: React.DragEvent, campaign: any) => {
+  const handleDragCampaign = (e: React.DragEvent, campaign: any) => {
     setDraggedCampaign(campaign);
+    setDraggedAd(null);
     e.dataTransfer.setData("campaignId", campaign.id);
-    // Needed for Firefox
     e.dataTransfer.effectAllowed = "copyMove";
   };
 
-  const handleDragEnd = (e: React.DragEvent) => {
-    setDraggedCampaign(null);
+  const handleDragAd = (e: React.DragEvent, campaign: any, ad: any) => {
+    e.stopPropagation();
+    setDraggedCampaign(campaign);
+    setDraggedAd(ad);
+    e.dataTransfer.setData("adId", ad.id);
+    e.dataTransfer.setData("campaignId", campaign.id);
+    e.dataTransfer.effectAllowed = "copyMove";
   };
 
-  const handleDragOver = (e: React.DragEvent, placementId: string) => {
+  const handleDragEnd = () => {
+    setDraggedCampaign(null);
+    setDraggedAd(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "copy";
     e.currentTarget.classList.add("drag-over");
   };
 
-  const handleDragLeave = (e: React.DragEvent, placementId: string) => {
+  const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     e.currentTarget.classList.remove("drag-over");
   };
 
-  const handleDrop = (e: React.DragEvent, placementId: string) => {
+  const handleDrop = async (e: React.DragEvent, placementId: string) => {
     e.preventDefault();
     e.currentTarget.classList.remove("drag-over");
-    if (draggedCampaign) {
-      setModalCampaign(draggedCampaign);
-      setDropTarget(placementId);
-      if (draggedCampaign.ads && draggedCampaign.ads.length > 0) {
-        setBannerAssignMode("existing");
-      } else {
-        setBannerAssignMode("new");
+
+    let adToAssign = draggedAd;
+    const currentCampaign = draggedCampaign;
+
+    if (!adToAssign && currentCampaign) {
+      const campAds = currentCampaign.ads || [];
+      if (campAds.length === 0) {
+        toast.error(`La campaña "${currentCampaign.name}" no tiene banners creados. Añade uno en 'Gestionar'.`);
+        setDraggedCampaign(null);
+        setDraggedAd(null);
+        return;
       }
-      setModalOpen(true);
+      // Pick first ad that is not already in this placement, or the first ad
+      adToAssign = campAds.find((a: any) => {
+        const pName = Array.isArray(a.ad_placements) ? a.ad_placements[0]?.name : a.ad_placements?.name;
+        return pName !== placementId;
+      }) || campAds[0];
     }
-  };
 
-  const handleModalSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!modalCampaign || !dropTarget) return;
+    if (!adToAssign) {
+      setDraggedCampaign(null);
+      setDraggedAd(null);
+      return;
+    }
 
-    setIsSubmitting(true);
-    const formData = new FormData(e.currentTarget);
-    formData.append("placement_name", dropTarget);
+    const targetPlacementObj = ALL_PLACEMENTS.find(p => p.id === placementId);
+    const placementLabel = targetPlacementObj?.label || placementId;
+    const dbPlacement = dbPlacements?.find(p => p.name === placementId);
+    const isVip = !!dbPlacement?.is_vip;
+
+    // Optimistic UI Update
+    const previousAds = [...activeAds];
+    const updatedAd = {
+      ...adToAssign,
+      ad_placements: { name: placementId },
+      ad_campaigns: { name: currentCampaign?.name || adToAssign?.ad_campaigns?.name || 'Campaña' }
+    };
+
+    setActiveAds(prev => {
+      if (isVip) {
+        const withoutOld = prev.filter(a => a.id !== adToAssign.id);
+        return [...withoutOld, updatedAd];
+      } else {
+        const filtered = prev.filter(a => {
+          const pName = Array.isArray(a?.ad_placements) ? a.ad_placements[0]?.name : a?.ad_placements?.name;
+          return pName !== placementId && a.id !== adToAssign.id;
+        });
+        return [updatedAd, ...filtered];
+      }
+    });
 
     try {
-      await addAdToCampaign(modalCampaign.id, formData);
-      setModalOpen(false);
-      setModalCampaign(null);
-      toast.success("Banner asignado correctamente");
-    } catch (error) {
-      console.error(error);
-      toast.error("Error al asignar banner");
+      setIsSubmitting(true);
+      await updateAdPlacement(adToAssign.id, placementId);
+      toast.success(`Banner de "${currentCampaign?.name || 'campaña'}" asignado a ${placementLabel}`);
+    } catch (err: any) {
+      console.error(err);
+      setActiveAds(previousAds);
+      toast.error("Error al asignar el banner");
     } finally {
       setIsSubmitting(false);
+      setDraggedCampaign(null);
+      setDraggedAd(null);
     }
   };
 
@@ -143,7 +188,7 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
             const isVip = dbPlacement?.is_vip;
             const isActive = dbPlacement ? dbPlacement.is_active : true;
 
-            const occupants = validActiveAds.filter((ad: any) => {
+            const occupants = activeAds.filter((ad: any) => {
               const pName = Array.isArray(ad?.ad_placements) ? ad.ad_placements[0]?.name : ad?.ad_placements?.name;
               return pName === placement.id;
             });
@@ -172,8 +217,8 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
             return (
               <div 
                 key={placement.id} 
-                onDragOver={(e) => handleDragOver(e, placement.id)}
-                onDragLeave={(e) => handleDragLeave(e, placement.id)}
+                onDragOver={(e) => handleDragOver(e)}
+                onDragLeave={(e) => handleDragLeave(e)}
                 onDrop={(e) => handleDrop(e, placement.id)}
                 className="dropzone"
                 style={{ 
@@ -221,53 +266,86 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
                   </div>
                 </div>
                 {occupants.length > 0 ? (
-                  <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', pointerEvents: 'none' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
                     {isVip ? (
-                      <>
-                        <strong style={{ color: '#ffd700' }}>{occupants.length}</strong> Banners en Rotación
-                        <div style={{ marginTop: '0.5rem', pointerEvents: 'auto' }}>
-                          <button onClick={() => handleOpenVipModal(placement.id)} style={{ backgroundColor: 'rgba(255, 215, 0, 0.1)', color: '#ffd700', border: '1px solid rgba(255, 215, 0, 0.3)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem', cursor: 'pointer' }}>
-                            Ver / Ordenar
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      <>
+                      <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div>
-                            Ocupado por: <br/>
-                            <strong style={{ color: 'white' }}>
-                              {Array.isArray(occupants[0]?.ad_campaigns) ? occupants[0].ad_campaigns[0]?.name : occupants[0]?.ad_campaigns?.name}
+                            <strong style={{ color: '#ffd700' }}>{occupants.length}</strong> Banners en Rotación
+                          </div>
+                          <div style={{ pointerEvents: 'auto' }}>
+                            <button onClick={() => handleOpenVipModal(placement.id)} style={{ backgroundColor: 'rgba(255, 215, 0, 0.1)', color: '#ffd700', border: '1px solid rgba(255, 215, 0, 0.3)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem', cursor: 'pointer' }}>
+                              Ver / Ordenar
+                            </button>
+                          </div>
+                        </div>
+                        {/* Mini thumbnails de los banners en rotación VIP */}
+                        <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.5rem', alignItems: 'center', overflowX: 'auto' }}>
+                          {occupants.slice(0, 4).map((occ: any, i: number) => {
+                            const isVid = occ.image_url?.toLowerCase().endsWith('.mp4') || occ.image_url?.toLowerCase().endsWith('.webm');
+                            const occCampName = Array.isArray(occ.ad_campaigns) ? occ.ad_campaigns[0]?.name : occ.ad_campaigns?.name;
+                            return (
+                              <div key={occ.id || i} title={occCampName} style={{ width: '42px', height: '28px', borderRadius: '4px', overflow: 'hidden', backgroundColor: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,215,0,0.3)', flexShrink: 0 }}>
+                                {isVid ? (
+                                  <video src={occ.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
+                                ) : (
+                                  <img src={occ.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                )}
+                              </div>
+                            );
+                          })}
+                          {occupants.length > 4 && (
+                            <span style={{ fontSize: '0.7rem', color: '#ffd700', fontWeight: 700 }}>+{occupants.length - 4}</span>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: 0, flex: 1 }}>
+                          {occupants[0]?.image_url && (
+                            <div style={{ width: '50px', height: '32px', borderRadius: '4px', overflow: 'hidden', backgroundColor: '#000', border: '1px solid rgba(255,255,255,0.15)', flexShrink: 0 }}>
+                              {occupants[0].image_url.toLowerCase().endsWith('.mp4') || occupants[0].image_url.toLowerCase().endsWith('.webm') ? (
+                                <video src={occupants[0].image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
+                              ) : (
+                                <img src={occupants[0].image_url} alt="Banner" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              )}
+                            </div>
+                          )}
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ fontSize: '0.68rem', opacity: 0.6 }}>Ocupado por:</div>
+                            <strong style={{ color: 'white', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.8rem' }}>
+                              {Array.isArray(occupants[0]?.ad_campaigns) ? occupants[0].ad_campaigns[0]?.name : (occupants[0]?.ad_campaigns?.name || 'Campaña')}
                             </strong>
                           </div>
-                          <button
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setConfirmConfig({
-                                isOpen: true,
-                                title: "Eliminar Banner",
-                                message: "¿Seguro que deseas eliminar este banner? Podrás soltar uno nuevo en su lugar.",
-                                onConfirm: async () => {
-                                  try {
-                                    setIsSubmitting(true);
-                                    await removeAdFromPlacement(occupants[0].id);
-                                    setConfirmConfig(null);
-                                    toast.success("Banner removido de la ubicación");
-                                  } catch (error) {
-                                    toast.error("Error eliminando banner");
-                                  } finally {
-                                    setIsSubmitting(false);
-                                  }
-                                }
-                              });
-                            }}
-                            style={{ pointerEvents: 'auto', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', cursor: 'pointer', fontSize: '0.75rem' }}
-                          >
-                            Eliminar
-                          </button>
                         </div>
-                      </>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setConfirmConfig({
+                              isOpen: true,
+                              title: "Eliminar Banner",
+                              message: "¿Seguro que deseas eliminar este banner? Podrás soltar uno nuevo en su lugar.",
+                              onConfirm: async () => {
+                                try {
+                                  setIsSubmitting(true);
+                                  await removeAdFromPlacement(occupants[0].id);
+                                  setActiveAds(prev => prev.filter(a => a.id !== occupants[0].id));
+                                  setConfirmConfig(null);
+                                  toast.success("Banner removido de la ubicación");
+                                } catch (error) {
+                                  toast.error("Error eliminando banner");
+                                } finally {
+                                  setIsSubmitting(false);
+                                }
+                              }
+                            });
+                          }}
+                          style={{ pointerEvents: 'auto', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', cursor: 'pointer', fontSize: '0.75rem', flexShrink: 0 }}
+                        >
+                          Eliminar
+                        </button>
+                      </div>
                     )}
                   </div>
                 ) : (
@@ -359,7 +437,7 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
             <div 
               key={camp.id} 
               draggable
-              onDragStart={(e) => handleDragStart(e, camp)}
+              onDragStart={(e) => handleDragCampaign(e, camp)}
               onDragEnd={handleDragEnd}
               style={{ 
                 display: 'flex', 
@@ -400,10 +478,51 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
                 </div>
               </div>
               
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+                {/* Previews de Banners Arrastrables */}
+                {Array.isArray(camp?.ads) && camp.ads.length > 0 && typeof camp.ads[0]?.count !== 'number' && (
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    {camp.ads.map((ad: any, idx: number) => {
+                      const isVid = ad.image_url?.toLowerCase().endsWith('.mp4') || ad.image_url?.toLowerCase().endsWith('.webm');
+                      const pName = Array.isArray(ad.ad_placements) ? ad.ad_placements[0]?.name : ad.ad_placements?.name;
+                      const placementLabel = ALL_PLACEMENTS.find(p => p.id === pName)?.label;
+                      return (
+                        <div
+                          key={ad.id || idx}
+                          draggable
+                          onDragStart={(e) => handleDragAd(e, camp, ad)}
+                          onDragEnd={handleDragEnd}
+                          title={placementLabel ? `Ubicado en: ${placementLabel} (Arrastra a otra zona para reasignar)` : "Banner disponible (Arrastra al mapa para posicionar)"}
+                          style={{
+                            position: 'relative',
+                            width: '54px',
+                            height: '34px',
+                            borderRadius: '4px',
+                            overflow: 'hidden',
+                            backgroundColor: '#000',
+                            border: '1px solid rgba(255,255,255,0.2)',
+                            cursor: 'grab',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.4)',
+                            flexShrink: 0
+                          }}
+                        >
+                          {isVid ? (
+                            <video src={ad.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} muted />
+                          ) : (
+                            <img src={ad.image_url} alt="Banner" style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />
+                          )}
+                          {pName && (
+                            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '3px', backgroundColor: '#4ade80' }} />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
                 <div style={{ textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.02)', padding: '0.5rem 1rem', borderRadius: '0.5rem' }}>
                   <span style={{ display: 'block', fontSize: '1.25rem', fontWeight: 800 }}>
-                    {Array.isArray(camp?.ads) ? (camp.ads[0]?.count || 0) : (camp?.ads?.count || 0)}
+                    {Array.isArray(camp?.ads) ? (typeof camp.ads[0]?.count === 'number' ? camp.ads[0].count : camp.ads.length) : (camp?.ads?.count || 0)}
                   </span>
                   <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>Banners</span>
                 </div>
@@ -444,97 +563,7 @@ export default function AdsDashboardClient({ campaigns, validActiveAds, dbPlacem
         })})()}
       </div>
 
-      {/* MODAL ASIGNAR BANNER */}
-      {modalOpen && modalCampaign && dropTarget && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '1rem', padding: '2rem', width: '100%', maxWidth: '500px', position: 'relative', maxHeight: '90vh', overflowY: 'auto' }}>
-            <button onClick={() => { setModalOpen(false); setModalCampaign(null); }} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}>
-              <X size={24} />
-            </button>
-            <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Asignar Banner</h2>
-            <p style={{ fontSize: '0.875rem', opacity: 0.7, marginBottom: '1.5rem' }}>
-              Campaña: <strong>{modalCampaign.name}</strong> <br/>
-              Ubicación: <strong>{ALL_PLACEMENTS.find(p => p.id === dropTarget)?.label}</strong>
-            </p>
 
-            {modalCampaign.ads && modalCampaign.ads.length > 0 && (
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', backgroundColor: 'rgba(255,255,255,0.05)', padding: '0.25rem', borderRadius: '0.5rem' }}>
-                <button 
-                  onClick={() => setBannerAssignMode("existing")}
-                  style={{ flex: 1, padding: '0.5rem', borderRadius: '0.25rem', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem', backgroundColor: bannerAssignMode === "existing" ? 'var(--color-magenta)' : 'transparent', color: 'white', transition: '0.2s' }}
-                >
-                  Usar Existente
-                </button>
-                <button 
-                  onClick={() => setBannerAssignMode("new")}
-                  style={{ flex: 1, padding: '0.5rem', borderRadius: '0.25rem', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem', backgroundColor: bannerAssignMode === "new" ? 'var(--color-magenta)' : 'transparent', color: 'white', transition: '0.2s' }}
-                >
-                  Subir Nuevo
-                </button>
-              </div>
-            )}
-
-            {bannerAssignMode === "existing" && modalCampaign.ads && modalCampaign.ads.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <p style={{ fontSize: '0.875rem', opacity: 0.8, marginBottom: '0.5rem' }}>Selecciona el banner que deseas mover a esta ubicación:</p>
-                {modalCampaign.ads.map((ad: any) => {
-                  const isVideo = ad.image_url?.toLowerCase().endsWith('.mp4') || ad.image_url?.toLowerCase().endsWith('.webm');
-                  const pName = Array.isArray(ad.ad_placements) ? ad.ad_placements[0]?.name : ad.ad_placements?.name;
-                  return (
-                    <div key={ad.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', backgroundColor: 'rgba(255,255,255,0.05)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <div style={{ width: '80px', height: '50px', backgroundColor: 'black', borderRadius: '0.25rem', overflow: 'hidden', flexShrink: 0 }}>
-                        {isVideo ? (
-                          <video src={ad.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted />
-                        ) : (
-                          <img src={ad.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        )}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '0.75rem', opacity: 0.5 }}>Ubicación actual:</div>
-                        <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{ALL_PLACEMENTS.find(p => p.id === pName)?.label || pName || 'Sin asignar'}</div>
-                      </div>
-                      <button 
-                        onClick={async () => {
-                          setIsSubmitting(true);
-                          try {
-                            await updateAdPlacement(ad.id, dropTarget);
-                            setModalOpen(false);
-                            setModalCampaign(null);
-                            toast.success("Banner reasignado correctamente");
-                          } catch(err) {
-                            toast.error("Error moviendo banner");
-                          } finally {
-                            setIsSubmitting(false);
-                          }
-                        }}
-                        disabled={isSubmitting}
-                        className="btn btn-primary"
-                        style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}
-                      >
-                        {isSubmitting ? '...' : 'Mover Aquí'}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <form onSubmit={handleModalSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>URL del Recurso (Imagen o Video MP4/WEBM) *</label>
-                  <input type="url" name="image_url" required placeholder="https://..." style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>URL de Destino (Link al hacer clic)</label>
-                  <input type="url" name="target_url" placeholder="https://..." style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
-                </div>
-                <button type="submit" className="btn btn-primary" disabled={isSubmitting} style={{ marginTop: '1rem', opacity: isSubmitting ? 0.5 : 1 }}>
-                  {isSubmitting ? 'Guardando...' : 'Asignar Nuevo Banner'}
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* MODAL GESTIÓN VIP */}
       {vipModalPlacement && (
