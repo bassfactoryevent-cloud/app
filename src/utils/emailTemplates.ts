@@ -474,3 +474,51 @@ export const getCourtesyInvitationEmail = (
   return baseTemplate(`Invitación Oficial: ${eventTitle}`, content);
 };
 
+export const getNewUserWelcomeEmail = (
+  userName: string,
+  userEmail: string,
+  userPassword: string,
+  role: string
+) => {
+  const roleNameMap: Record<string, string> = {
+    superadmin: "👑 Super Administrador",
+    admin: "⚡ Administrador de Plataforma",
+    scanner: "📱 Staff de Validación & Escáner",
+    customer: "🎧 Miembro de la Comunidad"
+  };
+
+  const roleLabel = roleNameMap[role] || "Miembro de Bassfactory";
+
+  const content = `
+    <h1 style="color: #ffffff;">Bienvenido al equipo de Bassfactory</h1>
+    <p>Hola <strong>${userName}</strong>,</p>
+    <p>Has sido registrado en la plataforma oficial de <strong>Bassfactory</strong> con el siguiente rol:</p>
+    
+    <div style="background-color: #1a1a24; border: 1px solid #333344; border-radius: 8px; padding: 18px; margin: 20px 0;">
+      <p style="margin: 4px 0; color: #a1a1aa; font-size: 13px; text-transform: uppercase; font-weight: bold;">Rol Asignado</p>
+      <p style="margin: 0 0 12px 0; color: #ffffff; font-size: 16px; font-weight: bold;">${roleLabel}</p>
+
+      <p style="margin: 4px 0; color: #a1a1aa; font-size: 13px; text-transform: uppercase; font-weight: bold;">Correo de Acceso</p>
+      <p style="margin: 0 0 12px 0; color: #ffffff; font-size: 15px; font-family: monospace;">${userEmail}</p>
+
+      <p style="margin: 4px 0; color: #a1a1aa; font-size: 13px; text-transform: uppercase; font-weight: bold;">Contraseña Temporal</p>
+      <p style="margin: 0; color: #ffffff; font-size: 15px; font-family: monospace; background-color: rgba(255,255,255,0.06); padding: 6px 10px; border-radius: 4px; display: inline-block;">${userPassword}</p>
+    </div>
+
+    <p style="font-size: 14px; color: #a1a1aa;">
+      Ya puedes ingresar con estas credenciales para acceder a tus herramientas asignadas.
+    </p>
+
+    <center style="margin-top: 25px;">
+      <a href="${APP_URL}/login" class="button" style="background-color: #D90416; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: bold; display: inline-block;">
+        Iniciar Sesión en Bassfactory
+      </a>
+    </center>
+
+    <p style="font-size: 12px; color: #71717a; margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.08); paddingTop: 12px;">
+      Por seguridad, te recomendamos cambiar tu contraseña una vez ingreses a la plataforma desde tu perfil.
+    </p>
+  `;
+  return baseTemplate(`Acceso a Bassfactory - Credenciales de ${roleLabel}`, content);
+};
+

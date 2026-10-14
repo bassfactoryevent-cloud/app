@@ -2,8 +2,11 @@
 
 import { getAdminClient } from "@/utils/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { Resend } from "resend";
+import { getNewUserWelcomeEmail } from "@/utils/emailTemplates";
 
 const adminDb = getAdminClient();
+const resend = new Resend(process.env.RESEND_API_KEY || "");
 
 export async function updateUserRole(userId: string, newRole: string) {
   try {
@@ -136,6 +139,20 @@ export async function createUserAction(formData: {
       }
     } catch (profErr) {
       console.warn("Profile upsert notice:", profErr);
+    }
+
+    // 3. Enviar correo de bienvenida con credenciales
+    try {
+      if (process.env.RESEND_API_KEY) {
+        await resend.emails.send({
+          from: "Bassfactory <tickets@bassfactory.co>",
+          to: cleanEmail,
+          subject: `Tus accesos a Bassfactory (${cleanName})`,
+          html: getNewUserWelcomeEmail(cleanName, cleanEmail, password, role)
+        });
+      }
+    } catch (emailErr) {
+      console.error("Error sending welcome email to new user:", emailErr);
     }
 
     revalidatePath("/admin/users");

@@ -13,37 +13,50 @@ const resend = new Resend(process.env.RESEND_API_KEY || "");
 
 export async function sendTicketEmail(ticketId: string, customName?: string, customEmail?: string) {
   try {
-    // Obtener los datos del ticket
-    const { data: rawTicket, error } = await supabase
+    // 1. Obtener ticket canónico
+    const { data: ticket, error: ticketError } = await supabase
       .from("tickets")
-      .select(`
-        id,
-        qr_hash,
-        assigned_name,
-        assigned_email,
-        ticket_tiers!inner(name, events!inner(title, start_date, location_name, description, cover_image)),
-        merch_orders!inner(id, customer_name, customer_email)
-      `)
+      .select("id, qr_hash, tier_id, order_id, assigned_name, assigned_email")
       .eq("id", ticketId)
       .single();
 
-    if (error || !rawTicket) {
-      console.error("Error fetching ticket", error);
+    if (ticketError || !ticket) {
+      console.error("Error fetching ticket in sendTicketEmail:", ticketError);
       return false;
     }
 
-    const ticket = rawTicket as any;
-    
-    const tier = Array.isArray(ticket.ticket_tiers) ? ticket.ticket_tiers[0] : ticket.ticket_tiers;
-    const event = Array.isArray(tier.events) ? tier.events[0] : tier.events;
-    const order = Array.isArray(ticket.merch_orders) ? ticket.merch_orders[0] : ticket.merch_orders;
+    // 2. Obtener localidad y evento
+    const { data: tier } = await supabase
+      .from("ticket_tiers")
+      .select("id, name, event_id")
+      .eq("id", ticket.tier_id)
+      .single();
 
-    // Quién recibe el correo:
-    // 1. Si pasamos customName/Email explícito (desde el checkout o nominalización)
-    // 2. Si ya estaba asignado en BD
-    // 3. Fallback al dueño de la orden
-    const finalName = customName || ticket.assigned_name || order.customer_name || 'Cliente';
-    const finalEmail = customEmail || ticket.assigned_email || order.customer_email;
+    const { data: event } = tier?.event_id
+      ? await supabase
+          .from("events")
+          .select("title, start_date, location_name, description, cover_image")
+          .eq("id", tier.event_id)
+          .single()
+      : { data: null };
+
+    if (!tier || !event) {
+      console.error("Tier or event not found for ticket:", ticketId);
+      return false;
+    }
+
+    // 3. Obtener orden asociada
+    const { data: order } = ticket.order_id
+      ? await supabase
+          .from("merch_orders")
+          .select("id, customer_name, customer_email")
+          .eq("id", ticket.order_id)
+          .single()
+      : { data: null };
+
+    // Destinatario final
+    const finalName = customName || ticket.assigned_name || order?.customer_name || "Cliente";
+    const finalEmail = customEmail || ticket.assigned_email || order?.customer_email;
 
     if (!finalEmail) return false;
 
@@ -71,7 +84,7 @@ export async function sendTicketEmail(ticketId: string, customName?: string, cus
         eventDescription: event.description,
         coverImageUrl: event.cover_image,
         logoUrl: `${getAppUrl()}/Bass-Factory-Blanco-Sin-Letras.png`,
-        orderId: order.id || ticket.id
+        orderId: order?.id || ticket.id
       }) as any
     );
 
