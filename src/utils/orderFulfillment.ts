@@ -1,6 +1,7 @@
 import { getAdminClient } from "@/utils/supabase/admin";
 import { Resend } from "resend";
 import { getPurchaseConfirmationEmail, PurchasedItem } from "@/utils/emailTemplates";
+import { sendTicketEmail } from "@/utils/sendTicketEmail";
 
 const resend = new Resend(process.env.RESEND_API_KEY || "");
 const supabase = getAdminClient();
@@ -262,10 +263,10 @@ export async function fulfillOrder(orderId: string) {
     .update({ status: "paid", updated_at: new Date().toISOString() })
     .eq("id", orderId);
 
-  // 3. Validate and activate tickets (change from 'void' to 'valid')
+  // 3. Validate and activate tickets (change from 'void' to 'valid' with active QR)
   const { data: tickets, error: ticketsError } = await supabase
     .from("tickets")
-    .update({ status: "valid" })
+    .update({ status: "valid", qr_dispatched: true })
     .eq("order_id", orderId)
     .select("id, qr_hash, tier_id");
 
@@ -327,10 +328,19 @@ export async function fulfillOrder(orderId: string) {
     }
   }
 
-  // 6. Send General Confirmation Email with purchased items list
+  // 6. Send General Confirmation Email with purchased items list & invoice
   await sendOrderConfirmationEmail(orderId);
 
-  // 7. Las boletas oficiales con código QR se despachan automáticamente 1 día antes del evento a través del cron job (/api/cron/dispatch-tickets).
+  // 7. Despachar entradas oficiales individuales con PDF y código QR verificado
+  if (tickets && tickets.length > 0) {
+    for (const t of tickets) {
+      try {
+        await sendTicketEmail(t.id);
+      } catch (ticketMailErr) {
+        console.error(`Error enviando boleta ${t.id} por correo:`, ticketMailErr);
+      }
+    }
+  }
 
   return true;
 }

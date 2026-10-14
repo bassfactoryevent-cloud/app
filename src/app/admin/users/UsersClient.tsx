@@ -325,7 +325,6 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                                 outline: "none"
                               }}
                             >
-                              <option value="superadmin">👑 Super Admin</option>
                               <option value="admin">Admin</option>
                               <option value="scanner">🚪 Puerta / Escáner</option>
                               <option value="customer">Customer (Cliente)</option>
@@ -669,7 +668,6 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                 >
                   <option value="scanner">🚪 Personal de Puerta / Escáner (Para recepción y lectura de QRs en eventos)</option>
                   <option value="admin">Admin (Acceso a eventos, ventas y configuración)</option>
-                  <option value="superadmin">👑 Super Admin (Acceso total al sistema)</option>
                   <option value="customer">Cliente (Comprador común de boletas)</option>
                 </select>
                 <p style={{ margin: "0.4rem 0 0 0", fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>

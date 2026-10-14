@@ -147,8 +147,7 @@ export async function createEvent(formData: FormData) {
     }
     event = updatedEvent;
     
-    // Eliminar relaciones antiguas para reemplazarlas
-    await supabase.from("ticket_tiers").delete().eq("event_id", event.id);
+    // Eliminar DJs y sponsors antiguos para reemplazarlos
     await supabase.from("event_djs").delete().eq("event_id", event.id);
     await supabase.from("event_sponsors").delete().eq("event_id", event.id);
   } else {
@@ -161,23 +160,55 @@ export async function createEvent(formData: FormData) {
     event = newEvent;
   }
 
-  // Insertar boletas (Etapas)
+  // Insertar o actualizar boletas (Etapas) de forma segura sin violar Foreign Keys
   if (ticketsJson && event) {
     try {
       const tickets = JSON.parse(ticketsJson);
-      if (tickets.length > 0) {
-        const ticketInserts = tickets.map((t: any) => ({
-          event_id: event.id,
-          name: t.name,
-          price: parseFloat(t.price),
-          quantity_available: parseInt(t.quantity, 10),
-          sales_start: t.sales_start ? new Date(t.sales_start).toISOString() : null,
-          sales_end: t.sales_end ? new Date(t.sales_end).toISOString() : null,
-        }));
-        await supabase.from("ticket_tiers").insert(ticketInserts);
+      if (Array.isArray(tickets) && tickets.length > 0) {
+        // Obtener tiers actuales en base de datos
+        const { data: existingTiers } = await supabase
+          .from("ticket_tiers")
+          .select("id")
+          .eq("event_id", event.id);
+
+        const existingIds = (existingTiers || []).map((t: any) => t.id);
+        const submittedIds = tickets.map((t: any) => t.id).filter(Boolean);
+
+        // Identificar cuáles se quieren eliminar
+        const idsToDelete = existingIds.filter(id => !submittedIds.includes(id));
+        if (idsToDelete.length > 0) {
+          // Solo borrar los que NO tienen tickets emitidos para no violar foreign keys
+          const { data: soldTickets } = await supabase
+            .from("tickets")
+            .select("tier_id")
+            .in("tier_id", idsToDelete);
+          const soldTierIds = new Set((soldTickets || []).map((s: any) => s.tier_id));
+          const safeToDelete = idsToDelete.filter(id => !soldTierIds.has(id));
+          if (safeToDelete.length > 0) {
+            await supabase.from("ticket_tiers").delete().in("id", safeToDelete);
+          }
+        }
+
+        // Upsert / Insert
+        for (const t of tickets) {
+          const tierData: any = {
+            event_id: event.id,
+            name: t.name,
+            price: parseFloat(t.price),
+            quantity_available: parseInt(t.quantity, 10),
+            sales_start: t.sales_start ? new Date(t.sales_start).toISOString() : null,
+            sales_end: t.sales_end ? new Date(t.sales_end).toISOString() : null,
+          };
+
+          if (t.id && existingIds.includes(t.id)) {
+            await supabase.from("ticket_tiers").update(tierData).eq("id", t.id);
+          } else {
+            await supabase.from("ticket_tiers").insert([tierData]);
+          }
+        }
       }
     } catch (e) {
-      console.error("Error parsing tickets JSON", e);
+      console.error("Error parsing/updating tickets JSON", e);
     }
   }
 
@@ -216,15 +247,52 @@ export async function createEvent(formData: FormData) {
     }
   }
 
+  revalidatePath("/");
+  revalidatePath("/events");
   revalidatePath("/admin/events");
   revalidatePath(`/events/${slug}`);
   redirect("/admin/events");
+}
+
+export async function updateEventStatus(eventId: string, newStatus: string) {
+  try {
+    const supabase = await createClient();
+    const validStatuses = ["published", "draft", "archived", "postponed", "cancelled"];
+    if (!validStatuses.includes(newStatus)) {
+      return { success: false, error: "Estado no válido." };
+    }
+
+    const { data: event, error } = await supabase
+      .from("events")
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq("id", eventId)
+      .select("slug")
+      .single();
+
+    if (error) {
+      console.error("Error updating event status:", error);
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath("/");
+    revalidatePath("/events");
+    revalidatePath("/admin/events");
+    if (event?.slug) {
+      revalidatePath(`/events/${event.slug}`);
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error("updateEventStatus error:", err);
+    return { success: false, error: err.message || "Error al actualizar estado" };
+  }
 }
 
 export async function deleteEvent(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("events").delete().eq("id", id);
   if (error) throw new Error(error.message);
-  revalidatePath("/admin/events");
+  revalidatePath("/");
   revalidatePath("/events");
+  revalidatePath("/admin/events");
 }

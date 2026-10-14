@@ -4,8 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { Calendar, Plus, MapPin, Ticket, Search, Filter, ChevronLeft, ChevronRight, Activity } from "lucide-react";
 import DeleteEventButton from "./DeleteEventButton";
+import { updateEventStatus } from "./actions";
+import { toast } from "sonner";
 
 export default function EventsClient({ initialEvents, error }: { initialEvents: any[], error: any }) {
+  const [events, setEvents] = useState<any[]>(initialEvents || []);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("published"); // Por defecto muestra los publicados 'de una'
   const [currentPage, setCurrentPage] = useState(1);
@@ -13,14 +16,31 @@ export default function EventsClient({ initialEvents, error }: { initialEvents: 
 
   // Conteo por estado
   const counts = {
-    all: initialEvents?.length || 0,
-    published: initialEvents?.filter(e => e.status === 'published').length || 0,
-    draft: initialEvents?.filter(e => e.status === 'draft').length || 0,
-    archived: initialEvents?.filter(e => e.status === 'archived').length || 0,
+    all: events.length,
+    published: events.filter(e => e.status === 'published').length,
+    draft: events.filter(e => e.status === 'draft').length,
+    archived: events.filter(e => e.status === 'archived').length,
+  };
+
+  const handleQuickStatusChange = async (eventId: string, newStatus: string) => {
+    const prevStatus = events.find(e => e.id === eventId)?.status;
+    setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: newStatus } : e));
+    try {
+      const res = await updateEventStatus(eventId, newStatus);
+      if (res.success) {
+        toast.success(`Estado actualizado a: ${newStatus.toUpperCase()}`);
+      } else {
+        setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: prevStatus } : e));
+        toast.error(res.error || "Error al actualizar estado");
+      }
+    } catch {
+      setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: prevStatus } : e));
+      toast.error("Error al actualizar estado");
+    }
   };
 
   // Filtrado
-  const filteredEvents = (initialEvents || []).filter((event) => {
+  const filteredEvents = events.filter((event) => {
     const matchesSearch = 
       (event.title?.toLowerCase() || "").includes(searchTerm.toLowerCase()) || 
       (event.location_name?.toLowerCase() || "").includes(searchTerm.toLowerCase());
@@ -234,16 +254,47 @@ export default function EventsClient({ initialEvents, error }: { initialEvents: 
                     <Calendar size={48} />
                   </div>
                 )}
-                <div style={{ position: 'absolute', top: '1rem', right: '1rem', padding: '0.25rem 0.75rem', borderRadius: '99px', fontSize: '0.75rem', fontWeight: 600, 
-                  backgroundColor: 
-                    event.status === 'published' ? '#10b981' : 
-                    event.status === 'postponed' ? '#f59e0b' :
-                    event.status === 'cancelled' ? '#ef4444' :
-                    'rgba(0,0,0,0.6)', 
-                  color: 'white' 
-                }}>
-                  {event.status.toUpperCase()}
+                <div style={{ position: 'absolute', top: '0.75rem', right: '0.75rem', zIndex: 10 }}>
+                  <select
+                    value={event.status}
+                    onChange={(e) => handleQuickStatusChange(event.id, e.target.value)}
+                    style={{
+                      padding: '0.3rem 0.65rem',
+                      borderRadius: '99px',
+                      fontSize: '0.75rem',
+                      fontWeight: 800,
+                      backgroundColor: 
+                        event.status === 'published' ? '#10b981' : 
+                        event.status === 'archived' ? '#f59e0b' :
+                        event.status === 'postponed' ? '#3b82f6' :
+                        event.status === 'cancelled' ? '#ef4444' :
+                        'rgba(0,0,0,0.8)', 
+                      color: 'white',
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      cursor: 'pointer',
+                      outline: 'none',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.4)'
+                    }}
+                  >
+                    <option value="published" style={{ backgroundColor: '#111', color: '#10b981' }}>🟢 PUBLICADO</option>
+                    <option value="archived" style={{ backgroundColor: '#111', color: '#f59e0b' }}>📦 ARCHIVADO</option>
+                    <option value="draft" style={{ backgroundColor: '#111', color: '#9ca3af' }}>⚪ BORRADOR</option>
+                    <option value="postponed" style={{ backgroundColor: '#111', color: '#3b82f6' }}>🟡 APLAZADO</option>
+                    <option value="cancelled" style={{ backgroundColor: '#111', color: '#ef4444' }}>🔴 CANCELADO</option>
+                  </select>
                 </div>
+
+                {event.start_date && new Date(event.start_date) < new Date() && event.status === 'published' && (
+                  <div style={{
+                    position: 'absolute', bottom: '0.5rem', left: '0.5rem',
+                    backgroundColor: 'rgba(239, 68, 68, 0.95)', color: 'white',
+                    padding: '0.2rem 0.5rem', borderRadius: '4px',
+                    fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.5)', zIndex: 5
+                  }}>
+                    ⚠️ Pasado - Pendiente Archivar
+                  </div>
+                )}
               </div>
               
               <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>

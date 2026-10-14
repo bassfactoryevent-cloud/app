@@ -36,10 +36,11 @@ export default async function ScannerPortalPage() {
   let assignedEvents: any[] = [];
 
   if (isSuperOrAdmin) {
-    // Admins y Superadmins tienen acceso a todos los eventos
+    // Admins tienen acceso a todos los eventos activos
     const { data: allEvents } = await adminDb
       .from("events")
       .select("id, title, cover_image, location_name, start_date, total_capacity")
+      .neq("status", "archived")
       .order("start_date", { ascending: false });
 
     assignedEvents = allEvents || [];
@@ -53,7 +54,8 @@ export default async function ScannerPortalPage() {
       const { data: eventsData } = await adminDb
         .from("events")
         .select("id, title, cover_image, location_name, start_date, total_capacity")
-        .in("id", eventIds);
+        .in("id", eventIds)
+        .neq("status", "archived");
 
       assignedEvents = eventsData || [];
     }

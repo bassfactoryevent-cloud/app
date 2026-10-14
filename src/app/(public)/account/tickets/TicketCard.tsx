@@ -220,35 +220,40 @@ export default function TicketCard({ event, tickets, eventDate }: TicketCardProp
             </div>
 
             {/* Antifraud Protocol Notice */}
-            <div style={{
-              marginTop: '1.25rem',
-              backgroundColor: isWithin24Hours ? 'rgba(34, 197, 94, 0.08)' : 'rgba(245, 158, 11, 0.08)',
-              border: `1px solid ${isWithin24Hours ? 'rgba(34, 197, 94, 0.25)' : 'rgba(245, 158, 11, 0.25)'}`,
-              borderRadius: '0.75rem',
-              padding: '0.75rem 1rem',
-              fontSize: '0.8rem',
-              color: isWithin24Hours ? '#86efac' : '#fde68a',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '10px'
-            }}>
-              {isWithin24Hours ? (
-                <ShieldCheck size={18} style={{ color: '#22c55e', flexShrink: 0, marginTop: '2px' }} />
-              ) : (
-                <Lock size={18} style={{ color: '#f59e0b', flexShrink: 0, marginTop: '2px' }} />
-              )}
-              <div style={{ lineHeight: 1.45 }}>
-                {isWithin24Hours ? (
-                  <span>
-                    <strong>Acceso Habilitado:</strong> Ya puedes ver tu boleta digital con código QR o descargar el PDF oficial para ingresar en taquilla.
-                  </span>
-                ) : (
-                  <span>
-                    <strong>Activación Programada (Antifraude):</strong> Los botones para ver la boleta digital con QR y descargar el PDF oficial se desbloquearán automáticamente el <strong>{activationDateStr}</strong> (24 horas antes del evento). Mientras tanto, puedes transferir cualquiera de tus entradas a tus amigos.
-                  </span>
-                )}
-              </div>
-            </div>
+            {(() => {
+              const isEnabledOverall = isWithin24Hours || tickets.some((t: any) => t.qr_dispatched);
+              return (
+                <div style={{
+                  marginTop: '1.25rem',
+                  backgroundColor: isEnabledOverall ? 'rgba(34, 197, 94, 0.08)' : 'rgba(245, 158, 11, 0.08)',
+                  border: `1px solid ${isEnabledOverall ? 'rgba(34, 197, 94, 0.25)' : 'rgba(245, 158, 11, 0.25)'}`,
+                  borderRadius: '0.75rem',
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.8rem',
+                  color: isEnabledOverall ? '#86efac' : '#fde68a',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px'
+                }}>
+                  {isEnabledOverall ? (
+                    <ShieldCheck size={18} style={{ color: '#22c55e', flexShrink: 0, marginTop: '2px' }} />
+                  ) : (
+                    <Lock size={18} style={{ color: '#f59e0b', flexShrink: 0, marginTop: '2px' }} />
+                  )}
+                  <div style={{ lineHeight: 1.45 }}>
+                    {isEnabledOverall ? (
+                      <span>
+                        <strong>Acceso Habilitado:</strong> Ya puedes ver tu boleta digital con código QR verificado o descargar el PDF oficial para ingresar en taquilla.
+                      </span>
+                    ) : (
+                      <span>
+                        <strong>Activación Programada (Antifraude):</strong> Los botones para ver la boleta digital con QR y descargar el PDF oficial se desbloquearán automáticamente el <strong>{activationDateStr}</strong> (24 horas antes del evento). Mientras tanto, puedes transferir cualquiera de tus entradas a tus amigos.
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
 

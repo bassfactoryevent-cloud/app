@@ -10,7 +10,10 @@ const resend = new Resend(process.env.RESEND_API_KEY || "");
 
 export async function updateUserRole(userId: string, newRole: string) {
   try {
-    const validRoles = ["superadmin", "admin", "scanner", "customer"];
+    if (newRole === "superadmin") {
+      return { success: false, error: "El rol de Super Admin está protegido y no puede asignarse desde el panel." };
+    }
+    const validRoles = ["admin", "scanner", "customer"];
     if (!validRoles.includes(newRole)) {
       return { success: false, error: "Rol no válido" };
     }
@@ -85,6 +88,9 @@ export async function createUserAction(formData: {
     }
     if (password.length < 6) {
       return { success: false, error: "La contraseña debe tener al menos 6 caracteres." };
+    }
+    if (role === "superadmin") {
+      return { success: false, error: "El rol de Super Admin está protegido y no se puede crear desde el panel." };
     }
 
     const cleanEmail = email.trim().toLowerCase();
