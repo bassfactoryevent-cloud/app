@@ -365,28 +365,34 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.65rem;
   padding-top: 0.65rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
+  min-width: 0;
 }
 
 .dockItems {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 0.45rem;
   flex: 1;
+  min-width: 0;
+  width: 100%;
 }
 
 .dockCard {
   position: relative;
   text-align: left;
-  padding: 0.45rem 0.68rem;
+  padding: 0.45rem 0.65rem;
   border-radius: 0.55rem;
   background: rgba(12, 12, 16, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.55);
   cursor: pointer;
   overflow: hidden;
+  min-width: 0;
+  width: 100%;
   backdrop-filter: blur(8px);
   transition: all 0.2s ease;
 }
@@ -398,7 +404,7 @@
 
 .dockCardActive {
   background: rgba(20, 20, 26, 0.92);
-  border-color: rgba(217, 4, 22, 0.55);
+  border-color: rgba(217, 4, 22, 0.65);
   color: #ffffff;
 }
 
@@ -408,7 +414,7 @@
   left: 0;
   right: 0;
   height: 2.5px;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .dockProgressBar {
@@ -433,10 +439,10 @@
 .dockCardMeta {
   font-size: 0.58rem;
   font-weight: 800;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #D90416;
-  margin-bottom: 0.1rem;
+  margin-bottom: 0.08rem;
   display: block;
   white-space: nowrap;
   overflow: hidden;
@@ -450,6 +456,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   display: block;
+  width: 100%;
 }
 
 .dockArrows {
@@ -463,8 +470,8 @@
   width: 30px;
   height: 30px;
   border-radius: 999px;
-  background: rgba(15, 15, 20, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(15, 15, 20, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -489,20 +496,20 @@
 
   .heroContainer {
     padding: 0 0.65rem;
-    gap: 0.9rem;
+    gap: 0.85rem;
   }
 
   .stageGrid {
     flex-direction: row;
     align-items: center;
-    gap: 0.85rem;
+    gap: 0.75rem;
   }
 
   .artworkShowcase {
-    width: 96px;
-    height: 96px;
+    width: 92px;
+    height: 92px;
     border-radius: 0.75rem;
-    padding: 0.2rem;
+    padding: 0.18rem;
   }
 
   .artworkCornerTag {
@@ -510,14 +517,14 @@
   }
 
   .heroTitle {
-    font-size: 1.35rem;
+    font-size: 1.32rem;
     line-height: 1.08;
     margin-bottom: 0.35rem;
   }
 
   .heroSubtitle {
-    font-size: 0.76rem;
-    margin-bottom: 0.7rem;
+    font-size: 0.75rem;
+    margin-bottom: 0.65rem;
   }
 
   .actionsRow {
@@ -535,21 +542,33 @@
     text-align: center;
   }
 
+  .spotlightDock {
+    gap: 0.45rem;
+    padding-top: 0.55rem;
+  }
+
   .dockItems {
-    display: flex;
-    gap: 0.35rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: 0.32rem;
   }
 
   .dockCard {
-    flex: 1;
-    padding: 0.38rem 0.45rem;
+    padding: 0.35rem 0.42rem;
+    border-radius: 0.45rem;
   }
 
   .dockCardMeta {
-    font-size: 0.52rem;
+    font-size: 0.5rem;
+    letter-spacing: 0.04em;
   }
 
   .dockCardTitle {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
+  }
+
+  .arrowBtn {
+    width: 28px;
+    height: 28px;
   }
 }

@@ -629,7 +629,11 @@ export default function HeroForm({
                       textOverflow: "ellipsis",
                     }}
                   >
-                    {(slide.title || "Sin título").replace(/<br\s*\/?>/gi, " ")}
+                    {(slide.title || "Sin título")
+                      .replace(/<br\s*\/?>/gi, " ")
+                      .replace(/<[^>]*>/g, "")
+                      .replace(/\s+/g, " ")
+                      .trim()}
                   </div>
                   <div
                     style={{

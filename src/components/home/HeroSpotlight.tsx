@@ -11,6 +11,28 @@ interface HeroSpotlightProps {
   autoplayMs: number;
 }
 
+/**
+ * Strips all HTML tags so raw `<h2 style="...">` strings never leak into dock labels or alt attributes.
+ */
+export function stripHtmlTags(raw?: string): string {
+  if (!raw) return "";
+  return raw
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Strips outer block tags (<h2 style=...>, <p>, etc.) while preserving <br/> line breaks.
+ */
+function cleanHeadingHtml(raw?: string): string {
+  if (!raw) return "MÚSICA<br/>Cultura<br/>Movimiento";
+  return raw
+    .replace(/<\/?(h1|h2|h3|h4|p|div|span)[^>]*>/gi, "")
+    .trim();
+}
+
 function resolveMediaConfig(slide: HeroSlide) {
   let url =
     slide.media_url ||
@@ -28,7 +50,7 @@ function resolveMediaConfig(slide: HeroSlide) {
     isVideo = true;
     let ytId = "";
     if (url.includes("youtu.be")) {
-      ytId = bgExtractYt(url);
+      ytId = url.split("youtu.be/")[1]?.split("?")[0] || "";
     } else {
       ytId = url.split("v=")[1]?.split("&")[0] || "";
     }
@@ -36,10 +58,6 @@ function resolveMediaConfig(slide: HeroSlide) {
   }
 
   return { url, isEmbed, isVideo };
-}
-
-function bgExtractYt(url: string) {
-  return url.split("youtu.be/")[1]?.split("?")[0] || "";
 }
 
 /**
@@ -58,10 +76,10 @@ function HeroSonicCanvas() {
     let width = 0;
     let height = 0;
 
-    const particles = Array.from({ length: 28 }, (_, i) => ({
+    const particles = Array.from({ length: 24 }, (_, i) => ({
       x: Math.random(),
       y: Math.random(),
-      r: 1 + (i % 3) * 0.7,
+      r: 1 + (i % 3) * 0.65,
       speedY: 0.0004 + (i % 5) * 0.00018,
       drift: (i % 2 === 0 ? 1 : -1) * 0.00025,
       isRed: i % 3 === 0,
@@ -71,7 +89,7 @@ function HeroSonicCanvas() {
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
       width = rect.width || window.innerWidth;
-      height = rect.height || 460;
+      height = rect.height || 440;
       canvas.width = width;
       canvas.height = height;
     };
@@ -84,7 +102,6 @@ function HeroSonicCanvas() {
       t += 0.035;
       ctx.clearRect(0, 0, width, height);
 
-      // 1. Floating atmospheric rave particles
       for (const p of particles) {
         p.y -= p.speedY;
         p.x += Math.sin(t + p.y * 10) * p.drift;
@@ -97,28 +114,27 @@ function HeroSonicCanvas() {
         ctx.beginPath();
         ctx.arc(px, py, p.r, 0, Math.PI * 2);
         ctx.fillStyle = p.isRed
-          ? "rgba(217, 4, 22, 0.55)"
-          : "rgba(255, 255, 255, 0.25)";
+          ? "rgba(217, 4, 22, 0.5)"
+          : "rgba(255, 255, 255, 0.22)";
         ctx.fill();
       }
 
-      // 2. Subtle soundwave along the lower horizon
       ctx.beginPath();
-      const baseY = height - 6;
+      const baseY = height - 4;
       ctx.moveTo(0, baseY);
-      const step = Math.max(12, Math.floor(width / 64));
+      const step = Math.max(12, Math.floor(width / 60));
       for (let x = 0; x <= width; x += step) {
         const norm = x / width;
         const envelope = Math.sin(norm * Math.PI);
         const wave =
           Math.sin(norm * 18 + t * 2.4) *
           Math.cos(norm * 9 - t * 1.6) *
-          10 *
+          8 *
           envelope;
         ctx.lineTo(x, baseY - Math.abs(wave));
       }
-      ctx.strokeStyle = "rgba(217, 4, 22, 0.32)";
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = "rgba(217, 4, 22, 0.28)";
+      ctx.lineWidth = 1.4;
       ctx.stroke();
 
       animId = requestAnimationFrame(render);
@@ -168,7 +184,7 @@ function LiveCountdown({ targetDate }: { targetDate: string }) {
 
   return (
     <div className={styles.countdownStrip}>
-      <Timer size={14} style={{ color: "#D90416", marginRight: "0.1rem" }} />
+      <Timer size={13} style={{ color: "#D90416", marginRight: "0.1rem" }} />
       <div className={styles.countdownUnit}>
         <span className={styles.countdownNumber}>{pad(timeLeft.days)}</span>
         <span className={styles.countdownLabel}>Días</span>
@@ -202,19 +218,21 @@ export default function HeroSpotlight({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
 
   const count = safeSlides.length;
   const currentSlide = safeSlides[currentIndex] || safeSlides[0];
+  const effectiveDuration = autoplayMs && autoplayMs > 0 ? autoplayMs : 6500;
 
   useEffect(() => {
-    if (count <= 1 || !autoplayMs || autoplayMs <= 0 || isPaused) return;
+    if (count <= 1 || isPaused) return;
 
-    const timer = setInterval(() => {
+    const timer = setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % count);
-    }, autoplayMs);
+    }, effectiveDuration);
 
-    return () => clearInterval(timer);
-  }, [count, autoplayMs, isPaused, currentIndex]);
+    return () => clearTimeout(timer);
+  }, [count, effectiveDuration, isPaused, currentIndex]);
 
   const goPrev = () => {
     setCurrentIndex((prev) => (prev - 1 + count) % count);
@@ -226,31 +244,39 @@ export default function HeroSpotlight({
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0]?.clientX ?? null;
+    touchStartY.current = e.touches[0]?.clientY ?? null;
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current === null || count <= 1) return;
     const endX = e.changedTouches[0]?.clientX ?? touchStartX.current;
+    const endY = e.changedTouches[0]?.clientY ?? (touchStartY.current || 0);
     const deltaX = endX - touchStartX.current;
-    if (Math.abs(deltaX) > 45) {
+    const deltaY = Math.abs(endY - (touchStartY.current || 0));
+
+    if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > deltaY) {
       if (deltaX < 0) goNext();
       else goPrev();
     }
     touchStartX.current = null;
+    touchStartY.current = null;
   };
 
   if (!currentSlide) return null;
 
   const currentMedia = resolveMediaConfig(currentSlide);
-  // Show the sharp uncropped poster/product showcase card on the right whenever the slide is an event, merch, post, or ad with an image!
   const showFramedArtwork =
     !currentMedia.isVideo && currentSlide.source_type !== "custom";
 
   return (
     <section
       className={styles.heroSection}
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
+      onPointerEnter={(e) => {
+        if (e.pointerType === "mouse") setIsPaused(true);
+      }}
+      onPointerLeave={(e) => {
+        if (e.pointerType === "mouse") setIsPaused(false);
+      }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -290,7 +316,7 @@ export default function HeroSpotlight({
             ) : (
               <img
                 src={media.url}
-                alt={(slide.title || "Bassfactory").replace(/<[^>]+>/g, " ")}
+                alt={stripHtmlTags(slide.title) || "Bassfactory"}
                 className={
                   isCatalogImage
                     ? styles.mediaImageAmbient
@@ -324,9 +350,9 @@ export default function HeroSpotlight({
                 currentSlide.meta?.location) && (
                 <span className={styles.metaPill}>
                   {currentSlide.source_type === "merch" ? (
-                    <Tag size={12} style={{ color: "#D90416" }} />
+                    <Tag size={11} style={{ color: "#D90416" }} />
                   ) : (
-                    <MapPin size={12} style={{ color: "#D90416" }} />
+                    <MapPin size={11} style={{ color: "#D90416" }} />
                   )}
                   <span>
                     {currentSlide.meta?.price_label ||
@@ -352,8 +378,7 @@ export default function HeroSpotlight({
             <h1
               className={styles.heroTitle}
               dangerouslySetInnerHTML={{
-                __html:
-                  currentSlide.title || "MÚSICA<br/>Cultura<br/>Movimiento",
+                __html: cleanHeadingHtml(currentSlide.title),
               }}
             />
 
@@ -394,12 +419,12 @@ export default function HeroSpotlight({
             <Link
               href={currentSlide.primary_button_url || "/events"}
               className={styles.artworkShowcase}
-              title={currentSlide.title?.replace(/<[^>]+>/g, " ")}
+              title={stripHtmlTags(currentSlide.title)}
             >
               <div className={styles.artworkInner}>
                 <img
                   src={currentMedia.url}
-                  alt={currentSlide.title?.replace(/<[^>]+>/g, " ")}
+                  alt={stripHtmlTags(currentSlide.title)}
                   className={styles.artworkImg}
                 />
                 <span className={styles.artworkCornerTag}>
@@ -414,16 +439,24 @@ export default function HeroSpotlight({
           )}
         </div>
 
-        {/* Interactive Multi-Slide Dock */}
+        {/* Interactive Multi-Slide Dock (Fits 100% inside Mobile & Desktop) */}
         {count > 1 && (
           <div className={styles.spotlightDock}>
             <div className={styles.dockItems}>
               {safeSlides.map((slide, idx) => {
                 const isActive = idx === currentIndex;
-                const cleanTitle = (slide.title || `Slide ${idx + 1}`).replace(
-                  /<br\s*\/?>/gi,
-                  " "
-                );
+                const cleanTitle =
+                  stripHtmlTags(slide.title) || `Slide ${idx + 1}`;
+                const shortBadge =
+                  slide.source_type === "event"
+                    ? "EVENTO"
+                    : slide.source_type === "merch"
+                    ? "MERCH"
+                    : slide.source_type === "post"
+                    ? "CULTURA"
+                    : slide.source_type === "ad"
+                    ? "PAUTA"
+                    : "INICIO";
 
                 return (
                   <button
@@ -435,16 +468,18 @@ export default function HeroSpotlight({
                     }`}
                   >
                     <span className={styles.dockCardMeta}>
-                      0{idx + 1} • {slide.badge_label || "DESTACADO"}
+                      0{idx + 1} • {shortBadge}
                     </span>
                     <span className={styles.dockCardTitle}>{cleanTitle}</span>
 
                     <div className={styles.dockProgressTrack}>
-                      {isActive && autoplayMs > 0 && !isPaused && (
+                      {isActive && !isPaused && (
                         <div
-                          key={`${currentIndex}-${isPaused}`}
+                          key={`prog-${currentIndex}`}
                           className={styles.dockProgressBar}
-                          style={{ animationDuration: `${autoplayMs}ms` }}
+                          style={{
+                            animationDuration: `${effectiveDuration}ms`,
+                          }}
                         />
                       )}
                     </div>
