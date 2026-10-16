@@ -456,24 +456,31 @@ export async function acceptIncomingTransfersAction(
       updatedTransfers[0].to_name ||
       cleanUserEmail;
 
-    // 4. Actualizar propietario de las boletas (descontándolas inmediatamente del emisor y sumándolas al receptor)
-    const { error: ticketUpdateErr } = await adminDb
-      .from("tickets")
-      .update({
-        user_id: user.id,
-        assigned_name: receiverName,
-        assigned_email: cleanUserEmail,
-        transferred_at: nowIso,
-        qr_dispatched: false,
-      })
-      .in("id", acceptedTicketIds);
+    // 4. Actualizar propietario de las boletas y rotar el qr_hash criptográfico por seguridad antifraude
+    const crypto = await import("crypto");
+    for (const tId of acceptedTicketIds) {
+      const newRaw = `${tId}-${user.id}-${Date.now()}-${crypto.randomBytes(8).toString("hex")}`;
+      const newQrHash = crypto.createHash("sha256").update(newRaw).digest("hex");
 
-    if (ticketUpdateErr) {
-      console.error("Error updating tickets ownership:", ticketUpdateErr);
-      return {
-        success: false,
-        error: "Error asignando la propiedad de las boletas.",
-      };
+      const { error: ticketUpdateErr } = await adminDb
+        .from("tickets")
+        .update({
+          user_id: user.id,
+          assigned_name: receiverName,
+          assigned_email: cleanUserEmail,
+          qr_hash: newQrHash,
+          transferred_at: nowIso,
+          qr_dispatched: false,
+        })
+        .eq("id", tId);
+
+      if (ticketUpdateErr) {
+        console.error("Error updating ticket ownership:", ticketUpdateErr);
+        return {
+          success: false,
+          error: "Error asignando la propiedad de las boletas.",
+        };
+      }
     }
 
     // 5. Obtener información del evento y notificar al emisor

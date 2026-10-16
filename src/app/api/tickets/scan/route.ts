@@ -147,6 +147,14 @@ export async function POST(req: Request) {
     }
 
     const nowIso = new Date().toISOString();
+
+    // Si la boleta tenía una transferencia pendiente sin aceptar, cancelarla automáticamente al ingresar al evento
+    await adminDb
+      .from("ticket_transfers")
+      .update({ status: "cancelled", updated_at: nowIso })
+      .eq("ticket_id", ticket.id)
+      .eq("status", "pending");
+
     const formattedTime = new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
     return NextResponse.json({ 
