@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import CanvasIcon from "@/components/ui/CanvasIcon";
+import styles from "./StageMontageCanvas.module.css";
 
 type StagePreset = "lasers" | "sound" | "matrix";
 
@@ -183,105 +184,24 @@ export default function StageMontageCanvas() {
   const activeInfo = PRESETS.find((p) => p.id === preset) || PRESETS[0];
 
   return (
-    <div
-      style={{
-        position: "relative",
-        borderRadius: "0.95rem",
-        overflow: "hidden",
-        background: "var(--color-surface)",
-        border: "1px solid rgba(255, 255, 255, 0.08)",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <div className={styles.container}>
       {/* Top: Interactive Canvas Stage Rig */}
-      <div
-        style={{
-          position: "relative",
-          height: "150px",
-          background:
-            "radial-gradient(circle at 50% 0%, rgba(217, 4, 22, 0.2), #050507 78%)",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.07)",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-        }}
-      >
-        <canvas
-          ref={canvasRef}
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            pointerEvents: "none",
-          }}
-        />
+      <div className={styles.rigWrapper}>
+        <canvas ref={canvasRef} className={styles.canvas} />
 
-        <div
-          style={{
-            position: "relative",
-            zIndex: 2,
-            padding: "0.65rem 0.8rem",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "0.4rem",
-          }}
-        >
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.35rem",
-              padding: "0.18rem 0.55rem",
-              borderRadius: "999px",
-              background: "rgba(5, 5, 5, 0.82)",
-              border: "1px solid rgba(217, 4, 22, 0.45)",
-              fontSize: "0.58rem",
-              fontWeight: 800,
-              letterSpacing: "0.08em",
-              color: "#fff",
-              textTransform: "uppercase",
-            }}
-          >
-            <span
-              style={{
-                width: "5px",
-                height: "5px",
-                borderRadius: "50%",
-                background: "#D90416",
-                boxShadow: "0 0 8px #D90416",
-              }}
-            />
+        <div className={styles.topBar}>
+          <span className={styles.labBadge}>
+            <span className={styles.dot} />
             BASSFACTORY LAB
           </span>
 
-          <span
-            style={{
-              fontSize: "0.6rem",
-              fontWeight: 700,
-              color: "rgba(255,255,255,0.68)",
-              background: "rgba(0,0,0,0.65)",
-              padding: "0.16rem 0.5rem",
-              borderRadius: "999px",
-            }}
-          >
+          <span className={styles.specBadge}>
             {activeInfo.spec}
           </span>
         </div>
 
         {/* Mode Switcher Pills at Bottom of Canvas */}
-        <div
-          style={{
-            position: "relative",
-            zIndex: 2,
-            padding: "0.55rem 0.75rem",
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: "0.35rem",
-          }}
-        >
+        <div className={styles.presetGrid}>
           {PRESETS.map((p) => {
             const isActive = p.id === preset;
             return (
@@ -289,24 +209,7 @@ export default function StageMontageCanvas() {
                 key={p.id}
                 type="button"
                 onClick={() => setPreset(p.id)}
-                style={{
-                  padding: "0.28rem 0.35rem",
-                  borderRadius: "0.4rem",
-                  fontSize: "0.6rem",
-                  fontWeight: 800,
-                  letterSpacing: "0.03em",
-                  cursor: "pointer",
-                  background: isActive
-                    ? "#D90416"
-                    : "rgba(12, 12, 16, 0.82)",
-                  color: "#fff",
-                  border: isActive
-                    ? "1px solid #D90416"
-                    : "1px solid rgba(255,255,255,0.14)",
-                  transition: "all 0.18s ease",
-                  textAlign: "center",
-                  whiteSpace: "nowrap",
-                }}
+                className={`${styles.presetButton} ${isActive ? styles.presetButtonActive : ""}`}
               >
                 {p.tag}
               </button>
@@ -316,75 +219,27 @@ export default function StageMontageCanvas() {
       </div>
 
       {/* Bottom: Consulting & Advisory Offer + CTA to /produccion */}
-      <div
-        style={{
-          padding: "1.1rem 1.15rem 1.25rem",
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.5rem",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.45rem" }}>
-          <CanvasIcon variant="laser" size={22} />
-          <span
-            style={{
-              fontSize: "0.65rem",
-              fontWeight: 800,
-              letterSpacing: "0.09em",
-              color: "#D90416",
-              textTransform: "uppercase",
-            }}
-          >
+      <div className={styles.content}>
+        <div className={styles.tagRow}>
+          <CanvasIcon variant="laser" size={20} />
+          <span className={styles.tagText}>
             ASESORÍA, CONSULTORÍA & PRODUCCIÓN
           </span>
         </div>
 
-        <h3
-          style={{
-            fontSize: "0.98rem",
-            fontWeight: 800,
-            color: "#ffffff",
-            margin: 0,
-            lineHeight: 1.22,
-          }}
-        >
+        <h3 className={styles.title}>
           ¿Quieres crear tu propio evento? {activeInfo.title}
         </h3>
 
-        <p
-          style={{
-            fontSize: "0.76rem",
-            color: "rgba(255, 255, 255, 0.65)",
-            margin: 0,
-            lineHeight: 1.45,
-          }}
-        >
+        <p className={styles.desc}>
           {activeInfo.desc}
         </p>
 
-        <Link
-          href="/produccion"
-          style={{
-            marginTop: "0.4rem",
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
-            fontSize: "0.78rem",
-            fontWeight: 800,
-            color: "#ffffff",
-            background: "#D90416",
-            border: "1px solid rgba(255, 255, 255, 0.14)",
-            padding: "0.62rem 1rem",
-            borderRadius: "0.55rem",
-            textDecoration: "none",
-            boxShadow: "0 6px 18px rgba(217, 4, 22, 0.3)",
-            transition: "all 0.2s ease",
-          }}
-        >
+        <Link href="/produccion" className={styles.ctaButton}>
           Solicitar Asesoría y Acompañamiento →
         </Link>
       </div>
     </div>
   );
 }
+

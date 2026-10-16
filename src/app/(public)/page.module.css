@@ -461,21 +461,81 @@
   }
   .container {
     padding: 0 var(--space-2);
+    gap: 1.35rem;
+  }
+  .contentColumn {
+    gap: 1.25rem;
+  }
+  .sidebarColumn {
+    gap: 1.15rem;
   }
   .card {
-    min-width: 45vw;
-    flex: 0 0 45vw;
+    min-width: 38vw;
+    flex: 0 0 38vw;
+    max-width: 155px;
+    padding: 0.6rem;
+    border-radius: 9px;
+  }
+  .cardImage {
+    margin-bottom: 0.45rem;
+    border-radius: 6px;
   }
   .cardTitle {
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     line-height: 1.2;
+    margin-bottom: 0.1rem;
   }
   .cardSubtitle {
-    font-size: 0.75rem;
+    font-size: 0.68rem;
+    line-height: 1.25;
   }
   .cardButton, .cardButtonOutline {
-    padding: 0.25rem 0.6rem;
-    font-size: 0.7rem;
+    margin-top: 0.45rem;
+    padding: 0.22rem 0.52rem;
+    font-size: 0.64rem;
+    border-radius: 4px;
+  }
+  .raversReviews {
+    padding: 0.85rem;
+    border-radius: 10px;
+  }
+  .reviewItem {
+    margin-bottom: 0.55rem;
+    padding-bottom: 0.55rem;
+  }
+  .reviewText {
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+  .reviewAuthor {
+    font-size: 0.66rem;
+  }
+  .registrationBanner {
+    padding: 1.25rem 0.95rem;
+    border-radius: 12px;
+    margin-top: 0.5rem;
+  }
+  .registrationBanner h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0.35rem;
+  }
+  .registrationBanner p {
+    font-size: 0.76rem;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+  }
+  .registrationForm {
+    gap: 0.55rem;
+  }
+  .pillInput {
+    padding: 0.65rem 1rem;
+    font-size: 0.82rem;
+    border-radius: 8px;
+  }
+  .pillButton {
+    padding: 0.65rem 1rem;
+    font-size: 0.82rem;
+    border-radius: 8px;
   }
 }
 
@@ -544,36 +604,85 @@
   font-size: 0.78rem;
 }
 
+/* Blog Section Custom Header */
+.blogHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.25rem;
+}
+
+.blogHeaderTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.blogHeaderTitle {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.blogHeaderLink {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-magenta);
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
 @media (max-width: 768px) {
+  .blogHeaderRow {
+    padding-bottom: 0.1rem;
+  }
+  .blogHeaderTitleGroup {
+    gap: 0.45rem;
+  }
+  .blogHeaderTitle {
+    font-size: 0.98rem;
+    letter-spacing: -0.015em;
+  }
+  .blogHeaderLink {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+  }
+
   .principalHeroContainer {
-    height: 165px;
-    border-radius: 12px;
+    height: 145px;
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
   }
   .principalHeroImage {
-    flex: 0 0 38%;
+    flex: 0 0 36%;
     min-height: 100%;
   }
   .principalHeroContent {
-    flex: 0 0 62%;
-    padding: 0.85rem;
-    gap: 0.35rem;
+    flex: 0 0 64%;
+    padding: 0.65rem 0.75rem;
+    gap: 0.25rem;
   }
   .principalHeroTag {
-    font-size: 0.52rem;
-    padding: 0.16rem 0.45rem;
+    font-size: 0.5rem;
+    padding: 0.14rem 0.42rem;
   }
   .principalHeroTitle {
-    font-size: 0.92rem;
+    font-size: 0.82rem;
+    line-height: 1.15;
   }
   .principalHeroExcerpt {
-    font-size: 0.72rem;
+    font-size: 0.66rem;
+    line-height: 1.35;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
   .principalHeroButton {
-    padding: 0.35rem 0.75rem;
-    font-size: 0.68rem;
+    padding: 0.28rem 0.65rem;
+    font-size: 0.62rem;
   }
 }
+

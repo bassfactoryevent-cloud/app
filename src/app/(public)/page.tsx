@@ -110,15 +110,16 @@ export default async function Home() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               
               {/* Encabezado del bloque agrupado */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.25rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-                  <CanvasIcon variant="equalizer" size={28} />
-                  <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>Noticias, Cultura</h2>
+              <div className={styles.blogHeaderRow}>
+                <div className={styles.blogHeaderTitleGroup}>
+                  <CanvasIcon variant="equalizer" size={24} />
+                  <h2 className={styles.blogHeaderTitle}>Noticias, Cultura</h2>
                 </div>
-                <Link href="/blog" style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-magenta)', textDecoration: 'none' }}>
+                <Link href="/blog" className={styles.blogHeaderLink}>
                   Ver todo →
                 </Link>
               </div>
+
 
               {principalPost && (
                 <div className={styles.principalHeroContainer}>
