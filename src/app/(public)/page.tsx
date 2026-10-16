@@ -144,24 +144,21 @@ export default async function Home() {
           </p>
 
           <div className={styles.actions}>
-            {(heroSettings?.primary_button_text && heroSettings?.primary_button_url) ? (
-              <Link href={heroSettings.primary_button_url} className={styles.btnPrimary}>
-                {heroSettings.primary_button_text}
-              </Link>
-            ) : null}
-            
-            {(heroSettings?.secondary_button_text && heroSettings?.secondary_button_url) ? (
-              <Link href={heroSettings.secondary_button_url} className={styles.btnSecondary} style={{ padding: '0.875rem 2rem', backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', borderRadius: '10px', fontWeight: 600, textDecoration: 'none', backdropFilter: 'blur(10px)' }}>
+            <Link
+              href={heroSettings?.primary_button_url || "/events"}
+              className={styles.btnPrimary}
+            >
+              {heroSettings?.primary_button_text || "Ver Eventos"}
+            </Link>
+
+            {heroSettings?.secondary_button_text ? (
+              <Link
+                href={heroSettings.secondary_button_url || "/register"}
+                className={styles.btnSecondary}
+              >
                 {heroSettings.secondary_button_text}
               </Link>
             ) : null}
-
-            {/* Fallback original button if no settings exist */}
-            {!heroSettings?.primary_button_text && (
-              <Link href="/events" className={styles.btnPrimary}>
-                Ver Eventos
-              </Link>
-            )}
           </div>
         </div>
       </div>

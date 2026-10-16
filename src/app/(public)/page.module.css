@@ -82,20 +82,28 @@
 
 .actions {
   display: flex;
-  gap: var(--space-2);
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
   flex-wrap: wrap;
 }
 
 .btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background-color: var(--color-magenta);
   color: var(--color-white);
-  border: none;
+  border: 1px solid transparent;
   border-radius: 10px;
   padding: 1rem 2rem;
   font-size: 1rem;
   font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .btnPrimary:hover {
@@ -104,6 +112,9 @@
 }
 
 .btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background-color: rgba(255, 255, 255, 0.1);
   color: var(--color-white);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -111,9 +122,12 @@
   padding: 1rem 2rem;
   font-size: 1rem;
   font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s ease;
   backdrop-filter: blur(10px);
+  box-sizing: border-box;
 }
 
 .btnSecondary:hover {
@@ -409,6 +423,19 @@
   }
   .heroContent {
     padding: 0 var(--space-2);
+  }
+  .actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: nowrap;
+  }
+  .btnPrimary,
+  .btnSecondary {
+    padding: 0.85rem 1.35rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
   }
   .container {
     padding: 0 var(--space-2);

@@ -112,14 +112,14 @@ export default function HeroForm({ initialData }: { initialData: any }) {
       <section style={{ backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: 'var(--radius-lg)' }}>
         <h3 style={{ marginBottom: '1.5rem' }}>Botones de Acción</h3>
         
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
           {/* Primary */}
           <div style={{ padding: '1rem', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
             <h4 style={{ marginBottom: '1rem' }}>Botón Principal</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Texto del Botón</label>
-                <input type="text" name="primary_button_text" defaultValue={initialData?.primary_button_text || ""} style={{ width: '100%' }} />
+                <input type="text" name="primary_button_text" defaultValue={initialData?.primary_button_text || ""} style={{ width: '100%' }} placeholder="Ver Eventos" />
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>URL o Ruta</label>
@@ -134,11 +134,11 @@ export default function HeroForm({ initialData }: { initialData: any }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Texto del Botón</label>
-                <input type="text" name="secondary_button_text" defaultValue={initialData?.secondary_button_text || ""} style={{ width: '100%' }} />
+                <input type="text" name="secondary_button_text" defaultValue={initialData?.secondary_button_text || ""} style={{ width: '100%' }} placeholder="Ej: Suscríbete" />
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>URL o Ruta</label>
-                <input type="text" name="secondary_button_url" defaultValue={initialData?.secondary_button_url || ""} style={{ width: '100%' }} />
+                <input type="text" name="secondary_button_url" defaultValue={initialData?.secondary_button_url || ""} style={{ width: '100%' }} placeholder="/register" />
               </div>
             </div>
           </div>
