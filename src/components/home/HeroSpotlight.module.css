@@ -1,0 +1,456 @@
+.heroSection {
+  position: relative;
+  height: 76vh;
+  min-height: 540px;
+  max-height: 820px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 2.5rem 1.5rem 2.25rem;
+  margin-bottom: var(--space-4);
+  overflow: hidden;
+  background-color: #050505;
+  user-select: none;
+}
+
+.mediaLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.mediaLayerActive {
+  opacity: 1;
+  z-index: 1;
+}
+
+.mediaImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transform: scale(1.04);
+  transition: transform 7s ease-out;
+}
+
+.mediaLayerActive .mediaImage {
+  transform: scale(1);
+}
+
+.mediaVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.mediaIframe {
+  width: 100vw;
+  height: 56.25vw;
+  min-height: 100%;
+  min-width: 177.77vh;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  border: none;
+}
+
+.heroVignette {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background:
+    linear-gradient(180deg, rgba(5, 5, 5, 0.35) 0%, rgba(5, 5, 5, 0.25) 35%, rgba(5, 5, 5, 0.88) 82%, #000000 100%),
+    radial-gradient(circle at 15% 75%, rgba(217, 4, 22, 0.18) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+.heroContainer {
+  position: relative;
+  z-index: 5;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.slideContent {
+  max-width: 780px;
+  animation: slideFadeIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.badgesRow {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.categoryBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  background: #D90416;
+  color: #ffffff;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 18px rgba(217, 4, 22, 0.45);
+}
+
+.pulseDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 8px #ffffff;
+}
+
+.metaPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(15, 15, 18, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.tagPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.32rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.tagPill:hover {
+  background: rgba(217, 4, 22, 0.25);
+  border-color: rgba(217, 4, 22, 0.5);
+}
+
+.heroTitle {
+  font-size: clamp(2.1rem, 5vw, 4.1rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 0.98;
+  color: #ffffff;
+  margin: 0 0 0.85rem;
+  text-transform: uppercase;
+  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
+}
+
+.heroSubtitle {
+  font-size: clamp(0.92rem, 1.4vw, 1.12rem);
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 600px;
+  margin: 0 0 1.25rem;
+}
+
+/* Live Countdown Strip */
+.countdownStrip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: 0.85rem;
+  background: rgba(10, 10, 14, 0.78);
+  border: 1px solid rgba(217, 4, 22, 0.38);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  margin-bottom: 1.25rem;
+}
+
+.countdownUnit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 38px;
+}
+
+.countdownNumber {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.countdownLabel {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.countdownSep {
+  color: #D90416;
+  font-weight: 900;
+  font-size: 0.95rem;
+}
+
+/* Side-by-side Action Buttons */
+.actionsRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #D90416;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 0.7rem;
+  padding: 0.95rem 1.85rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(217, 4, 22, 0.38);
+  transition: all 0.2s ease;
+}
+
+.btnPrimary:hover {
+  background-color: #ff1426;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(217, 4, 22, 0.5);
+}
+
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 0.7rem;
+  padding: 0.95rem 1.85rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.2s ease;
+}
+
+.btnSecondary:hover {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Interactive Spotlight Dock (Multi-slide selector) */
+.spotlightDock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dockItems {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.65rem;
+  flex: 1;
+}
+
+.dockCard {
+  position: relative;
+  text-align: left;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.7rem;
+  background: rgba(12, 12, 16, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+}
+
+.dockCard:hover {
+  background: rgba(24, 24, 30, 0.85);
+  color: #ffffff;
+}
+
+.dockCardActive {
+  background: rgba(20, 20, 26, 0.9);
+  border-color: rgba(217, 4, 22, 0.55);
+  color: #ffffff;
+}
+
+.dockProgressTrack {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dockProgressBar {
+  height: 100%;
+  background: #D90416;
+  box-shadow: 0 0 10px #D90416;
+  width: 0%;
+  animation-name: fillProgress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes fillProgress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.dockCardMeta {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #D90416;
+  margin-bottom: 0.15rem;
+  display: block;
+}
+
+.dockCardTitle {
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.dockArrows {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.arrowBtn {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: rgba(15, 15, 20, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.arrowBtn:hover {
+  background: #D90416;
+  border-color: #D90416;
+}
+
+@media (max-width: 768px) {
+  .heroSection {
+    height: auto;
+    min-height: 500px;
+    padding: 5.5rem 0.5rem 1.5rem;
+  }
+
+  .heroContainer {
+    padding: 0 0.75rem;
+    gap: 1.15rem;
+  }
+
+  .heroTitle {
+    font-size: 2rem;
+    line-height: 1.04;
+  }
+
+  .heroSubtitle {
+    font-size: 0.86rem;
+    margin-bottom: 1rem;
+  }
+
+  .actionsRow {
+    display: flex;
+    flex-direction: row !important;
+    width: 100%;
+    gap: 0.65rem;
+  }
+
+  .btnPrimary,
+  .btnSecondary {
+    flex: 1 1 calc(50% - 0.35rem);
+    padding: 0.85rem 0.9rem;
+    font-size: 0.86rem;
+    text-align: center;
+  }
+
+  .dockItems {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .dockCard {
+    flex: 1;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .dockCardTitle {
+    font-size: 0.72rem;
+  }
+}

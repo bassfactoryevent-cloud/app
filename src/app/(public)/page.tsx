@@ -4,6 +4,8 @@ import Link from "next/link";
 import HorizontalScroll from "@/components/ui/HorizontalScroll";
 import { Calendar, MapPin } from "lucide-react";
 import AdBanner from "@/components/AdBanner";
+import HeroSpotlight from "@/components/home/HeroSpotlight";
+import { parseHeroConfig } from "@/types/hero";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -58,110 +60,21 @@ export default async function Home() {
     .eq('id', 1)
     .single();
 
-  // (Optional fallback) Fetch upcoming events in case we want to use the first event as a fallback
-  const heroEvent = events && events.length > 0 ? events[0] : null;
-
-  const subtitle = heroSettings?.subtitle || "El ecosistema definitivo de la cultura electrónica en tu ciudad.";
-  const tags = heroSettings?.tags || [];
-  const titleHtml = heroSettings?.title || "MÚSICA<br/>Cultura<br/>Movimiento";
-
-  let bgMediaUrl = heroSettings?.media_url || heroEvent?.cover_image || "https://images.unsplash.com/photo-1571266028243-3716f02d2d2e?q=80&w=1600&auto=format&fit=crop";
-  let isVideoEmbed = false;
-  let renderAsVideo = heroSettings?.media_type === "video";
-
-  if (bgMediaUrl.includes("vimeo.com")) {
-    isVideoEmbed = true;
-    renderAsVideo = true;
-    const vimeoId = bgMediaUrl.split("vimeo.com/")[1]?.split("?")[0];
-    bgMediaUrl = `https://player.vimeo.com/video/${vimeoId}?background=1&autoplay=1&loop=1&byline=0&title=0`;
-  } else if (bgMediaUrl.includes("youtube.com") || bgMediaUrl.includes("youtu.be")) {
-    isVideoEmbed = true;
-    renderAsVideo = true;
-    let ytId = "";
-    if (bgMediaUrl.includes("youtu.be")) {
-      ytId = bgMediaUrl.split("youtu.be/")[1]?.split("?")[0];
-    } else {
-      ytId = bgMediaUrl.split("v=")[1]?.split("&")[0];
-    }
-    bgMediaUrl = `https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${ytId}&showinfo=0`;
-  }
+  // Parse Hero Spotlight Multi-Slide configuration
+  const heroConfig = parseHeroConfig(heroSettings, {
+    events: events || [],
+    merch: merch || [],
+    posts: principalPost ? [principalPost, ...(posts || [])] : posts || [],
+  });
 
   return (
     <div className={styles.page}>
       
-      {/* 1. Hero Banner: Next Upcoming Event or Dynamic Banner */}
-      <div className={styles.hero}>
-        <div className={styles.heroBackground}>
-          {renderAsVideo ? (
-            isVideoEmbed ? (
-              <iframe
-                src={bgMediaUrl}
-                className={styles.heroVideo}
-                style={{ width: '100vw', height: '56.25vw', minHeight: '100%', minWidth: '177.77vh', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', border: 'none' }}
-                allow="autoplay; fullscreen; picture-in-picture"
-                allowFullScreen
-              ></iframe>
-            ) : (
-              <video 
-                src={bgMediaUrl} 
-                autoPlay 
-                loop 
-                muted 
-                playsInline
-                className={styles.heroVideo}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            )
-          ) : (
-            <img 
-              src={bgMediaUrl} 
-              alt="Hero Background" 
-              className={styles.heroImage}
-            />
-          )}
-          <div className={styles.heroOverlay}></div>
-        </div>
-        
-        <div className={styles.heroContent}>
-          {/* Tags */}
-          {tags.length > 0 && (
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-              {tags.map((tag: any, i: number) => tag.url ? (
-                <Link key={i} href={tag.url} style={{ padding: '0.25rem 1rem', backgroundColor: 'var(--color-magenta)', color: 'white', borderRadius: '10px', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'none' }}>
-                  {tag.text}
-                </Link>
-              ) : (
-                <span key={i} style={{ padding: '0.25rem 1rem', backgroundColor: 'var(--color-magenta)', color: 'white', borderRadius: '10px', fontSize: '0.875rem', fontWeight: 600 }}>
-                  {tag.text}
-                </span>
-              ))}
-            </div>
-          )}
-
-          <h1 className={styles.title} dangerouslySetInnerHTML={{ __html: titleHtml }} />
-          <p className={styles.subtitle}>
-            {subtitle}
-          </p>
-
-          <div className={styles.actions}>
-            <Link
-              href={heroSettings?.primary_button_url || "/events"}
-              className={styles.btnPrimary}
-            >
-              {heroSettings?.primary_button_text || "Ver Eventos"}
-            </Link>
-
-            {heroSettings?.secondary_button_text ? (
-              <Link
-                href={heroSettings.secondary_button_url || "/register"}
-                className={styles.btnSecondary}
-              >
-                {heroSettings.secondary_button_text}
-              </Link>
-            ) : null}
-          </div>
-        </div>
-      </div>
+      {/* 1. Hero Spotlight Multi-Slide Carousel */}
+      <HeroSpotlight
+        slides={heroConfig.slides}
+        autoplayMs={heroConfig.autoplayMs}
+      />
 
       <div className={styles.container}>
         <div className={styles.mainLayout}>
