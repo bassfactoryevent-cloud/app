@@ -201,8 +201,10 @@ export default async function Home() {
           {/* COLUMNA DERECHA (Sidebar) */}
           <div className={styles.sidebarColumn}>
             
-            {/* Banner Publicidad Vertical */}
-            <AdBanner placementName="home_sidebar" />
+            {/* Banner Publicidad Vertical (en móvil se mueve al final del sidebar para no quedar pegado al banner horizontal) */}
+            <div className={styles.sidebarAd}>
+              <AdBanner placementName="home_sidebar" />
+            </div>
 
             {/* Asesoría, Consultoría y Acompañamiento para crear eventos */}
             <StageMontageCanvas />
