@@ -5,6 +5,8 @@ import HorizontalScroll from "@/components/ui/HorizontalScroll";
 import { Calendar, MapPin } from "lucide-react";
 import AdBanner from "@/components/AdBanner";
 import HeroSpotlight from "@/components/home/HeroSpotlight";
+import StageMontageCanvas from "@/components/home/StageMontageCanvas";
+import CanvasIcon from "@/components/ui/CanvasIcon";
 import { parseHeroConfig } from "@/types/hero";
 
 export const dynamic = "force-dynamic";
@@ -82,38 +84,42 @@ export default async function Home() {
           {/* COLUMNA IZQUIERDA (Contenido Principal) */}
           <div className={styles.contentColumn}>
             
-            {/* 1. Eventos */}
-            <HorizontalScroll title="Eventos" viewAllLink="/events">
+            {/* 1. Eventos con icono Canvas Radar */}
+            <HorizontalScroll title="Eventos" viewAllLink="/events" canvasIcon="radar">
               {events && events.slice(0, 8).map(event => (
                 <Link href={`/events/${event.slug}`} key={event.id} className={styles.card}>
                   <img src={event.cover_image || "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?q=80&w=400"} alt={event.title} className={styles.cardImage} />
                   <h3 className={styles.cardTitle}>{event.title}</h3>
-                  <div className={styles.cardSubtitle} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.5rem' }}>
-                    <Calendar size={14} />
+                  <div className={styles.cardSubtitle} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.35rem' }}>
+                    <Calendar size={12} />
                     <span>{new Date(event.start_date).toLocaleDateString('es-CO', { month: 'short', day: 'numeric' })}</span>
                   </div>
-                  <div className={styles.cardSubtitle} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.25rem', flex: 1 }}>
-                    <MapPin size={14} />
-                    <span>{event.location_name}</span>
+                  <div className={styles.cardSubtitle} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.2rem', flex: 1 }}>
+                    <MapPin size={12} />
+                    <span>{event.location || event.location_name || "Colombia"}</span>
                   </div>
                   <span className={styles.cardButton}>Comprar Tickets</span>
                 </Link>
               ))}
             </HorizontalScroll>
 
+            {/* Simulador Interactivo Canvas de Montaje de Escenario */}
+            <StageMontageCanvas />
+
             {/* Banner Publicidad Delgado (Bajo Eventos) */}
             <AdBanner placementName="home_horizontal_thin" />
 
-            {/* 2. Noticias, Cultura (Blog) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* 2. Noticias, Cultura (Blog) con icono Canvas Equalizer */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               
               {/* Encabezado del bloque agrupado */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingBottom: '0.5rem' }}>
-                <div>
-                  <h2 style={{ fontWeight: 800, margin: 0, letterSpacing: '-0.03em' }}>Noticias, Cultura</h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+                  <CanvasIcon variant="equalizer" size={28} />
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>Noticias, Cultura</h2>
                 </div>
-                <Link href="/blog" style={{ fontSize: '0.875rem', fontWeight: 600, opacity: 0.8, color: 'var(--color-magenta)', textDecoration: 'none' }}>
-                  Ver Más
+                <Link href="/blog" style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-magenta)', textDecoration: 'none' }}>
+                  Ver todo →
                 </Link>
               </div>
 
@@ -131,7 +137,7 @@ export default async function Home() {
                   </div>
                   {/* Right: Content */}
                   <div className={styles.principalHeroContent}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'flex-start' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem', alignItems: 'flex-start' }}>
                       <span className={styles.principalHeroTag}>
                         Noticias, Cultura
                       </span>
@@ -139,9 +145,9 @@ export default async function Home() {
                         {principalPost.title}
                       </h2>
                       <p className={styles.principalHeroExcerpt}>
-                        {principalPost.excerpt || (principalPost.content?.replace(/<[^>]+>/g, '').substring(0, 140) + '...')}
+                        {principalPost.excerpt || (principalPost.content?.replace(/<[^>]+>/g, '').substring(0, 120) + '...')}
                       </p>
-                      <div style={{ marginTop: 'auto' }}>
+                      <div style={{ marginTop: '0.25rem' }}>
                         <Link href={`/blog/${principalPost.slug}`} className={styles.principalHeroButton}>
                           Seguir leyendo
                         </Link>
@@ -154,16 +160,16 @@ export default async function Home() {
               <HorizontalScroll title="" viewAllLink="">
                 {posts && posts.length > 0 ? posts.filter((p: any) => p.id !== principalPost?.id).map((post: any) => (
                   <Link href={`/blog/${post.slug}`} key={post.id} className={styles.card}>
-                    <div style={{ position: 'relative', width: '100%', aspectRatio: '16/10' }}>
+                    <div style={{ position: 'relative', width: '100%', aspectRatio: '16/10', overflow: 'hidden', borderRadius: '6px' }}>
                       <img src={post.cover_image || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=400"} alt={post.title} className={styles.cardImage} style={{ position: 'absolute', top: 0, left: 0, height: '100%', marginBottom: 0 }} />
                       {post.categories && (
-                        <div style={{ position: 'absolute', top: '0.5rem', left: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', padding: '0.25rem 0.5rem', borderRadius: '100px', fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', zIndex: 2 }}>
+                        <div style={{ position: 'absolute', top: '0.4rem', left: '0.4rem', backgroundColor: 'var(--color-magenta)', color: 'white', padding: '0.18rem 0.45rem', borderRadius: '100px', fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', zIndex: 2 }}>
                           {post.categories.name}
                         </div>
                       )}
                     </div>
-                    <h3 className={styles.cardTitle} style={{ marginTop: '1rem' }}>{post.title}</h3>
-                    <p className={styles.cardSubtitle} style={{ marginTop: '0.5rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', flex: 1 }}>
+                    <h3 className={styles.cardTitle} style={{ marginTop: '0.7rem' }}>{post.title}</h3>
+                    <p className={styles.cardSubtitle} style={{ marginTop: '0.35rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', flex: 1 }}>
                       {post.excerpt}
                     </p>
                     <span className={styles.cardButtonOutline}>Ver Más</span>
@@ -174,15 +180,16 @@ export default async function Home() {
               </HorizontalScroll>
             </div>
 
-            {/* 3. Merch */}
-            <HorizontalScroll title="Merch" viewAllLink="/merch">
+            {/* 3. Merch con icono Canvas Prism */}
+            <HorizontalScroll title="Merch" viewAllLink="/merch" canvasIcon="prism">
               {merch && merch.slice(0, 8).map(product => {
                 const primaryImage = product.merch_product_images?.find((img: any) => img.is_primary)?.image_url || product.merch_product_images?.[0]?.image_url || "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=400";
+                const priceVal = product.price_cop ?? product.base_price ?? 0;
                 return (
                   <Link href={`/merch/${product.slug}`} key={product.id} className={styles.card}>
                     <img src={primaryImage} alt={product.title} className={styles.cardImage} />
                     <h3 className={styles.cardTitle}>{product.title}</h3>
-                    <p className={styles.cardSubtitle} style={{ flex: 1 }}>$ {Number(product.base_price).toLocaleString('es-CO')}</p>
+                    <p className={styles.cardSubtitle} style={{ flex: 1 }}>$ {Number(priceVal).toLocaleString('es-CO')}</p>
                     <span className={styles.cardButton}>Comprar</span>
                   </Link>
                 );

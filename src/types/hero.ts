@@ -152,9 +152,9 @@ export function parseHeroConfig(
         (firstMerch.description || "").replace(/<[^>]+>/g, "").slice(0, 145) ||
         "Prendas oficiales de edición limitada diseñadas para la cultura underground.",
       primary_button_text: "Comprar Prenda",
-      primary_button_url: `/store/${firstMerch.slug}`,
+      primary_button_url: `/merch/${firstMerch.slug}`,
       secondary_button_text: "Ver Colección",
-      secondary_button_url: "/store",
+      secondary_button_url: "/merch",
       tags: [],
       meta: {
         price_label: formattedPrice,
@@ -179,9 +179,9 @@ export function parseHeroConfig(
         firstPost.excerpt ||
         "Explora las últimas noticias, lanzamientos y entrevistas de la escena electrónica.",
       primary_button_text: "Leer Artículo",
-      primary_button_url: `/news/${firstPost.slug}`,
+      primary_button_url: `/blog/${firstPost.slug}`,
       secondary_button_text: "Ver Editorial",
-      secondary_button_url: "/news",
+      secondary_button_url: "/blog",
       tags: [],
       meta: {
         show_countdown: false,

@@ -136,63 +136,74 @@
 
 .card {
   background-color: var(--color-surface);
-  border-radius: var(--radius-md);
-  padding: var(--space-2);
-  transition: background-color 0.2s ease;
-  flex: 0 0 calc((100% - (3 * var(--space-2))) / 4.1);
-  min-width: 180px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 0.75rem;
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+  flex: 0 0 185px;
+  min-width: 170px;
+  max-width: 205px;
   display: flex;
   flex-direction: column;
 }
 
 .cardButton {
-  margin-top: 1rem;
+  margin-top: 0.65rem;
   align-self: flex-start;
-  padding: 0.35rem 0.75rem;
+  padding: 0.3rem 0.68rem;
   background-color: var(--color-magenta);
   color: white;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  border-radius: 5px;
+  font-size: 0.7rem;
+  font-weight: 700;
   text-transform: none;
   transition: all 0.2s ease;
 }
 
 .cardButtonOutline {
-  margin-top: 1rem;
+  margin-top: 0.65rem;
   align-self: flex-start;
-  padding: 0.35rem 0.75rem;
+  padding: 0.3rem 0.68rem;
   background-color: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.16);
   color: white;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  border-radius: 5px;
+  font-size: 0.7rem;
+  font-weight: 700;
   text-transform: none;
   transition: all 0.2s ease;
 }
 
 .card:hover {
   background-color: var(--color-surface-hover);
+  border-color: rgba(217, 4, 22, 0.35);
+  transform: translateY(-2px);
 }
 
 .cardImage {
   width: 100%;
   aspect-ratio: 1/1;
-  border-radius: var(--radius-sm);
+  border-radius: 7px;
   object-fit: cover;
-  margin-bottom: 1rem;
+  object-position: center;
+  margin-bottom: 0.65rem;
+  background-color: #09090b;
 }
 
 .cardTitle {
   font-weight: 700;
-  font-size: 1rem;
-  margin-bottom: 0.25rem;
+  font-size: 0.88rem;
+  line-height: 1.25;
+  margin-bottom: 0.15rem;
   color: var(--color-text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .cardSubtitle {
-  font-size: 0.875rem;
+  font-size: 0.76rem;
   color: var(--color-text-secondary);
 }
 
@@ -202,9 +213,9 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  min-width: 160px;
+  min-width: 140px;
   flex: 0 0 auto;
-  padding: 1rem;
+  padding: 0.85rem;
   border-radius: var(--radius-md);
   transition: background-color 0.2s ease;
 }
@@ -214,46 +225,46 @@
 }
 
 .djImage {
-  width: 140px;
-  height: 140px;
+  width: 115px;
+  height: 115px;
   border-radius: 50%;
   object-fit: cover;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   box-shadow: 0 8px 24px rgba(0,0,0,0.5);
 }
 
 .container {
-  max-width: 1400px;
+  max-width: 1360px;
   margin: 0 auto;
-  padding: 0 var(--space-4);
+  padding: 0 var(--space-3);
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: 2rem;
 }
 
 .mainLayout {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-6);
+  gap: 1.75rem;
 }
 
 @media (min-width: 1024px) {
   .mainLayout {
-    grid-template-columns: 7fr 3fr;
+    grid-template-columns: 7.2fr 2.8fr;
   }
 }
 
 .contentColumn {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: 1.75rem;
   min-width: 0;
 }
 
 .sidebarColumn {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: 1.5rem;
 }
 
 /* Sections */
@@ -463,50 +474,50 @@
   flex-direction: row;
   width: 100%;
   background-color: #0a0a0a;
-  border-radius: 24px;
+  border-radius: 16px;
   overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.05);
-  margin-bottom: 1rem;
+  border: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 0.75rem;
 }
 
 .principalHeroImage {
-  flex: 0 0 50%;
+  flex: 0 0 42%;
   position: relative;
   background-color: #111;
-  min-height: 300px;
+  min-height: 215px;
 }
 
 .principalHeroContent {
-  flex: 0 0 50%;
+  flex: 0 0 58%;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 3rem 2rem;
+  padding: 1.5rem 1.65rem;
 }
 
 .principalHeroTag {
   background-color: var(--color-magenta);
   color: white;
-  padding: 0.25rem 1rem;
+  padding: 0.22rem 0.75rem;
   border-radius: 100px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.65rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
 .principalHeroTitle {
-  font-size: 2rem;
+  font-size: 1.35rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  line-height: 1.1;
+  line-height: 1.15;
   margin: 0;
 }
 
 .principalHeroExcerpt {
-  font-size: 1rem;
-  opacity: 0.8;
-  line-height: 1.5;
+  font-size: 0.84rem;
+  opacity: 0.75;
+  line-height: 1.45;
   margin: 0;
 }
 
@@ -514,44 +525,44 @@
   display: inline-block;
   background-color: white;
   color: black;
-  padding: 0.75rem 1.5rem;
+  padding: 0.52rem 1.15rem;
   border-radius: 100px;
   font-weight: 700;
   text-decoration: none;
   transition: opacity 0.2s;
-  font-size: 0.875rem;
+  font-size: 0.78rem;
 }
 
 @media (max-width: 768px) {
   .principalHeroContainer {
-    height: 180px;
-    border-radius: 16px;
+    height: 165px;
+    border-radius: 12px;
   }
   .principalHeroImage {
-    flex: 0 0 40%;
+    flex: 0 0 38%;
     min-height: 100%;
   }
   .principalHeroContent {
-    flex: 0 0 60%;
-    padding: 1rem;
-    gap: 0.5rem;
+    flex: 0 0 62%;
+    padding: 0.85rem;
+    gap: 0.35rem;
   }
   .principalHeroTag {
-    font-size: 0.5rem;
-    padding: 0.2rem 0.5rem;
+    font-size: 0.52rem;
+    padding: 0.16rem 0.45rem;
   }
   .principalHeroTitle {
-    font-size: 1rem;
+    font-size: 0.92rem;
   }
   .principalHeroExcerpt {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
   .principalHeroButton {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.7rem;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.68rem;
   }
 }

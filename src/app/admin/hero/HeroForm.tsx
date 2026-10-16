@@ -155,9 +155,9 @@ export default function HeroForm({
         presetType === "event"
           ? "/events"
           : presetType === "merch"
-          ? "/store"
+          ? "/merch"
           : presetType === "post"
-          ? "/news"
+          ? "/blog"
           : "/events",
       secondary_button_text: "Suscribete",
       secondary_button_url: "/register",
@@ -239,8 +239,9 @@ export default function HeroForm({
         item.merch_product_images?.find((img: any) => img.is_primary)?.image_url ||
         item.merch_product_images?.[0]?.image_url ||
         currentSlide.media_url;
-      const formattedPrice = item.price_cop
-        ? `$${Number(item.price_cop).toLocaleString("es-CO")} COP`
+      const priceVal = item.price_cop ?? item.base_price;
+      const formattedPrice = priceVal
+        ? `$${Number(priceVal).toLocaleString("es-CO")} COP`
         : "";
       updateCurrentSlide({
         source_id: item.id,
@@ -252,9 +253,9 @@ export default function HeroForm({
           (item.description || "").replace(/<[^>]+>/g, "").slice(0, 150) ||
           "Prenda oficial de la colección Bassfactory. Envíos a todo el país.",
         primary_button_text: "Comprar Prenda",
-        primary_button_url: `/store/${item.slug}`,
+        primary_button_url: `/merch/${item.slug}`,
         secondary_button_text: "Ver Tienda",
-        secondary_button_url: "/store",
+        secondary_button_url: "/merch",
         meta: {
           price_label: formattedPrice,
           show_countdown: false,
@@ -274,9 +275,9 @@ export default function HeroForm({
           post.excerpt ||
           "Lee el artículo completo en la sección editorial de Bassfactory.",
         primary_button_text: "Leer Artículo",
-        primary_button_url: `/news/${post.slug}`,
+        primary_button_url: `/blog/${post.slug}`,
         secondary_button_text: "Ver Más Noticias",
-        secondary_button_url: "/news",
+        secondary_button_url: "/blog",
         meta: {
           show_countdown: false,
         },

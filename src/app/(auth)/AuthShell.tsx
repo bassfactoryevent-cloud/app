@@ -46,7 +46,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
             <Link href="/events" className={styles.topNavLink}>
               Eventos
             </Link>
-            <Link href="/store" className={styles.topNavLink}>
+            <Link href="/merch" className={styles.topNavLink}>
               Merch
             </Link>
           </nav>

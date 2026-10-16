@@ -3,13 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { HeroSlide } from "@/types/hero";
-import {
-  ChevronLeft,
-  ChevronRight,
-  MapPin,
-  Tag,
-  Timer,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Tag, Timer } from "lucide-react";
 import styles from "./HeroSpotlight.module.css";
 
 interface HeroSpotlightProps {
@@ -34,14 +28,110 @@ function resolveMediaConfig(slide: HeroSlide) {
     isVideo = true;
     let ytId = "";
     if (url.includes("youtu.be")) {
-      ytId = url.split("youtu.be/")[1]?.split("?")[0];
+      ytId = bgExtractYt(url);
     } else {
-      ytId = url.split("v=")[1]?.split("&")[0];
+      ytId = url.split("v=")[1]?.split("&")[0] || "";
     }
     url = `https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${ytId}&showinfo=0`;
   }
 
   return { url, isEmbed, isVideo };
+}
+
+function bgExtractYt(url: string) {
+  return url.split("youtu.be/")[1]?.split("?")[0] || "";
+}
+
+/**
+ * Interactive 60fps HTML5 Canvas layer rendering subtle rave dust particles + a bottom 128 BPM sonic wave.
+ */
+function HeroSonicCanvas() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animId = 0;
+    let width = 0;
+    let height = 0;
+
+    const particles = Array.from({ length: 28 }, (_, i) => ({
+      x: Math.random(),
+      y: Math.random(),
+      r: 1 + (i % 3) * 0.7,
+      speedY: 0.0004 + (i % 5) * 0.00018,
+      drift: (i % 2 === 0 ? 1 : -1) * 0.00025,
+      isRed: i % 3 === 0,
+    }));
+
+    const resize = () => {
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      width = rect.width || window.innerWidth;
+      height = rect.height || 460;
+      canvas.width = width;
+      canvas.height = height;
+    };
+
+    resize();
+    window.addEventListener("resize", resize);
+
+    let t = 0;
+    const render = () => {
+      t += 0.035;
+      ctx.clearRect(0, 0, width, height);
+
+      // 1. Floating atmospheric rave particles
+      for (const p of particles) {
+        p.y -= p.speedY;
+        p.x += Math.sin(t + p.y * 10) * p.drift;
+        if (p.y < 0) p.y = 1;
+        if (p.x < 0) p.x = 1;
+        if (p.x > 1) p.x = 0;
+
+        const px = p.x * width;
+        const py = p.y * height;
+        ctx.beginPath();
+        ctx.arc(px, py, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.isRed
+          ? "rgba(217, 4, 22, 0.55)"
+          : "rgba(255, 255, 255, 0.25)";
+        ctx.fill();
+      }
+
+      // 2. Subtle soundwave along the lower horizon
+      ctx.beginPath();
+      const baseY = height - 6;
+      ctx.moveTo(0, baseY);
+      const step = Math.max(12, Math.floor(width / 64));
+      for (let x = 0; x <= width; x += step) {
+        const norm = x / width;
+        const envelope = Math.sin(norm * Math.PI);
+        const wave =
+          Math.sin(norm * 18 + t * 2.4) *
+          Math.cos(norm * 9 - t * 1.6) *
+          10 *
+          envelope;
+        ctx.lineTo(x, baseY - Math.abs(wave));
+      }
+      ctx.strokeStyle = "rgba(217, 4, 22, 0.32)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      animId = requestAnimationFrame(render);
+    };
+
+    animId = requestAnimationFrame(render);
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className={styles.sonicCanvas} />;
 }
 
 function LiveCountdown({ targetDate }: { targetDate: string }) {
@@ -78,7 +168,7 @@ function LiveCountdown({ targetDate }: { targetDate: string }) {
 
   return (
     <div className={styles.countdownStrip}>
-      <Timer size={16} style={{ color: "#D90416", marginRight: "0.15rem" }} />
+      <Timer size={14} style={{ color: "#D90416", marginRight: "0.1rem" }} />
       <div className={styles.countdownUnit}>
         <span className={styles.countdownNumber}>{pad(timeLeft.days)}</span>
         <span className={styles.countdownLabel}>Días</span>
@@ -151,6 +241,11 @@ export default function HeroSpotlight({
 
   if (!currentSlide) return null;
 
+  const currentMedia = resolveMediaConfig(currentSlide);
+  // Show the sharp uncropped poster/product showcase card on the right whenever the slide is an event, merch, post, or ad with an image!
+  const showFramedArtwork =
+    !currentMedia.isVideo && currentSlide.source_type !== "custom";
+
   return (
     <section
       className={styles.heroSection}
@@ -159,10 +254,12 @@ export default function HeroSpotlight({
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Background Media Layers for Smooth Crossfade */}
+      {/* Background Media Layers */}
       {safeSlides.map((slide, idx) => {
         const isActive = idx === currentIndex;
         const media = resolveMediaConfig(slide);
+        const isCatalogImage =
+          !media.isVideo && slide.source_type !== "custom";
 
         return (
           <div
@@ -194,7 +291,11 @@ export default function HeroSpotlight({
               <img
                 src={media.url}
                 alt={(slide.title || "Bassfactory").replace(/<[^>]+>/g, " ")}
-                className={styles.mediaImage}
+                className={
+                  isCatalogImage
+                    ? styles.mediaImageAmbient
+                    : styles.mediaImage
+                }
               />
             )}
           </div>
@@ -202,90 +303,118 @@ export default function HeroSpotlight({
       })}
 
       <div className={styles.heroVignette} />
+      <HeroSonicCanvas />
 
       <div className={styles.heroContainer}>
-        {/* Active Slide Foreground Content */}
-        <div key={currentSlide.id || currentIndex} className={styles.slideContent}>
-          {/* Top Contextual Badges */}
-          <div className={styles.badgesRow}>
-            {currentSlide.badge_label && (
-              <span className={styles.categoryBadge}>
-                <span className={styles.pulseDot} />
-                <span>{currentSlide.badge_label}</span>
-              </span>
-            )}
-
-            {(currentSlide.meta?.price_label || currentSlide.meta?.location) && (
-              <span className={styles.metaPill}>
-                {currentSlide.source_type === "merch" ? (
-                  <Tag size={13} style={{ color: "#D90416" }} />
-                ) : (
-                  <MapPin size={13} style={{ color: "#D90416" }} />
-                )}
-                <span>
-                  {currentSlide.meta?.price_label || currentSlide.meta?.location}
+        <div className={styles.stageGrid}>
+          {/* Left: Refined Editorial Typography & Actions */}
+          <div
+            key={currentSlide.id || currentIndex}
+            className={styles.slideContent}
+          >
+            <div className={styles.badgesRow}>
+              {currentSlide.badge_label && (
+                <span className={styles.categoryBadge}>
+                  <span className={styles.pulseDot} />
+                  <span>{currentSlide.badge_label}</span>
                 </span>
-              </span>
-            )}
-
-            {Array.isArray(currentSlide.tags) &&
-              currentSlide.tags.map((tag, i) =>
-                tag.url ? (
-                  <Link key={i} href={tag.url} className={styles.tagPill}>
-                    {tag.text}
-                  </Link>
-                ) : (
-                  <span key={i} className={styles.tagPill}>
-                    {tag.text}
-                  </span>
-                )
               )}
+
+              {(currentSlide.meta?.price_label ||
+                currentSlide.meta?.location) && (
+                <span className={styles.metaPill}>
+                  {currentSlide.source_type === "merch" ? (
+                    <Tag size={12} style={{ color: "#D90416" }} />
+                  ) : (
+                    <MapPin size={12} style={{ color: "#D90416" }} />
+                  )}
+                  <span>
+                    {currentSlide.meta?.price_label ||
+                      currentSlide.meta?.location}
+                  </span>
+                </span>
+              )}
+
+              {Array.isArray(currentSlide.tags) &&
+                currentSlide.tags.map((tag, i) =>
+                  tag.url ? (
+                    <Link key={i} href={tag.url} className={styles.tagPill}>
+                      {tag.text}
+                    </Link>
+                  ) : (
+                    <span key={i} className={styles.tagPill}>
+                      {tag.text}
+                    </span>
+                  )
+                )}
+            </div>
+
+            <h1
+              className={styles.heroTitle}
+              dangerouslySetInnerHTML={{
+                __html:
+                  currentSlide.title || "MÚSICA<br/>Cultura<br/>Movimiento",
+              }}
+            />
+
+            {currentSlide.subtitle && (
+              <p className={styles.heroSubtitle}>{currentSlide.subtitle}</p>
+            )}
+
+            {currentSlide.meta?.show_countdown &&
+              currentSlide.meta?.event_date && (
+                <div>
+                  <LiveCountdown targetDate={currentSlide.meta.event_date} />
+                </div>
+              )}
+
+            <div className={styles.actionsRow}>
+              {currentSlide.primary_button_text && (
+                <Link
+                  href={currentSlide.primary_button_url || "/events"}
+                  className={styles.btnPrimary}
+                >
+                  {currentSlide.primary_button_text}
+                </Link>
+              )}
+
+              {currentSlide.secondary_button_text && (
+                <Link
+                  href={currentSlide.secondary_button_url || "/register"}
+                  className={styles.btnSecondary}
+                >
+                  {currentSlide.secondary_button_text}
+                </Link>
+              )}
+            </div>
           </div>
 
-          {/* Main Headline */}
-          <h1
-            className={styles.heroTitle}
-            dangerouslySetInnerHTML={{
-              __html: currentSlide.title || "MÚSICA<br/>Cultura<br/>Movimiento",
-            }}
-          />
-
-          {/* Subtitle */}
-          {currentSlide.subtitle && (
-            <p className={styles.heroSubtitle}>{currentSlide.subtitle}</p>
-          )}
-
-          {/* Optional Live Event Countdown */}
-          {currentSlide.meta?.show_countdown &&
-            currentSlide.meta?.event_date && (
-              <div>
-                <LiveCountdown targetDate={currentSlide.meta.event_date} />
+          {/* Right: Sharp, Uncropped Framed Artwork for Events, Merch, Posts & Ads */}
+          {showFramedArtwork && (
+            <Link
+              href={currentSlide.primary_button_url || "/events"}
+              className={styles.artworkShowcase}
+              title={currentSlide.title?.replace(/<[^>]+>/g, " ")}
+            >
+              <div className={styles.artworkInner}>
+                <img
+                  src={currentMedia.url}
+                  alt={currentSlide.title?.replace(/<[^>]+>/g, " ")}
+                  className={styles.artworkImg}
+                />
+                <span className={styles.artworkCornerTag}>
+                  {currentSlide.source_type === "event"
+                    ? "FLYER OFICIAL"
+                    : currentSlide.source_type === "merch"
+                    ? "DROP OFICIAL"
+                    : "DESTACADO"}
+                </span>
               </div>
-            )}
-
-          {/* Side-by-Side Primary & Secondary CTAs */}
-          <div className={styles.actionsRow}>
-            {currentSlide.primary_button_text && (
-              <Link
-                href={currentSlide.primary_button_url || "/events"}
-                className={styles.btnPrimary}
-              >
-                {currentSlide.primary_button_text}
-              </Link>
-            )}
-
-            {currentSlide.secondary_button_text && (
-              <Link
-                href={currentSlide.secondary_button_url || "/register"}
-                className={styles.btnSecondary}
-              >
-                {currentSlide.secondary_button_text}
-              </Link>
-            )}
-          </div>
+            </Link>
+          )}
         </div>
 
-        {/* Interactive Multi-Slide Dock (Only rendered when > 1 slide is active) */}
+        {/* Interactive Multi-Slide Dock */}
         {count > 1 && (
           <div className={styles.spotlightDock}>
             <div className={styles.dockItems}>
@@ -331,7 +460,7 @@ export default function HeroSpotlight({
                 aria-label="Slide anterior"
                 className={styles.arrowBtn}
               >
-                <ChevronLeft size={18} />
+                <ChevronLeft size={15} />
               </button>
               <button
                 type="button"
@@ -339,7 +468,7 @@ export default function HeroSpotlight({
                 aria-label="Siguiente slide"
                 className={styles.arrowBtn}
               >
-                <ChevronRight size={18} />
+                <ChevronRight size={15} />
               </button>
             </div>
           </div>
