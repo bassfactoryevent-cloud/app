@@ -30,8 +30,10 @@ export const metadata: Metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
+  minimumScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: "cover",
   themeColor: "#000000",
   colorScheme: "dark",
 };
@@ -39,6 +41,7 @@ export const viewport = {
 import { Toaster } from "sonner";
 import { Suspense } from "react";
 import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
+import { ViewportLock } from "@/components/ViewportLock";
 
 export default function RootLayout({
   children,
@@ -48,6 +51,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={`dark ${geistSans.variable} ${geistMono.variable}`} style={{ colorScheme: "dark", backgroundColor: "#000000" }} suppressHydrationWarning>
       <body style={{ backgroundColor: "#000000", color: "#FFFFFF" }}>
+        <ViewportLock />
         <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark" enableSystem={false} disableTransitionOnChange>
           <Suspense fallback={null}>
             <AnalyticsTracker />
