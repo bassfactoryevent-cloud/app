@@ -161,10 +161,11 @@ export default async function Home() {
                     <div style={{ position: 'relative', width: '100%', aspectRatio: '16/10', overflow: 'hidden', borderRadius: '6px' }}>
                       <img src={post.cover_image || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=400"} alt={post.title} className={styles.cardImage} style={{ position: 'absolute', top: 0, left: 0, height: '100%', marginBottom: 0 }} />
                       {post.categories && (
-                        <div style={{ position: 'absolute', top: '0.4rem', left: '0.4rem', backgroundColor: 'var(--color-magenta)', color: 'white', padding: '0.18rem 0.45rem', borderRadius: '100px', fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', zIndex: 2 }}>
+                        <div className={styles.cardCategoryBadge}>
                           {post.categories.name}
                         </div>
                       )}
+
                     </div>
                     <h3 className={styles.cardTitle} style={{ marginTop: '0.7rem' }}>{post.title}</h3>
                     <p className={styles.cardSubtitle} style={{ marginTop: '0.35rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', flex: 1 }}>

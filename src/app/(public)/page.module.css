@@ -481,34 +481,38 @@
     border-radius: 6px;
   }
   .cardTitle {
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     line-height: 1.2;
     margin-bottom: 0.1rem;
   }
   .cardSubtitle {
-    font-size: 0.68rem;
+    font-size: 0.62rem;
     line-height: 1.25;
   }
   .cardButton, .cardButtonOutline {
     margin-top: 0.45rem;
-    padding: 0.22rem 0.52rem;
-    font-size: 0.64rem;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.58rem;
     border-radius: 4px;
   }
   .raversReviews {
     padding: 0.85rem;
     border-radius: 10px;
   }
+  .raversReviews h3 {
+    font-size: 0.88rem !important;
+    margin-bottom: 0.55rem !important;
+  }
   .reviewItem {
-    margin-bottom: 0.55rem;
-    padding-bottom: 0.55rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
   }
   .reviewText {
-    font-size: 0.75rem;
-    line-height: 1.4;
+    font-size: 0.68rem;
+    line-height: 1.38;
   }
   .reviewAuthor {
-    font-size: 0.66rem;
+    font-size: 0.60rem;
   }
   .registrationBanner {
     padding: 1.25rem 0.95rem;
@@ -516,25 +520,25 @@
     margin-top: 0.5rem;
   }
   .registrationBanner h2 {
-    font-size: 1.25rem;
-    margin-bottom: 0.35rem;
+    font-size: 1.10rem;
+    margin-bottom: 0.3rem;
   }
   .registrationBanner p {
-    font-size: 0.76rem;
-    margin-bottom: 1rem;
-    line-height: 1.4;
+    font-size: 0.70rem;
+    margin-bottom: 0.85rem;
+    line-height: 1.38;
   }
   .registrationForm {
     gap: 0.55rem;
   }
   .pillInput {
-    padding: 0.65rem 1rem;
-    font-size: 0.82rem;
+    padding: 0.6rem 0.95rem;
+    font-size: 0.75rem;
     border-radius: 8px;
   }
   .pillButton {
-    padding: 0.65rem 1rem;
-    font-size: 0.82rem;
+    padding: 0.6rem 0.95rem;
+    font-size: 0.75rem;
     border-radius: 8px;
   }
 }
@@ -634,7 +638,28 @@
   transition: opacity 0.2s;
 }
 
+.cardCategoryBadge {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.4rem;
+  background-color: var(--color-magenta);
+  color: white;
+  padding: 0.18rem 0.45rem;
+  border-radius: 100px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  z-index: 2;
+}
+
 @media (max-width: 768px) {
+  .cardCategoryBadge {
+    top: 0.35rem;
+    left: 0.35rem;
+    padding: 0.12rem 0.35rem;
+    font-size: 0.5rem;
+  }
+
   .blogHeaderRow {
     padding-bottom: 0.1rem;
   }
@@ -642,12 +667,12 @@
     gap: 0.45rem;
   }
   .blogHeaderTitle {
-    font-size: 0.98rem;
+    font-size: 0.88rem;
     letter-spacing: -0.015em;
   }
   .blogHeaderLink {
-    font-size: 0.7rem;
-    padding: 0.2rem 0.4rem;
+    font-size: 0.64rem;
+    padding: 0.15rem 0.35rem;
   }
 
   .principalHeroContainer {
@@ -665,15 +690,15 @@
     gap: 0.25rem;
   }
   .principalHeroTag {
-    font-size: 0.5rem;
-    padding: 0.14rem 0.42rem;
+    font-size: 0.46rem;
+    padding: 0.12rem 0.38rem;
   }
   .principalHeroTitle {
-    font-size: 0.82rem;
+    font-size: 0.75rem;
     line-height: 1.15;
   }
   .principalHeroExcerpt {
-    font-size: 0.66rem;
+    font-size: 0.60rem;
     line-height: 1.35;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -681,8 +706,8 @@
     overflow: hidden;
   }
   .principalHeroButton {
-    padding: 0.28rem 0.65rem;
-    font-size: 0.62rem;
+    padding: 0.24rem 0.58rem;
+    font-size: 0.56rem;
   }
 }
 
