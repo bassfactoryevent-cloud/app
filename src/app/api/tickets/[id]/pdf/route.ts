@@ -55,16 +55,26 @@ export async function GET(
 
     const ticket = rawTicket as any;
 
-    // 3. Validar propiedad de la boleta o rol administrativo
-    let isOwner = ticket.user_id === user.id || ticket.assigned_email?.toLowerCase() === user.email?.toLowerCase();
+    // 3. Validar propiedad estricta de la boleta o rol administrativo (sin fuga por order_id si fue transferida)
+    const cleanUserEmail = (user.email || "").trim().toLowerCase();
+    const ticketAssignedEmail = (ticket.assigned_email || "").trim().toLowerCase();
 
-    if (!isOwner && ticket.order_id) {
+    let isOwner = false;
+    if (ticketAssignedEmail) {
+      isOwner = cleanUserEmail.length > 0 && ticketAssignedEmail === cleanUserEmail;
+    } else if (ticket.user_id) {
+      isOwner = ticket.user_id === user.id;
+    } else if (ticket.order_id) {
       const { data: order } = await adminSupabase
         .from("merch_orders")
         .select("user_id, customer_email")
         .eq("id", ticket.order_id)
         .single();
-      if (order && (order.user_id === user.id || order.customer_email?.toLowerCase() === user.email?.toLowerCase())) {
+      if (
+        order &&
+        (order.user_id === user.id ||
+          (order.customer_email || "").trim().toLowerCase() === cleanUserEmail)
+      ) {
         isOwner = true;
       }
     }
@@ -78,7 +88,13 @@ export async function GET(
     const isAdmin = profile?.role === "admin" || profile?.role === "superadmin";
 
     if (!isOwner && !isAdmin) {
-      return NextResponse.json({ error: "Acceso denegado: No tienes permiso para descargar esta entrada." }, { status: 403 });
+      return NextResponse.json(
+        {
+          error:
+            "Acceso denegado: Esta boleta ya no está en tu posesión o fue transferida a otro usuario.",
+        },
+        { status: 403 }
+      );
     }
 
     if (ticket.status !== "valid" && ticket.status !== "scanned") {

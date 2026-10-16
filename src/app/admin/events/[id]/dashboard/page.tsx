@@ -2,8 +2,10 @@ import { notFound } from "next/navigation";
 import EventDashboardClient from "./EventDashboardClient";
 import { getAdminClient } from "@/utils/supabase/admin";
 import { getAssignmentsForEvent } from "@/utils/staffAssignments";
+import { healStalePendingTransfers } from "@/utils/userTickets";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const adminDb = getAdminClient();
 
@@ -42,13 +44,19 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
   let transfers: any[] = [];
 
   if (tierIds.length > 0) {
-    // 3. Obtener boletas emitidas ÚNICAMENTE para las localidades de este evento (incluyendo quién la escaneó y estado de QR)
+    // 3. Obtener boletas emitidas ÚNICAMENTE para las localidades de este evento (excluyendo void)
     const { data: rawTickets } = await adminDb
       .from("tickets")
-      .select("id, tier_id, order_id, status, assigned_name, assigned_email, scanned_at, scanned_by, created_at, qr_dispatched")
-      .in("tier_id", tierIds);
+      .select("id, user_id, tier_id, order_id, status, assigned_name, assigned_email, transferred_at, scanned_at, scanned_by, created_at, qr_dispatched")
+      .in("tier_id", tierIds)
+      .neq("status", "void");
 
     eventTickets = rawTickets || [];
+    const ticketIds = eventTickets.map((t: any) => t.id);
+
+    if (ticketIds.length > 0) {
+      await healStalePendingTransfers(ticketIds);
+    }
 
     // 4. Obtener órdenes asociadas ÚNICAMENTE a estas boletas (incluye cortesías)
     const orderIds = Array.from(new Set(eventTickets.map((t: any) => t.order_id).filter(Boolean)));
@@ -63,11 +71,10 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
     }
 
     // 5. Historial de Transferencias de boletas exclusivas de este evento
-    const ticketIds = eventTickets.map((t: any) => t.id);
     if (ticketIds.length > 0) {
       const { data: rawTransfers } = await adminDb
         .from("ticket_transfers")
-        .select("id, ticket_id, from_user_id, to_email, to_name, status, created_at")
+        .select("id, ticket_id, from_user_id, to_email, to_name, status, created_at, updated_at")
         .in("ticket_id", ticketIds)
         .order("created_at", { ascending: false });
 

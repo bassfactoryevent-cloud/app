@@ -358,30 +358,46 @@ export const getTicketDeliveryEmail = (name: string, eventTitle: string, eventDa
   return baseTemplate(`Tu Entrada: ${eventTitle}`, content);
 };
 
-export const getTransferInitiatedEmail = (receiverName: string, senderName: string, eventTitle: string, transferUrl: string) => {
+export const getTransferInitiatedEmail = (
+  receiverName: string,
+  senderName: string,
+  eventTitle: string,
+  transferUrl: string,
+  quantity: number = 1
+) => {
+  const isMultiple = quantity > 1;
   const content = `
-    <h1>¡Te han enviado una entrada!</h1>
+    <h1>${isMultiple ? `¡Te han enviado ${quantity} entradas!` : `¡Te han enviado una entrada!`}</h1>
     <p>Hola <strong>${receiverName}</strong>,</p>
-    <p><strong>${senderName}</strong> te ha transferido una boleta oficial para <strong>${eventTitle}</strong> a través de Bassfactory.</p>
+    <p><strong>${senderName}</strong> te ha transferido <strong>${isMultiple ? `${quantity} boletas oficiales` : `una boleta oficial`}</strong> para <strong>${eventTitle}</strong> a través de Bassfactory.</p>
     
-    <p>Para asegurar tu ingreso y descargar tu código QR personal, es obligatorio que aceptes la transferencia ingresando a tu cuenta (si no tienes una, podrás crearla fácilmente con este mismo correo).</p>
+    <p>Para asegurar tu ingreso y activar tus códigos QR personales, es obligatorio que aceptes la transferencia ingresando a tu cuenta (si no tienes una, podrás crearla fácilmente con este mismo correo).</p>
     
     <center>
-      <a href="${transferUrl}" class="button">Aceptar Boleta</a>
+      <a href="${transferUrl}" class="button">${isMultiple ? `Aceptar ${quantity} Boletas` : `Aceptar Boleta`}</a>
     </center>
 
-    <p style="font-size: 14px; margin-top: 20px;"><em>Nota: Si no aceptas la transferencia, la boleta regresará a su comprador original.</em></p>
+    <p style="font-size: 14px; margin-top: 20px;"><em>Nota: Tienes 48 horas para aceptar. Si no aceptas la transferencia, ${isMultiple ? `las boletas regresarán` : `la boleta regresará`} a su comprador original.</em></p>
   `;
-  return baseTemplate(`${senderName} te envió una boleta`, content);
+  return baseTemplate(
+    isMultiple ? `${senderName} te envió ${quantity} boletas` : `${senderName} te envió una boleta`,
+    content
+  );
 };
 
-export const getTransferAcceptedEmail = (senderName: string, receiverName: string, eventTitle: string) => {
+export const getTransferAcceptedEmail = (
+  senderName: string,
+  receiverName: string,
+  eventTitle: string,
+  quantity: number = 1
+) => {
+  const isMultiple = quantity > 1;
   const content = `
     <h1>Transferencia Exitosa</h1>
     <p>Hola <strong>${senderName}</strong>,</p>
-    <p>Te confirmamos que <strong>${receiverName}</strong> ha aceptado correctamente la boleta para <strong>${eventTitle}</strong> que le transferiste.</p>
+    <p>Te confirmamos que <strong>${receiverName}</strong> ha aceptado correctamente ${isMultiple ? `las <strong>${quantity} boletas</strong>` : `la boleta`} para <strong>${eventTitle}</strong> que le transferiste.</p>
     
-    <p>La boleta ha salido de tu cuenta y el nuevo código QR ha sido despachado a su destinatario. Ya no tienes que preocuparte por nada más.</p>
+    <p>${isMultiple ? `Las boletas se han descontado` : `La boleta se ha descontado`} de tu inventario y ahora pertenecen oficialmente a la cuenta de ${receiverName}.</p>
     
     <center>
       <a href="${APP_URL}/account/tickets" class="button">Ver mis boletas</a>

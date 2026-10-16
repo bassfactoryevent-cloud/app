@@ -4,6 +4,9 @@ import Link from "next/link";
 import { Ticket, ShoppingBag, Bell, ShieldCheck, Clock, CheckCircle2, ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { getUserNotifications } from "@/utils/notifications";
+import { getUserTicketsData } from "@/utils/userTickets";
+
+export const dynamic = "force-dynamic";
 
 export default async function AccountDashboardPage() {
   const supabase = await createClient();
@@ -15,7 +18,8 @@ export default async function AccountDashboardPage() {
 
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
 
-  const { count: ticketsCount } = await supabase.from("tickets").select("*", { count: 'exact', head: true }).eq("user_id", user.id);
+  const userTicketsData = await getUserTicketsData({ id: user.id, email: user.email });
+  const ticketsCount = userTicketsData.tickets.length;
   const { count: ordersCount } = await supabase.from("merch_orders").select("*", { count: 'exact', head: true }).eq("user_id", user.id);
 
   const notifications = await getUserNotifications({

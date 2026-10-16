@@ -253,3 +253,70 @@ export async function toggleCourtesyLock(ticketId: string, eventId: string, curr
     return { success: false, error: err.message || "Error al actualizar estado del QR." };
   }
 }
+
+export async function getLiveEventDashboardData(eventId: string) {
+  try {
+    const { healStalePendingTransfers } = await import("@/utils/userTickets");
+
+    const { data: ticketTiers } = await adminDb
+      .from("ticket_tiers")
+      .select("id")
+      .eq("event_id", eventId);
+
+    const tierIds = (ticketTiers || []).map((t: any) => t.id);
+    if (tierIds.length === 0) {
+      return { success: true, tickets: [], orders: [], transfers: [] };
+    }
+
+    const { data: rawTickets } = await adminDb
+      .from("tickets")
+      .select(
+        "id, user_id, tier_id, order_id, status, assigned_name, assigned_email, transferred_at, scanned_at, scanned_by, created_at, qr_dispatched"
+      )
+      .in("tier_id", tierIds)
+      .neq("status", "void");
+
+    const eventTickets = rawTickets || [];
+    const ticketIds = eventTickets.map((t: any) => t.id);
+
+    if (ticketIds.length > 0) {
+      await healStalePendingTransfers(ticketIds);
+    }
+
+    const orderIds = Array.from(
+      new Set(eventTickets.map((t: any) => t.order_id).filter(Boolean))
+    );
+
+    const [ordersRes, transfersRes] = await Promise.all([
+      orderIds.length > 0
+        ? adminDb
+            .from("merch_orders")
+            .select(
+              "id, customer_name, customer_email, total_amount, created_at, status, payment_provider, payment_id, shipping_city, shipping_address"
+            )
+            .in("id", orderIds)
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] }),
+      ticketIds.length > 0
+        ? adminDb
+            .from("ticket_transfers")
+            .select(
+              "id, ticket_id, from_user_id, to_email, to_name, status, created_at, updated_at"
+            )
+            .in("ticket_id", ticketIds)
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    return {
+      success: true,
+      tickets: eventTickets,
+      orders: ordersRes.data || [],
+      transfers: transfersRes.data || [],
+    };
+  } catch (err: any) {
+    console.error("Error in getLiveEventDashboardData:", err);
+    return { success: false };
+  }
+}
+

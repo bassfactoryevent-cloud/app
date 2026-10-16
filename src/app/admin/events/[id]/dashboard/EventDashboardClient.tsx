@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, useRef, useCallback } from "react";
 import Link from "next/link";
 import { 
   ArrowLeft, DollarSign, Ticket, Users, Activity, ScanLine, 
@@ -11,7 +11,7 @@ import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 import { addStaffToEventAction, toggleStaffStatusAction, removeStaffAction } from "../staff/actions";
 import { IssueCourtesyModal } from "./IssueCourtesyModal";
-import { toggleCourtesyLock } from "./actions";
+import { toggleCourtesyLock, getLiveEventDashboardData } from "./actions";
 
 interface EventDashboardClientProps {
   event: any;
@@ -46,6 +46,24 @@ export default function EventDashboardClient({
   const [attendeeSearch, setAttendeeSearch] = useState("");
   const [isCourtesyModalOpen, setIsCourtesyModalOpen] = useState(false);
   const [isLockingTicketId, setIsLockingTicketId] = useState<string | null>(null);
+  const isSyncingRef = useRef(false);
+
+  const syncDashboardData = useCallback(async () => {
+    if (isSyncingRef.current) return;
+    isSyncingRef.current = true;
+    try {
+      const res = await getLiveEventDashboardData(event.id);
+      if (res.success) {
+        if (res.tickets) setTickets(res.tickets);
+        if (res.orders) setOrders(res.orders);
+        if (res.transfers) setTransfers(res.transfers);
+      }
+    } catch (e) {
+      console.error("Error syncing dashboard data:", e);
+    } finally {
+      isSyncingRef.current = false;
+    }
+  }, [event.id]);
 
   const handleToggleTicketLock = async (ticketId: string, currentDispatched: boolean) => {
     try {
@@ -122,11 +140,10 @@ export default function EventDashboardClient({
     });
   };
   
-  // Realtime subscription
+  // Realtime subscription + Deterministic 4s Live Sync
   useEffect(() => {
-    // Escuchar actualizaciones de boletas escaneadas o creadas
     const ticketsChannel = supabase
-      .channel('schema-db-changes-tickets')
+      .channel(`event-dashboard-live-${event.id}`)
       .on(
         'postgres_changes',
         {
@@ -136,25 +153,58 @@ export default function EventDashboardClient({
         },
         (payload) => {
           const updatedTicket = payload.new as any;
-          if (!updatedTicket) return;
-          setTickets((prev) => {
-            const exists = prev.some(t => t.id === updatedTicket.id);
-            if (exists) {
-              return prev.map(t => t.id === updatedTicket.id ? updatedTicket : t);
-            }
-            return [updatedTicket, ...prev];
-          });
-          if (updatedTicket.status === 'scanned') {
+          if (updatedTicket?.status === 'scanned') {
             toast.info("Boleta escaneada en puerta");
           }
+          syncDashboardData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'ticket_transfers'
+        },
+        () => {
+          syncDashboardData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'merch_orders'
+        },
+        () => {
+          syncDashboardData();
         }
       )
       .subscribe();
 
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        syncDashboardData();
+      }
+    }, 4000);
+
+    const handleVisibilityOrFocus = () => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        syncDashboardData();
+      }
+    };
+
+    window.addEventListener("focus", handleVisibilityOrFocus);
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+
     return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
       supabase.removeChannel(ticketsChannel);
     };
-  }, [event.id, supabase]);
+  }, [event.id, supabase, syncDashboardData]);
 
   // Derived calculations
   const totalTiersCapacity = initialTiers.reduce((sum, t) => sum + (Number(t.quantity_available) || 0), 0);
