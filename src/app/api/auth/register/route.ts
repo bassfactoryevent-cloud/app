@@ -15,9 +15,16 @@ export async function POST(req: Request) {
       );
     }
 
+    if (String(password).length < 6) {
+      return NextResponse.json(
+        { error: "La contraseña debe tener al menos 6 caracteres." },
+        { status: 400 }
+      );
+    }
+
     const supabase = await createClient();
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: {
@@ -34,9 +41,17 @@ export async function POST(req: Request) {
       );
     }
 
+    const hasSession = Boolean(data?.session);
+
     return NextResponse.json({
       success: true,
-      message: "Cuenta creada exitosamente. Inicia sesión para continuar.",
+      hasSession,
+      redirectUrl: hasSession
+        ? "/account"
+        : "/login?message=Cuenta+creada+exitosamente.+Inicia+sesión+para+continuar.",
+      message: hasSession
+        ? "¡Bienvenido a Bassfactory! Ingresando a tu cuenta..."
+        : "Cuenta creada exitosamente. Inicia sesión para continuar.",
     });
   } catch (err: any) {
     console.error("Error in register API route:", err);

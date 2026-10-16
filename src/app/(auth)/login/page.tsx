@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LoginForm } from "./LoginForm";
+import styles from "../AuthLayout.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -13,21 +14,33 @@ export default async function LoginPage({
 
   return (
     <>
-      <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
-        <h1 style={{ fontSize: "1.75rem", fontWeight: 800, marginBottom: "0.4rem", color: "#ffffff", letterSpacing: "-0.02em" }}>
-          Bienvenido de vuelta
-        </h1>
-        <p style={{ opacity: 0.7, fontSize: "0.9rem", color: "rgba(255, 255, 255, 0.7)", margin: 0 }}>
-          Inicia sesión para gestionar tus tickets, órdenes y panel.
+      <div className={styles.formHeader}>
+        <h1 className={styles.formTitle}>Bienvenido de vuelta</h1>
+        <p className={styles.formSubtitle}>
+          Ingresa tus credenciales para acceder a tus tickets QR y pedidos.
         </p>
       </div>
 
       <LoginForm initialMessage={message} />
 
-      <div style={{ marginTop: "1.75rem", textAlign: "center", fontSize: "0.85rem", opacity: 0.85, color: "rgba(255, 255, 255, 0.7)" }}>
-        ¿No tienes cuenta?{" "}
-        <Link href="/register" style={{ color: "var(--color-magenta, #D90416)", fontWeight: 700, textDecoration: "none" }}>
-          Regístrate aquí
+      <div
+        style={{
+          marginTop: "1.4rem",
+          textAlign: "center",
+          fontSize: "0.84rem",
+          color: "rgba(255, 255, 255, 0.65)",
+        }}
+      >
+        ¿Aún no tienes una cuenta?{" "}
+        <Link
+          href="/register"
+          style={{
+            color: "#D90416",
+            fontWeight: 700,
+            textDecoration: "none",
+          }}
+        >
+          Crear cuenta gratis →
         </Link>
       </div>
     </>

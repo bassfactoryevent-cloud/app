@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { RegisterForm } from "./RegisterForm";
+import styles from "../AuthLayout.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -13,21 +14,33 @@ export default async function RegisterPage({
 
   return (
     <>
-      <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
-        <h1 style={{ fontSize: "1.75rem", fontWeight: 800, marginBottom: "0.4rem", color: "#ffffff", letterSpacing: "-0.02em" }}>
-          Únete a Bassfactory
-        </h1>
-        <p style={{ opacity: 0.7, fontSize: "0.9rem", color: "rgba(255, 255, 255, 0.7)", margin: 0 }}>
-          Crea tu cuenta para comprar tickets y merch exclusivo.
+      <div className={styles.formHeader}>
+        <h1 className={styles.formTitle}>Únete a Bassfactory</h1>
+        <p className={styles.formSubtitle}>
+          Crea tu cuenta oficial para comprar entradas QR y merch exclusivo.
         </p>
       </div>
 
       <RegisterForm initialMessage={message} />
 
-      <div style={{ marginTop: "1.75rem", textAlign: "center", fontSize: "0.85rem", opacity: 0.85, color: "rgba(255, 255, 255, 0.7)" }}>
-        ¿Ya tienes cuenta?{" "}
-        <Link href="/login" style={{ color: "var(--color-magenta, #D90416)", fontWeight: 700, textDecoration: "none" }}>
-          Inicia sesión aquí
+      <div
+        style={{
+          marginTop: "1.4rem",
+          textAlign: "center",
+          fontSize: "0.84rem",
+          color: "rgba(255, 255, 255, 0.65)",
+        }}
+      >
+        ¿Ya tienes una cuenta?{" "}
+        <Link
+          href="/login"
+          style={{
+            color: "#D90416",
+            fontWeight: 700,
+            textDecoration: "none",
+          }}
+        >
+          Inicia sesión aquí →
         </Link>
       </div>
     </>

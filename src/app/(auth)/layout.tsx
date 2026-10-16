@@ -1,32 +1,9 @@
-import Link from "next/link";
-import Image from "next/image";
-import logo from "../../../public/bassfactorylogo1.png";
+import { AuthShell } from "./AuthShell";
 
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-bg)', color: 'white' }}>
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', gap: '2.5rem' }}>
-        <Link href="/">
-          <Image
-            src={logo}
-            alt="Bassfactory Logo"
-            width={400}
-            height={206}
-            style={{ width: "200px", height: "auto", objectFit: "contain", filter: "brightness(0) invert(1)" }}
-            priority
-          />
-        </Link>
-        <div style={{ width: '100%', maxWidth: '400px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: '2.5rem', borderRadius: '1rem', backdropFilter: 'blur(10px)' }}>
-          {children}
-        </div>
-      </main>
-      <footer style={{ textAlign: 'center', padding: '2rem', opacity: 0.5, fontSize: '0.875rem' }}>
-        © {new Date().getFullYear()} Bassfactory. Todos los derechos reservados.
-      </footer>
-    </div>
-  );
+  return <AuthShell>{children}</AuthShell>;
 }

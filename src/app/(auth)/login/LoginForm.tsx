@@ -1,18 +1,30 @@
 "use client";
 
 import React, { useState } from "react";
-import { LogIn, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { LogIn, Loader2, AlertCircle, CheckCircle2, Eye, EyeOff, Mail, Lock } from "lucide-react";
 
 export function LoginForm({ initialMessage }: { initialMessage?: string }) {
+  const isPositiveInitial =
+    initialMessage &&
+    (initialMessage.toLowerCase().includes("creada") ||
+      initialMessage.toLowerCase().includes("éxito") ||
+      initialMessage.toLowerCase().includes("exito"));
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(initialMessage || "");
+  const [errorMessage, setErrorMessage] = useState(
+    !isPositiveInitial && initialMessage ? initialMessage : ""
+  );
+  const [infoMessage, setInfoMessage] = useState(
+    isPositiveInitial && initialMessage ? initialMessage : ""
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
+    setInfoMessage("");
     setIsLoading(true);
 
     try {
@@ -40,60 +52,132 @@ export function LoginForm({ initialMessage }: { initialMessage?: string }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
+    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.05rem" }}>
+      {infoMessage && (
+        <div
+          style={{
+            backgroundColor: "rgba(34, 197, 94, 0.12)",
+            color: "#4ade80",
+            border: "1px solid rgba(34, 197, 94, 0.3)",
+            padding: "0.85rem 1rem",
+            borderRadius: "0.65rem",
+            fontSize: "0.84rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.6rem",
+            lineHeight: 1.4,
+          }}
+        >
+          <CheckCircle2 size={18} style={{ flexShrink: 0, color: "#22c55e" }} />
+          <span>{infoMessage}</span>
+        </div>
+      )}
+
       {errorMessage && (
-        <div style={{
-          backgroundColor: "rgba(239, 68, 68, 0.12)",
-          color: "#f87171",
-          border: "1px solid rgba(239, 68, 68, 0.3)",
-          padding: "0.85rem 1rem",
-          borderRadius: "0.55rem",
-          fontSize: "0.85rem",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.6rem",
-          lineHeight: 1.4
-        }}>
+        <div
+          style={{
+            backgroundColor: "rgba(239, 68, 68, 0.12)",
+            color: "#f87171",
+            border: "1px solid rgba(239, 68, 68, 0.3)",
+            padding: "0.85rem 1rem",
+            borderRadius: "0.65rem",
+            fontSize: "0.84rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.6rem",
+            lineHeight: 1.4,
+          }}
+        >
           <AlertCircle size={18} style={{ flexShrink: 0, color: "#ef4444" }} />
           <span>{errorMessage}</span>
         </div>
       )}
 
       <div>
-        <label htmlFor="email" style={{ display: "block", marginBottom: "0.45rem", fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>
+        <label
+          htmlFor="email"
+          style={{
+            display: "block",
+            marginBottom: "0.45rem",
+            fontSize: "0.82rem",
+            fontWeight: 600,
+            color: "rgba(255,255,255,0.85)",
+            letterSpacing: "0.01em",
+          }}
+        >
           Correo Electrónico
         </label>
-        <input
-          type="email"
-          name="email"
-          id="email"
-          required
-          autoComplete="email"
-          placeholder="tu@email.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={isLoading}
-          style={{
-            width: "100%",
-            padding: "0.8rem 1rem",
-            borderRadius: "0.55rem",
-            border: "1px solid rgba(255, 255, 255, 0.12)",
-            backgroundColor: "rgba(0, 0, 0, 0.45)",
-            color: "#ffffff",
-            fontSize: "0.9rem",
-            outline: "none",
-            transition: "border-color 0.2s"
-          }}
-          onFocus={(e) => (e.currentTarget.style.borderColor = "var(--color-magenta, #D90416)")}
-          onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.12)")}
-        />
+        <div style={{ position: "relative" }}>
+          <Mail
+            size={17}
+            style={{
+              position: "absolute",
+              left: "0.95rem",
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: "rgba(255, 255, 255, 0.4)",
+              pointerEvents: "none",
+            }}
+          />
+          <input
+            type="email"
+            name="email"
+            id="email"
+            required
+            autoComplete="email"
+            placeholder="tu@correo.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={isLoading}
+            style={{
+              width: "100%",
+              padding: "0.82rem 1rem 0.82rem 2.65rem",
+              borderRadius: "0.65rem",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              color: "#ffffff",
+              fontSize: "0.9rem",
+              outline: "none",
+              transition: "border-color 0.2s, box-shadow 0.2s",
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = "#D90416";
+              e.currentTarget.style.boxShadow = "0 0 0 3px rgba(217, 4, 22, 0.15)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.12)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
+          />
+        </div>
       </div>
 
       <div>
-        <label htmlFor="password" style={{ display: "block", marginBottom: "0.45rem", fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>
+        <label
+          htmlFor="password"
+          style={{
+            display: "block",
+            marginBottom: "0.45rem",
+            fontSize: "0.82rem",
+            fontWeight: 600,
+            color: "rgba(255,255,255,0.85)",
+            letterSpacing: "0.01em",
+          }}
+        >
           Contraseña
         </label>
         <div style={{ position: "relative" }}>
+          <Lock
+            size={17}
+            style={{
+              position: "absolute",
+              left: "0.95rem",
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: "rgba(255, 255, 255, 0.4)",
+              pointerEvents: "none",
+            }}
+          />
           <input
             type={showPassword ? "text" : "password"}
             name="password"
@@ -106,22 +190,29 @@ export function LoginForm({ initialMessage }: { initialMessage?: string }) {
             disabled={isLoading}
             style={{
               width: "100%",
-              padding: "0.8rem 2.75rem 0.8rem 1rem",
-              borderRadius: "0.55rem",
+              padding: "0.82rem 2.75rem 0.82rem 2.65rem",
+              borderRadius: "0.65rem",
               border: "1px solid rgba(255, 255, 255, 0.12)",
-              backgroundColor: "rgba(0, 0, 0, 0.45)",
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
               color: "#ffffff",
               fontSize: "0.9rem",
               outline: "none",
-              transition: "border-color 0.2s"
+              transition: "border-color 0.2s, box-shadow 0.2s",
             }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = "var(--color-magenta, #D90416)")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.12)")}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = "#D90416";
+              e.currentTarget.style.boxShadow = "0 0 0 3px rgba(217, 4, 22, 0.15)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.12)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             tabIndex={-1}
+            aria-label={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
             style={{
               position: "absolute",
               right: "0.85rem",
@@ -133,7 +224,7 @@ export function LoginForm({ initialMessage }: { initialMessage?: string }) {
               cursor: "pointer",
               padding: 0,
               display: "flex",
-              alignItems: "center"
+              alignItems: "center",
             }}
           >
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -148,29 +239,32 @@ export function LoginForm({ initialMessage }: { initialMessage?: string }) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: "0.5rem",
+          gap: "0.55rem",
           width: "100%",
-          padding: "0.95rem 1.25rem",
-          marginTop: "0.6rem",
-          backgroundColor: "var(--color-magenta, #D90416)",
+          padding: "0.92rem 1.25rem",
+          marginTop: "0.45rem",
+          backgroundColor: "#D90416",
           color: "#ffffff",
-          border: "none",
-          borderRadius: "0.55rem",
-          fontWeight: 700,
-          fontSize: "0.92rem",
+          border: "1px solid rgba(255, 255, 255, 0.12)",
+          borderRadius: "0.65rem",
+          fontWeight: 800,
+          fontSize: "0.9rem",
+          letterSpacing: "0.03em",
+          textTransform: "uppercase",
           cursor: isLoading ? "not-allowed" : "pointer",
           opacity: isLoading ? 0.75 : 1,
-          transition: "opacity 0.2s, transform 0.1s"
+          boxShadow: "0 8px 24px rgba(217, 4, 22, 0.32)",
+          transition: "all 0.2s ease",
         }}
       >
         {isLoading ? (
           <>
-            <Loader2 size={19} className="animate-spin" />
-            <span>Iniciando sesión...</span>
+            <Loader2 size={18} className="animate-spin" />
+            <span>Verificando acceso...</span>
           </>
         ) : (
           <>
-            <LogIn size={19} />
+            <LogIn size={18} />
             <span>Iniciar Sesión</span>
           </>
         )}
