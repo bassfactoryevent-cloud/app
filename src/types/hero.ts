@@ -60,7 +60,8 @@ export function parseHeroConfig(
     rawTags.slides.length > 0
   ) {
     return {
-      autoplayMs: Number(rawTags.autoplay_ms) >= 0 ? Number(rawTags.autoplay_ms) : 6500,
+      autoplayMs:
+        Number(rawTags.autoplay_ms) >= 0 ? Number(rawTags.autoplay_ms) : 6500,
       slides: rawTags.slides,
     };
   }
@@ -76,6 +77,12 @@ export function parseHeroConfig(
     firstEvent?.cover_image ||
     "https://images.unsplash.com/photo-1571266028243-3716f02d2d2e?q=80&w=1600&auto=format&fit=crop";
 
+  const cleanRootTitle = (
+    heroSettings?.title || "MÚSICA<br/>Cultura<br/>Movimiento"
+  )
+    .replace(/<\/?(h1|h2|h3|h4|p|div|span)[^>]*>/gi, "")
+    .trim();
+
   const slides: HeroSlide[] = [
     {
       id: "slide-main-1",
@@ -85,13 +92,14 @@ export function parseHeroConfig(
       badge_label: "ECOSISTEMA BASSFACTORY",
       media_type: heroSettings?.media_type === "video" ? "video" : "image",
       media_url: defaultMedia,
-      title: heroSettings?.title || "MÚSICA<br/>Cultura<br/>Movimiento",
+      title: cleanRootTitle,
       subtitle:
         heroSettings?.subtitle ||
         "El ecosistema definitivo de la cultura electrónica en tu ciudad.",
       primary_button_text: heroSettings?.primary_button_text || "Ver Eventos",
       primary_button_url: heroSettings?.primary_button_url || "/events",
-      secondary_button_text: heroSettings?.secondary_button_text || "Suscribete",
+      secondary_button_text:
+        heroSettings?.secondary_button_text || "Suscribete",
       secondary_button_url: heroSettings?.secondary_button_url || "/register",
       tags: legacyTags,
       meta: {},
@@ -123,7 +131,8 @@ export function parseHeroConfig(
       tags: [],
       meta: {
         event_date: firstEvent.start_date,
-        location: firstEvent.location || "Colombia",
+        location:
+          firstEvent.location_name || firstEvent.location || "Colombia",
         show_countdown: true,
       },
     });
@@ -135,8 +144,9 @@ export function parseHeroConfig(
         ?.image_url ||
       firstMerch.merch_product_images?.[0]?.image_url ||
       "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=1600";
-    const formattedPrice = firstMerch.price_cop
-      ? `$${Number(firstMerch.price_cop).toLocaleString("es-CO")} COP`
+    const rawPrice = firstMerch.base_price ?? firstMerch.price_cop;
+    const formattedPrice = rawPrice
+      ? `$${Number(rawPrice).toLocaleString("es-CO")} COP`
       : "EDICIÓN LIMITADA";
 
     slides.push({
@@ -164,6 +174,10 @@ export function parseHeroConfig(
   }
 
   if (firstPost) {
+    const cleanExcerpt =
+      firstPost.excerpt ||
+      (firstPost.content || "").replace(/<[^>]+>/g, "").slice(0, 145) ||
+      "Explora las últimas noticias, lanzamientos y entrevistas de la escena electrónica.";
     slides.push({
       id: `slide-post-${firstPost.id}`,
       active: true,
@@ -175,9 +189,7 @@ export function parseHeroConfig(
         firstPost.cover_image ||
         "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1600",
       title: firstPost.title,
-      subtitle:
-        firstPost.excerpt ||
-        "Explora las últimas noticias, lanzamientos y entrevistas de la escena electrónica.",
+      subtitle: cleanExcerpt,
       primary_button_text: "Leer Artículo",
       primary_button_url: `/blog/${firstPost.slug}`,
       secondary_button_text: "Ver Editorial",

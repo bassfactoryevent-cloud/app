@@ -26,29 +26,34 @@ export async function getHeroCatalog() {
   const [eventsRes, merchRes, postsRes, adsRes] = await Promise.all([
     adminDb
       .from("events")
-      .select("id, title, slug, description, cover_image, start_date, location, status")
+      .select("*")
       .eq("status", "published")
       .order("start_date", { ascending: true })
       .limit(30),
     adminDb
       .from("merch_products")
-      .select("id, title, slug, description, price_cop, status, merch_product_images(image_url, is_primary, sort_order)")
+      .select("*, merch_product_images(image_url, is_primary, sort_order)")
       .eq("status", "published")
       .order("created_at", { ascending: false })
       .limit(30),
     adminDb
       .from("posts")
-      .select("id, title, slug, excerpt, cover_image, is_published, created_at")
+      .select("*")
       .eq("is_published", true)
       .order("created_at", { ascending: false })
       .limit(30),
     adminDb
-      .from("advertisements")
-      .select("id, title, image_url, target_url, placement, is_active")
+      .from("ads")
+      .select("*, ad_campaigns(name, client_name)")
       .eq("is_active", true)
       .order("created_at", { ascending: false })
       .limit(30),
   ]);
+
+  if (eventsRes.error) console.error("Catalog events error:", eventsRes.error);
+  if (merchRes.error) console.error("Catalog merch error:", merchRes.error);
+  if (postsRes.error) console.error("Catalog posts error:", postsRes.error);
+  if (adsRes.error) console.error("Catalog ads error:", adsRes.error);
 
   return {
     events: eventsRes.data || [],

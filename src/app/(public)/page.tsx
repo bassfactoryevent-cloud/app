@@ -103,9 +103,6 @@ export default async function Home() {
               ))}
             </HorizontalScroll>
 
-            {/* Simulador Interactivo Canvas de Montaje de Escenario */}
-            <StageMontageCanvas />
-
             {/* Banner Publicidad Delgado (Bajo Eventos) */}
             <AdBanner placementName="home_horizontal_thin" />
 
@@ -206,6 +203,9 @@ export default async function Home() {
             
             {/* Banner Publicidad Vertical */}
             <AdBanner placementName="home_sidebar" />
+
+            {/* Asesoría, Consultoría y Acompañamiento para crear eventos */}
+            <StageMontageCanvas />
 
             {/* Ravers: Reseña */}
             <div className={styles.raversReviews}>

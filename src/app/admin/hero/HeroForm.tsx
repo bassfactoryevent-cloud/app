@@ -41,46 +41,169 @@ interface CatalogProps {
 const SOURCE_TYPES: {
   id: HeroSourceType;
   label: string;
-  desc: string;
   badgeDefault: string;
   icon: any;
 }[] = [
   {
     id: "event",
     label: "Evento Oficial",
-    desc: "Conecta un evento publicado con cuenta regresiva en vivo y venta de tickets.",
-    badgeDefault: "PRÓXIMO EVENTO",
+    badgeDefault: "PRÓXIMO EVENTO OFICIAL",
     icon: Calendar,
   },
   {
     id: "merch",
     label: "Merch / Drop",
-    desc: "Destaca una prenda oficial con etiqueta de precio y compra directa.",
     badgeDefault: "MERCH OFICIAL • DROP",
     icon: ShoppingBag,
   },
   {
     id: "post",
     label: "Post / Noticia",
-    desc: "Impulsa un artículo editorial, entrevista o lanzamiento musical.",
     badgeDefault: "EDITORIAL • CULTURA",
     icon: FileText,
   },
   {
     id: "ad",
     label: "Pauta / Sponsor",
-    desc: "Espacio patrocinado o activación de marca aliada en el Home.",
-    badgeDefault: "PRESENTADO POR",
+    badgeDefault: "PARTNER OFICIAL",
     icon: Megaphone,
   },
   {
     id: "custom",
-    label: "Libre / Institucional",
-    desc: "Video o imagen personalizada con textos y botones 100% libres.",
+    label: "Libre / Video",
     badgeDefault: "ECOSISTEMA BASSFACTORY",
     icon: Sparkles,
   },
 ];
+
+function stripHtmlClean(raw?: string) {
+  if (!raw) return "";
+  return raw
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function buildSlideFieldsFromItem(
+  sourceType: HeroSourceType,
+  item: any
+): Partial<HeroSlide> {
+  if (!item) return {};
+
+  if (sourceType === "event") {
+    const cleanDesc = stripHtmlClean(item.description).slice(0, 150);
+    const loc = item.location_name || item.location || "Colombia";
+    return {
+      source_type: "event",
+      source_id: item.id,
+      badge_label: "PRÓXIMO EVENTO OFICIAL",
+      media_type: "image",
+      media_url:
+        item.cover_image ||
+        "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?q=80&w=1600",
+      title: item.title,
+      subtitle:
+        cleanDesc ||
+        `Vive la experiencia oficial en ${loc}. Entradas QR disponibles por fases.`,
+      primary_button_text: "Comprar Tickets",
+      primary_button_url: `/events/${item.slug}`,
+      secondary_button_text: "Ver Todos los Eventos",
+      secondary_button_url: "/events",
+      meta: {
+        event_date: item.start_date,
+        location: loc,
+        show_countdown: true,
+      },
+    };
+  }
+
+  if (sourceType === "merch") {
+    const primaryImg =
+      item.merch_product_images?.find((img: any) => img.is_primary)
+        ?.image_url ||
+      item.merch_product_images?.[0]?.image_url ||
+      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=1600";
+    const priceVal = item.base_price ?? item.price_cop;
+    const formattedPrice = priceVal
+      ? `$${Number(priceVal).toLocaleString("es-CO")} COP`
+      : "EDICIÓN LIMITADA";
+
+    return {
+      source_type: "merch",
+      source_id: item.id,
+      badge_label: "MERCH OFICIAL • EDICIÓN LIMITADA",
+      media_type: "image",
+      media_url: primaryImg,
+      title: item.title,
+      subtitle:
+        stripHtmlClean(item.description).slice(0, 150) ||
+        "Prenda oficial de la colección Bassfactory. Envíos a todo el país.",
+      primary_button_text: "Comprar Prenda",
+      primary_button_url: `/merch/${item.slug}`,
+      secondary_button_text: "Ver Tienda",
+      secondary_button_url: "/merch",
+      meta: {
+        price_label: formattedPrice,
+        show_countdown: false,
+      },
+    };
+  }
+
+  if (sourceType === "post") {
+    const cleanExcerpt =
+      item.excerpt ||
+      stripHtmlClean(item.content).slice(0, 150) ||
+      "Lee el artículo completo en la sección editorial de Bassfactory.";
+    return {
+      source_type: "post",
+      source_id: item.id,
+      badge_label: "EDITORIAL • CULTURA ELECTRÓNICA",
+      media_type: "image",
+      media_url:
+        item.cover_image ||
+        "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1600",
+      title: item.title,
+      subtitle: cleanExcerpt,
+      primary_button_text: "Leer Artículo",
+      primary_button_url: `/blog/${item.slug}`,
+      secondary_button_text: "Ver Más Noticias",
+      secondary_button_url: "/blog",
+      meta: {
+        show_countdown: false,
+      },
+    };
+  }
+
+  if (sourceType === "ad") {
+    const campaignName =
+      item.ad_campaigns?.name ||
+      item.ad_campaigns?.client_name ||
+      item.title ||
+      "Campaña Oficial";
+    return {
+      source_type: "ad",
+      source_id: item.id,
+      badge_label: "PRESENTADO POR • PARTNER OFICIAL",
+      media_type: "image",
+      media_url:
+        item.image_url ||
+        "https://images.unsplash.com/photo-1571266028243-3716f02d2d2e?q=80&w=1600",
+      title: campaignName,
+      subtitle: "Conoce más sobre esta activación especial en Bassfactory.",
+      primary_button_text: "Explorar Ahora",
+      primary_button_url: item.target_url || "/events",
+      secondary_button_text: "",
+      secondary_button_url: "",
+      meta: {
+        sponsor_name: item.ad_campaigns?.client_name || campaignName,
+        show_countdown: false,
+      },
+    };
+  }
+
+  return {};
+}
 
 export default function HeroForm({
   initialData,
@@ -109,7 +232,9 @@ export default function HeroForm({
     );
   };
 
-  const updateCurrentMeta = (metaPatch: Partial<NonNullable<HeroSlide["meta"]>>) => {
+  const updateCurrentMeta = (
+    metaPatch: Partial<NonNullable<HeroSlide["meta"]>>
+  ) => {
     setSlides((prev) =>
       prev.map((slide, idx) =>
         idx === selectedIdx
@@ -119,58 +244,54 @@ export default function HeroForm({
     );
   };
 
+  // Creates a new slide of the chosen type and immediately auto-populates it with the 1st available catalog item
   const handleAddSlide = (presetType: HeroSourceType = "custom") => {
     const typeInfo =
       SOURCE_TYPES.find((t) => t.id === presetType) || SOURCE_TYPES[4];
+
+    let firstCatalogItem: any = null;
+    if (presetType === "event") firstCatalogItem = catalog.events?.[0] || null;
+    else if (presetType === "merch") firstCatalogItem = catalog.merch?.[0] || null;
+    else if (presetType === "post") firstCatalogItem = catalog.posts?.[0] || null;
+    else if (presetType === "ad") firstCatalogItem = catalog.ads?.[0] || null;
+
+    const autoFilled = firstCatalogItem
+      ? buildSlideFieldsFromItem(presetType, firstCatalogItem)
+      : {};
+
     const newSlide: HeroSlide = {
       id: `slide-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       active: true,
       source_type: presetType,
-      source_id: null,
+      source_id: firstCatalogItem?.id || null,
       badge_label: typeInfo.badgeDefault,
       media_type: "image",
       media_url:
         "https://images.unsplash.com/photo-1571266028243-3716f02d2d2e?q=80&w=1600&auto=format&fit=crop",
-      title:
-        presetType === "event"
-          ? "NUEVO EVENTO BASSFACTORY"
-          : presetType === "merch"
-          ? "NUEVO DROP EXCLUSIVO"
-          : presetType === "post"
-          ? "ESPECIAL CULTURA UNDERGROUND"
-          : presetType === "ad"
-          ? "EXPERIENCIA PATROCINADA"
-          : "MÚSICA<br/>Cultura<br/>Movimiento",
+      title: "MÚSICA<br/>Cultura<br/>Movimiento",
       subtitle:
-        "Selecciona un ítem de tu catálogo arriba o personaliza libremente los textos y enlaces de este slide.",
-      primary_button_text:
-        presetType === "event"
-          ? "Comprar Tickets"
-          : presetType === "merch"
-          ? "Comprar Ahora"
-          : presetType === "post"
-          ? "Leer Artículo"
-          : "Descubrir Más",
-      primary_button_url:
-        presetType === "event"
-          ? "/events"
-          : presetType === "merch"
-          ? "/merch"
-          : presetType === "post"
-          ? "/blog"
-          : "/events",
+        "Personaliza libremente los textos, imágenes y enlaces de este slide.",
+      primary_button_text: "Ver Eventos",
+      primary_button_url: "/events",
       secondary_button_text: "Suscribete",
       secondary_button_url: "/register",
       tags: [],
       meta: {
         show_countdown: presetType === "event",
       },
+      ...autoFilled,
     };
 
     const nextSlides = [...slides, newSlide];
     setSlides(nextSlides);
     setSelectedIdx(nextSlides.length - 1);
-    toast.success(`Slide #${nextSlides.length} (${typeInfo.label}) agregado`);
+    toast.success(
+      firstCatalogItem
+        ? `Slide #${nextSlides.length} (${typeInfo.label}) creado y autocompletado con "${
+            firstCatalogItem.title || firstCatalogItem.ad_campaigns?.name || "ítem"
+          }"`
+        : `Slide #${nextSlides.length} (${typeInfo.label}) agregado`
+    );
   };
 
   const handleRemoveSlide = (idx: number) => {
@@ -195,7 +316,7 @@ export default function HeroForm({
     setSelectedIdx(targetIdx);
   };
 
-  // Smart 1-Click Auto-Fill when picking an Event, Merch, Post, or Ad
+  // Smart 1-Click Auto-Fill when picking an Event, Merch, Post, or Ad from the dropdown
   const handleSelectCatalogItem = (itemId: string) => {
     if (!itemId) {
       updateCurrentSlide({ source_id: null });
@@ -203,106 +324,40 @@ export default function HeroForm({
     }
 
     const st = currentSlide.source_type;
+    let item: any = null;
+    if (st === "event") item = catalog.events.find((e) => e.id === itemId);
+    else if (st === "merch") item = catalog.merch.find((m) => m.id === itemId);
+    else if (st === "post") item = catalog.posts.find((p) => p.id === itemId);
+    else if (st === "ad") item = catalog.ads.find((a) => a.id === itemId);
 
-    if (st === "event") {
-      const ev = catalog.events.find((e) => e.id === itemId);
-      if (!ev) return;
-      const cleanDesc = (ev.description || "")
-        .replace(/<[^>]+>/g, "")
-        .slice(0, 150);
+    if (!item) return;
+
+    const fields = buildSlideFieldsFromItem(st, item);
+    updateCurrentSlide(fields);
+    toast.success(
+      `Imagen y textos cargados desde "${
+        item.title || item.ad_campaigns?.name || "catálogo"
+      }"`
+    );
+  };
+
+  const handleChangeSlideType = (newType: HeroSourceType) => {
+    let firstItem: any = null;
+    if (newType === "event") firstItem = catalog.events?.[0] || null;
+    else if (newType === "merch") firstItem = catalog.merch?.[0] || null;
+    else if (newType === "post") firstItem = catalog.posts?.[0] || null;
+    else if (newType === "ad") firstItem = catalog.ads?.[0] || null;
+
+    if (firstItem) {
+      updateCurrentSlide(buildSlideFieldsFromItem(newType, firstItem));
+    } else {
+      const typeInfo =
+        SOURCE_TYPES.find((t) => t.id === newType) || SOURCE_TYPES[4];
       updateCurrentSlide({
-        source_id: ev.id,
-        badge_label: "PRÓXIMO EVENTO OFICIAL",
-        media_type: "image",
-        media_url:
-          ev.cover_image ||
-          currentSlide.media_url,
-        title: ev.title,
-        subtitle:
-          cleanDesc ||
-          `Vive la experiencia oficial en ${ev.location || "Bassfactory"}. Entradas QR disponibles.`,
-        primary_button_text: "Comprar Tickets",
-        primary_button_url: `/events/${ev.slug}`,
-        secondary_button_text: "Ver Todos los Eventos",
-        secondary_button_url: "/events",
-        meta: {
-          event_date: ev.start_date,
-          location: ev.location || "",
-          show_countdown: true,
-        },
+        source_type: newType,
+        source_id: null,
+        badge_label: typeInfo.badgeDefault,
       });
-      toast.success(`Datos autocompletados desde el evento "${ev.title}"`);
-    } else if (st === "merch") {
-      const item = catalog.merch.find((m) => m.id === itemId);
-      if (!item) return;
-      const primaryImg =
-        item.merch_product_images?.find((img: any) => img.is_primary)?.image_url ||
-        item.merch_product_images?.[0]?.image_url ||
-        currentSlide.media_url;
-      const priceVal = item.price_cop ?? item.base_price;
-      const formattedPrice = priceVal
-        ? `$${Number(priceVal).toLocaleString("es-CO")} COP`
-        : "";
-      updateCurrentSlide({
-        source_id: item.id,
-        badge_label: "MERCH OFICIAL • EDICIÓN LIMITADA",
-        media_type: "image",
-        media_url: primaryImg,
-        title: item.title,
-        subtitle:
-          (item.description || "").replace(/<[^>]+>/g, "").slice(0, 150) ||
-          "Prenda oficial de la colección Bassfactory. Envíos a todo el país.",
-        primary_button_text: "Comprar Prenda",
-        primary_button_url: `/merch/${item.slug}`,
-        secondary_button_text: "Ver Tienda",
-        secondary_button_url: "/merch",
-        meta: {
-          price_label: formattedPrice,
-          show_countdown: false,
-        },
-      });
-      toast.success(`Datos autocompletados desde Merch "${item.title}"`);
-    } else if (st === "post") {
-      const post = catalog.posts.find((p) => p.id === itemId);
-      if (!post) return;
-      updateCurrentSlide({
-        source_id: post.id,
-        badge_label: "EDITORIAL • CULTURA ELECTRÓNICA",
-        media_type: "image",
-        media_url: post.cover_image || currentSlide.media_url,
-        title: post.title,
-        subtitle:
-          post.excerpt ||
-          "Lee el artículo completo en la sección editorial de Bassfactory.",
-        primary_button_text: "Leer Artículo",
-        primary_button_url: `/blog/${post.slug}`,
-        secondary_button_text: "Ver Más Noticias",
-        secondary_button_url: "/blog",
-        meta: {
-          show_countdown: false,
-        },
-      });
-      toast.success(`Datos autocompletados desde el Post "${post.title}"`);
-    } else if (st === "ad") {
-      const ad = catalog.ads.find((a) => a.id === itemId);
-      if (!ad) return;
-      updateCurrentSlide({
-        source_id: ad.id,
-        badge_label: "DESTACADO • PARTNER OFICIAL",
-        media_type: "image",
-        media_url: ad.image_url || currentSlide.media_url,
-        title: ad.title,
-        subtitle: "Conoce más sobre esta activación especial en Bassfactory.",
-        primary_button_text: "Explorar Ahora",
-        primary_button_url: ad.target_url || "/",
-        secondary_button_text: "",
-        secondary_button_url: "",
-        meta: {
-          sponsor_name: ad.title,
-          show_countdown: false,
-        },
-      });
-      toast.success(`Datos autocompletados desde la Pauta "${ad.title}"`);
     }
   };
 
@@ -394,6 +449,10 @@ export default function HeroForm({
     }
   };
 
+  const currentTypeInfo =
+    SOURCE_TYPES.find((t) => t.id === currentSlide?.source_type) ||
+    SOURCE_TYPES[4];
+
   return (
     <form
       onSubmit={handleSaveAll}
@@ -413,11 +472,21 @@ export default function HeroForm({
           borderRadius: "1rem",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "1.25rem", flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "1.25rem",
+            flexWrap: "wrap",
+          }}
+        >
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <Layers size={19} style={{ color: "#D90416" }} />
             <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>
-              {slides.length} {slides.length === 1 ? "Slide configurado" : "Slides en el Carrusel"}
+              {slides.length}{" "}
+              {slides.length === 1
+                ? "Slide configurado"
+                : "Slides en el Carrusel"}
             </span>
             <span
               style={{
@@ -435,7 +504,9 @@ export default function HeroForm({
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <Clock size={16} style={{ opacity: 0.7 }} />
-            <label style={{ fontSize: "0.84rem", opacity: 0.85, fontWeight: 600 }}>
+            <label
+              style={{ fontSize: "0.84rem", opacity: 0.85, fontWeight: 600 }}
+            >
               Rotación automática:
             </label>
             <select
@@ -478,7 +549,7 @@ export default function HeroForm({
         </button>
       </div>
 
-      {/* CARRUSEL DE SLIDES (DECK SELECTOR + BOTONES DE CREACIÓN RÁPIDA) */}
+      {/* 1. SECUENCIA DE SLIDES DEL HOME */}
       <div
         style={{
           backgroundColor: "var(--color-surface)",
@@ -501,14 +572,34 @@ export default function HeroForm({
             <h3 style={{ margin: 0, fontSize: "1.05rem" }}>
               1. Secuencia de Slides del Home
             </h3>
-            <p style={{ margin: "0.2rem 0 0", fontSize: "0.82rem", opacity: 0.65 }}>
-              Selecciona un slide para editarlo o agrega nuevos slides de Eventos, Merch, Noticias o Pautas.
+            <p
+              style={{
+                margin: "0.2rem 0 0",
+                fontSize: "0.82rem",
+                opacity: 0.65,
+              }}
+            >
+              Al agregar un slide de Evento, Merch, Post o Pauta se carga automáticamente su imagen y textos.
             </p>
           </div>
 
           {/* Botones de creación rápida por tipo */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "0.78rem", opacity: 0.7, marginRight: "0.25rem", fontWeight: 600 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.45rem",
+              flexWrap: "wrap",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "0.78rem",
+                opacity: 0.7,
+                marginRight: "0.25rem",
+                fontWeight: 600,
+              }}
+            >
               + Agregar Slide de:
             </span>
             {SOURCE_TYPES.map((st) => {
@@ -629,11 +720,7 @@ export default function HeroForm({
                       textOverflow: "ellipsis",
                     }}
                   >
-                    {(slide.title || "Sin título")
-                      .replace(/<br\s*\/?>/gi, " ")
-                      .replace(/<[^>]*>/g, "")
-                      .replace(/\s+/g, " ")
-                      .trim()}
+                    {stripHtmlClean(slide.title) || "Sin título"}
                   </div>
                   <div
                     style={{
@@ -676,7 +763,10 @@ export default function HeroForm({
                         cursor: idx === 0 ? "default" : "pointer",
                       }}
                     >
-                      <ArrowUp size={13} style={{ transform: "rotate(-90deg)" }} />
+                      <ArrowUp
+                        size={13}
+                        style={{ transform: "rotate(-90deg)" }}
+                      />
                     </button>
                     <button
                       type="button"
@@ -696,7 +786,10 @@ export default function HeroForm({
                           idx === slides.length - 1 ? "default" : "pointer",
                       }}
                     >
-                      <ArrowDown size={13} style={{ transform: "rotate(-90deg)" }} />
+                      <ArrowDown
+                        size={13}
+                        style={{ transform: "rotate(-90deg)" }}
+                      />
                     </button>
                   </div>
 
@@ -760,9 +853,11 @@ export default function HeroForm({
             alignItems: "start",
           }}
         >
-          {/* COLUMNA IZQUIERDA: CONFIGURADOR DEL SLIDE */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-            {/* A. Selector de Tipo de Contenido & Autocompletado en 1 Clic */}
+          {/* COLUMNA IZQUIERDA: CONFIGURADOR DIRECTO DEL SLIDE */}
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
+          >
+            {/* A. Selector directo según el tipo del Slide (Sin redundancia) */}
             <section
               style={{
                 backgroundColor: "var(--color-surface)",
@@ -771,66 +866,64 @@ export default function HeroForm({
                 border: "1px solid rgba(255,255,255,0.08)",
               }}
             >
-              <h3 style={{ marginBottom: "0.35rem", fontSize: "1.05rem" }}>
-                2. ¿Qué quieres mostrar en el Slide #{selectedIdx + 1}?
-              </h3>
-              <p style={{ fontSize: "0.82rem", opacity: 0.65, marginBottom: "1rem" }}>
-                Elige el tipo de contenido. Si seleccionas un Evento, Merch, Post o Pauta, se autocompletará automáticamente.
-              </p>
-
               <div
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(135px, 1fr))",
-                  gap: "0.55rem",
-                  marginBottom: "1.25rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: "0.75rem",
+                  marginBottom:
+                    currentSlide.source_type === "custom" ? "0.25rem" : "1rem",
                 }}
               >
-                {SOURCE_TYPES.map((st) => {
-                  const Icon = st.icon;
-                  const active = currentSlide.source_type === st.id;
-                  return (
-                    <button
-                      key={st.id}
-                      type="button"
-                      onClick={() =>
-                        updateCurrentSlide({
-                          source_type: st.id,
-                          source_id: null,
-                          badge_label: st.badgeDefault,
-                        })
-                      }
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "flex-start",
-                        gap: "0.35rem",
-                        padding: "0.75rem",
-                        borderRadius: "0.7rem",
-                        background: active
-                          ? "rgba(217, 4, 22, 0.16)"
-                          : "rgba(0,0,0,0.4)",
-                        border: active
-                          ? "1px solid #D90416"
-                          : "1px solid rgba(255,255,255,0.08)",
-                        color: "#fff",
-                        cursor: "pointer",
-                        textAlign: "left",
-                      }}
-                    >
-                      <Icon
-                        size={17}
-                        style={{ color: active ? "#D90416" : "rgba(255,255,255,0.6)" }}
-                      />
-                      <span style={{ fontSize: "0.8rem", fontWeight: 700 }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.05rem" }}>
+                    2. Contenido del Slide #{selectedIdx + 1} (
+                    {currentTypeInfo.label})
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: "0.8rem",
+                      opacity: 0.65,
+                      margin: "0.2rem 0 0",
+                    }}
+                  >
+                    {currentSlide.source_type === "custom"
+                      ? "Slide libre: configura abajo el video/imagen y textos personalizados."
+                      : "Al elegir un ítem de la lista se cargan su imagen, textos y botones automáticamente."}
+                  </p>
+                </div>
+
+                {/* Selector compacto por si desea cambiar la categoría de este slide */}
+                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  <span style={{ fontSize: "0.74rem", opacity: 0.6 }}>
+                    Categoría:
+                  </span>
+                  <select
+                    value={currentSlide.source_type}
+                    onChange={(e) =>
+                      handleChangeSlideType(e.target.value as HeroSourceType)
+                    }
+                    style={{
+                      padding: "0.35rem 0.6rem",
+                      fontSize: "0.78rem",
+                      borderRadius: "0.45rem",
+                      backgroundColor: "#09090b",
+                      border: "1px solid rgba(255,255,255,0.14)",
+                      color: "#fff",
+                    }}
+                  >
+                    {SOURCE_TYPES.map((st) => (
+                      <option key={st.id} value={st.id}>
                         {st.label}
-                      </span>
-                    </button>
-                  );
-                })}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              {/* Selector Inteligente de Catálogo según el tipo elegido */}
+              {/* Selector Directo de Evento */}
               {currentSlide.source_type === "event" && (
                 <div
                   style={{
@@ -849,23 +942,30 @@ export default function HeroForm({
                       color: "#fff",
                     }}
                   >
-                    🎟️ Seleccionar Evento Publicado (Autocompleta todo en 1 clic):
+                    🎟️ Evento Publicado ({catalog.events.length} disponibles):
                   </label>
                   <select
                     value={currentSlide.source_id || ""}
                     onChange={(e) => handleSelectCatalogItem(e.target.value)}
                     style={{ width: "100%", backgroundColor: "#09090b" }}
                   >
-                    <option value="">-- Elige un evento de tu catálogo --</option>
+                    <option value="">
+                      -- Selecciona un evento para cargar su flyer y datos --
+                    </option>
                     {catalog.events.map((ev) => (
                       <option key={ev.id} value={ev.id}>
-                        {ev.title} ({new Date(ev.start_date).toLocaleDateString("es-CO")})
+                        {ev.title} (
+                        {ev.start_date
+                          ? new Date(ev.start_date).toLocaleDateString("es-CO")
+                          : "Sin fecha"}{" "}
+                        • {ev.location_name || ev.location || "Colombia"})
                       </option>
                     ))}
                   </select>
                 </div>
               )}
 
+              {/* Selector Directo de Merch */}
               {currentSlide.source_type === "merch" && (
                 <div
                   style={{
@@ -884,23 +984,30 @@ export default function HeroForm({
                       color: "#fff",
                     }}
                   >
-                    👕 Seleccionar Prenda de Merch (Autocompleta foto, precio y link):
+                    👕 Prenda de Merch ({catalog.merch.length} disponibles):
                   </label>
                   <select
                     value={currentSlide.source_id || ""}
                     onChange={(e) => handleSelectCatalogItem(e.target.value)}
                     style={{ width: "100%", backgroundColor: "#09090b" }}
                   >
-                    <option value="">-- Elige un producto de la tienda --</option>
+                    <option value="">
+                      -- Selecciona una prenda para cargar su foto y precio --
+                    </option>
                     {catalog.merch.map((m) => (
                       <option key={m.id} value={m.id}>
-                        {m.title} - ${Number(m.price_cop || 0).toLocaleString("es-CO")} COP
+                        {m.title} - $
+                        {Number(
+                          m.base_price ?? m.price_cop ?? 0
+                        ).toLocaleString("es-CO")}{" "}
+                        COP
                       </option>
                     ))}
                   </select>
                 </div>
               )}
 
+              {/* Selector Directo de Post */}
               {currentSlide.source_type === "post" && (
                 <div
                   style={{
@@ -919,14 +1026,17 @@ export default function HeroForm({
                       color: "#fff",
                     }}
                   >
-                    📰 Seleccionar Artículo / Post del Blog:
+                    📰 Artículo / Post del Blog ({catalog.posts.length}{" "}
+                    disponibles):
                   </label>
                   <select
                     value={currentSlide.source_id || ""}
                     onChange={(e) => handleSelectCatalogItem(e.target.value)}
                     style={{ width: "100%", backgroundColor: "#09090b" }}
                   >
-                    <option value="">-- Elige un post publicado --</option>
+                    <option value="">
+                      -- Selecciona un post para cargar su portada y extracto --
+                    </option>
                     {catalog.posts.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.title}
@@ -936,6 +1046,7 @@ export default function HeroForm({
                 </div>
               )}
 
+              {/* Selector Directo de Pauta / Ad */}
               {currentSlide.source_type === "ad" && (
                 <div
                   style={{
@@ -954,17 +1065,21 @@ export default function HeroForm({
                       color: "#fff",
                     }}
                   >
-                    📢 Seleccionar Pauta / Campaña Activa (o personaliza abajo):
+                    📢 Pauta / Campaña Activa ({catalog.ads.length} disponibles):
                   </label>
                   <select
                     value={currentSlide.source_id || ""}
                     onChange={(e) => handleSelectCatalogItem(e.target.value)}
                     style={{ width: "100%", backgroundColor: "#09090b" }}
                   >
-                    <option value="">-- Elige una pauta registrada o edita libremente --</option>
+                    <option value="">
+                      -- Selecciona una pauta o personaliza abajo --
+                    </option>
                     {catalog.ads.map((a) => (
                       <option key={a.id} value={a.id}>
-                        {a.title} ({a.placement})
+                        {a.ad_campaigns?.name ||
+                          a.ad_campaigns?.client_name ||
+                          a.id}
                       </option>
                     ))}
                   </select>
@@ -982,10 +1097,17 @@ export default function HeroForm({
               }}
             >
               <h3 style={{ marginBottom: "1rem", fontSize: "1.05rem" }}>
-                3. Fondo Visual del Slide #{selectedIdx + 1}
+                3. Imagen o Video del Slide #{selectedIdx + 1} (Opcional modificar)
               </h3>
 
-              <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem", flexWrap: "wrap" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "1rem",
+                  marginBottom: "1rem",
+                  flexWrap: "wrap",
+                }}
+              >
                 <label
                   style={{
                     display: "inline-flex",
@@ -1043,22 +1165,48 @@ export default function HeroForm({
                 </label>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.75rem",
+                }}
+              >
                 <div>
-                  <label style={{ display: "block", marginBottom: "0.4rem", fontSize: "0.82rem", fontWeight: 600 }}>
-                    URL de {currentSlide.media_type === "video" ? "Video (.mp4, YouTube o Vimeo)" : "Imagen"}:
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "0.4rem",
+                      fontSize: "0.82rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    URL de{" "}
+                    {currentSlide.media_type === "video"
+                      ? "Video (.mp4, YouTube o Vimeo)"
+                      : "Imagen"}
+                    :
                   </label>
                   <input
                     type="url"
                     value={currentSlide.media_url}
-                    onChange={(e) => updateCurrentSlide({ media_url: e.target.value })}
+                    onChange={(e) =>
+                      updateCurrentSlide({ media_url: e.target.value })
+                    }
                     placeholder="https://..."
                     required
                     style={{ width: "100%" }}
                   />
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                    flexWrap: "wrap",
+                  }}
+                >
                   <label
                     style={{
                       display: "inline-flex",
@@ -1104,25 +1252,47 @@ export default function HeroForm({
               }}
             >
               <h3 style={{ margin: 0, fontSize: "1.05rem" }}>
-                4. Textos y Activación en Vivo
+                4. Textos y Activación en Vivo (Opcional modificar)
               </h3>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem" }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "0.85rem",
+                }}
+              >
                 <div>
-                  <label style={{ display: "block", marginBottom: "0.35rem", fontSize: "0.8rem", fontWeight: 600 }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "0.35rem",
+                      fontSize: "0.8rem",
+                      fontWeight: 600,
+                    }}
+                  >
                     Etiqueta Superior (Badge)
                   </label>
                   <input
                     type="text"
                     value={currentSlide.badge_label || ""}
-                    onChange={(e) => updateCurrentSlide({ badge_label: e.target.value })}
+                    onChange={(e) =>
+                      updateCurrentSlide({ badge_label: e.target.value })
+                    }
                     placeholder="Ej: PRÓXIMO EVENTO / MERCH DROP"
                     style={{ width: "100%" }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: "block", marginBottom: "0.35rem", fontSize: "0.8rem", fontWeight: 600 }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "0.35rem",
+                      fontSize: "0.8rem",
+                      fontWeight: 600,
+                    }}
+                  >
                     Ubicación / Precio / Sponsor (Opcional)
                   </label>
                   <input
@@ -1178,13 +1348,21 @@ export default function HeroForm({
                     }
                   />
                   <span>
-                    🔥 Mostrar Cuenta Regresiva en Vivo (Días : Horas : Min : Seg) en el Banner
+                    🔥 Mostrar Cuenta Regresiva en Vivo (Días : Horas : Min :
+                    Seg) en el Banner
                   </span>
                 </label>
 
                 {currentSlide.meta?.show_countdown && (
                   <div>
-                    <label style={{ display: "block", fontSize: "0.76rem", opacity: 0.75, marginBottom: "0.25rem" }}>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "0.76rem",
+                        opacity: 0.75,
+                        marginBottom: "0.25rem",
+                      }}
+                    >
                       Fecha y Hora Objetivo del Contador:
                     </label>
                     <input
@@ -1210,26 +1388,44 @@ export default function HeroForm({
               </div>
 
               <div>
-                <label style={{ display: "block", marginBottom: "0.35rem", fontSize: "0.82rem", fontWeight: 600 }}>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "0.35rem",
+                    fontSize: "0.82rem",
+                    fontWeight: 600,
+                  }}
+                >
                   Título Principal (admite &lt;br/&gt; para salto de línea)
                 </label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   value={currentSlide.title}
-                  onChange={(e) => updateCurrentSlide({ title: e.target.value })}
+                  onChange={(e) =>
+                    updateCurrentSlide({ title: e.target.value })
+                  }
                   style={{ width: "100%", fontFamily: "monospace" }}
                   placeholder="MÚSICA<br/>Cultura<br/>Movimiento"
                 />
               </div>
 
               <div>
-                <label style={{ display: "block", marginBottom: "0.35rem", fontSize: "0.82rem", fontWeight: 600 }}>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "0.35rem",
+                    fontSize: "0.82rem",
+                    fontWeight: 600,
+                  }}
+                >
                   Subtítulo / Descripción Corta
                 </label>
                 <input
                   type="text"
                   value={currentSlide.subtitle || ""}
-                  onChange={(e) => updateCurrentSlide({ subtitle: e.target.value })}
+                  onChange={(e) =>
+                    updateCurrentSlide({ subtitle: e.target.value })
+                  }
                   style={{ width: "100%" }}
                   placeholder="El ecosistema definitivo de la cultura electrónica..."
                 />
@@ -1246,7 +1442,7 @@ export default function HeroForm({
               }}
             >
               <h3 style={{ marginBottom: "1rem", fontSize: "1.05rem" }}>
-                5. Botones de Conversión (Lado a Lado en Desktop y Móvil)
+                5. Botones de Acción (Lado a Lado en Desktop y Móvil)
               </h3>
 
               <div
@@ -1264,33 +1460,61 @@ export default function HeroForm({
                     border: "1px solid rgba(217, 4, 22, 0.3)",
                   }}
                 >
-                  <h4 style={{ marginBottom: "0.75rem", fontSize: "0.88rem", color: "#D90416" }}>
+                  <h4
+                    style={{
+                      marginBottom: "0.75rem",
+                      fontSize: "0.88rem",
+                      color: "#D90416",
+                    }}
+                  >
                     Botón Principal (Rojo)
                   </h4>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.75rem",
+                    }}
+                  >
                     <div>
-                      <label style={{ display: "block", fontSize: "0.76rem", marginBottom: "0.25rem" }}>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "0.76rem",
+                          marginBottom: "0.25rem",
+                        }}
+                      >
                         Texto
                       </label>
                       <input
                         type="text"
                         value={currentSlide.primary_button_text || ""}
                         onChange={(e) =>
-                          updateCurrentSlide({ primary_button_text: e.target.value })
+                          updateCurrentSlide({
+                            primary_button_text: e.target.value,
+                          })
                         }
                         placeholder="Ej: Comprar Tickets"
                         style={{ width: "100%" }}
                       />
                     </div>
                     <div>
-                      <label style={{ display: "block", fontSize: "0.76rem", marginBottom: "0.25rem" }}>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "0.76rem",
+                          marginBottom: "0.25rem",
+                        }}
+                      >
                         Enlace (URL)
                       </label>
                       <input
                         type="text"
                         value={currentSlide.primary_button_url || ""}
                         onChange={(e) =>
-                          updateCurrentSlide({ primary_button_url: e.target.value })
+                          updateCurrentSlide({
+                            primary_button_url: e.target.value,
+                          })
                         }
                         placeholder="Ej: /events"
                         style={{ width: "100%" }}
@@ -1310,30 +1534,52 @@ export default function HeroForm({
                   <h4 style={{ marginBottom: "0.75rem", fontSize: "0.88rem" }}>
                     Botón Secundario (Cristal - Opcional)
                   </h4>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.75rem",
+                    }}
+                  >
                     <div>
-                      <label style={{ display: "block", fontSize: "0.76rem", marginBottom: "0.25rem" }}>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "0.76rem",
+                          marginBottom: "0.25rem",
+                        }}
+                      >
                         Texto
                       </label>
                       <input
                         type="text"
                         value={currentSlide.secondary_button_text || ""}
                         onChange={(e) =>
-                          updateCurrentSlide({ secondary_button_text: e.target.value })
+                          updateCurrentSlide({
+                            secondary_button_text: e.target.value,
+                          })
                         }
                         placeholder="Ej: Suscribete"
                         style={{ width: "100%" }}
                       />
                     </div>
                     <div>
-                      <label style={{ display: "block", fontSize: "0.76rem", marginBottom: "0.25rem" }}>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "0.76rem",
+                          marginBottom: "0.25rem",
+                        }}
+                      >
                         Enlace (URL)
                       </label>
                       <input
                         type="text"
                         value={currentSlide.secondary_button_url || ""}
                         onChange={(e) =>
-                          updateCurrentSlide({ secondary_button_url: e.target.value })
+                          updateCurrentSlide({
+                            secondary_button_url: e.target.value,
+                          })
                         }
                         placeholder="Ej: /register"
                         style={{ width: "100%" }}
@@ -1344,11 +1590,31 @@ export default function HeroForm({
               </div>
 
               {/* Etiquetas / Tags adicionales */}
-              <div style={{ marginTop: "1.25rem", paddingTop: "1.1rem", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-                <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, marginBottom: "0.5rem" }}>
+              <div
+                style={{
+                  marginTop: "1.25rem",
+                  paddingTop: "1.1rem",
+                  borderTop: "1px solid rgba(255,255,255,0.07)",
+                }}
+              >
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.82rem",
+                    fontWeight: 600,
+                    marginBottom: "0.5rem",
+                  }}
+                >
                   Pills / Etiquetas Adicionales (Opcional)
                 </label>
-                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "0.5rem",
+                    flexWrap: "wrap",
+                    marginBottom: "0.75rem",
+                  }}
+                >
                   <input
                     type="text"
                     placeholder="Texto (Ej: TECHNO / FASE 1)"
@@ -1377,7 +1643,13 @@ export default function HeroForm({
                 </div>
 
                 {currentSlide.tags && currentSlide.tags.length > 0 && (
-                  <div style={{ display: "flex", gap: "0.45rem", flexWrap: "wrap" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "0.45rem",
+                      flexWrap: "wrap",
+                    }}
+                  >
                     {currentSlide.tags.map((t, i) => (
                       <span
                         key={i}
@@ -1433,10 +1705,27 @@ export default function HeroForm({
                   marginBottom: "0.85rem",
                 }}
               >
-                <span style={{ fontSize: "0.82rem", fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", color: "rgba(255,255,255,0.75)" }}>
+                <span
+                  style={{
+                    fontSize: "0.82rem",
+                    fontWeight: 800,
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.75)",
+                  }}
+                >
                   Vista Previa en Vivo • Slide #{selectedIdx + 1}
                 </span>
-                <span style={{ fontSize: "0.75rem", color: "#4ade80", display: "inline-flex", alignItems: "center", gap: "0.3rem", fontWeight: 700 }}>
+                <span
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "#4ade80",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.3rem",
+                    fontWeight: 700,
+                  }}
+                >
                   <CheckCircle2 size={14} /> Responsive Mobile & Desktop
                 </span>
               </div>
@@ -1502,8 +1791,14 @@ export default function HeroForm({
                 />
 
                 <div style={{ position: "relative", zIndex: 2 }}>
-                  {/* Badges */}
-                  <div style={{ display: "flex", gap: "0.45rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "0.45rem",
+                      flexWrap: "wrap",
+                      marginBottom: "0.75rem",
+                    }}
+                  >
                     {currentSlide.badge_label && (
                       <span
                         style={{
@@ -1520,7 +1815,8 @@ export default function HeroForm({
                         {currentSlide.badge_label}
                       </span>
                     )}
-                    {(currentSlide.meta?.price_label || currentSlide.meta?.location) && (
+                    {(currentSlide.meta?.price_label ||
+                      currentSlide.meta?.location) && (
                       <span
                         style={{
                           padding: "0.28rem 0.75rem",
@@ -1533,14 +1829,15 @@ export default function HeroForm({
                           backdropFilter: "blur(8px)",
                         }}
                       >
-                        {currentSlide.meta?.price_label || currentSlide.meta?.location}
+                        {currentSlide.meta?.price_label ||
+                          currentSlide.meta?.location}
                       </span>
                     )}
                   </div>
 
                   <h2
                     style={{
-                      fontSize: "1.85rem",
+                      fontSize: "1.65rem",
                       fontWeight: 900,
                       lineHeight: 1.05,
                       color: "#fff",
@@ -1548,14 +1845,17 @@ export default function HeroForm({
                       textTransform: "uppercase",
                     }}
                     dangerouslySetInnerHTML={{
-                      __html: currentSlide.title || "TÍTULO DEL SLIDE",
+                      __html: (currentSlide.title || "TÍTULO DEL SLIDE").replace(
+                        /<\/?(h1|h2|h3|h4|p|div|span)[^>]*>/gi,
+                        ""
+                      ),
                     }}
                   />
 
                   {currentSlide.subtitle && (
                     <p
                       style={{
-                        fontSize: "0.84rem",
+                        fontSize: "0.82rem",
                         color: "rgba(255,255,255,0.78)",
                         margin: "0 0 1rem",
                         maxWidth: "460px",
@@ -1565,16 +1865,21 @@ export default function HeroForm({
                     </p>
                   )}
 
-                  {/* Botones */}
-                  <div style={{ display: "flex", gap: "0.65rem", flexWrap: "wrap" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "0.65rem",
+                      flexWrap: "wrap",
+                    }}
+                  >
                     {currentSlide.primary_button_text && (
                       <span
                         style={{
-                          padding: "0.65rem 1.25rem",
+                          padding: "0.6rem 1.15rem",
                           borderRadius: "0.55rem",
                           background: "#D90416",
                           color: "#fff",
-                          fontSize: "0.8rem",
+                          fontSize: "0.78rem",
                           fontWeight: 800,
                         }}
                       >
@@ -1584,12 +1889,12 @@ export default function HeroForm({
                     {currentSlide.secondary_button_text && (
                       <span
                         style={{
-                          padding: "0.65rem 1.25rem",
+                          padding: "0.6rem 1.15rem",
                           borderRadius: "0.55rem",
                           background: "rgba(255,255,255,0.12)",
                           border: "1px solid rgba(255,255,255,0.25)",
                           color: "#fff",
-                          fontSize: "0.8rem",
+                          fontSize: "0.78rem",
                           fontWeight: 700,
                         }}
                       >
