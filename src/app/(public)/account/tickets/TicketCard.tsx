@@ -70,9 +70,17 @@ export default function TicketCard({
     return transfers.find((tr: any) => tr.status === "pending") || null;
   };
 
-  // Boletas disponibles para transferir (activas y sin transferencia pendiente)
+  const isCourtesyTicket = (t: any) =>
+    Boolean(
+      t.is_courtesy ||
+        t.payment_provider === "courtesy" ||
+        t.payment_provider === "free_event" ||
+        (t.ticket_tiers && Number(t.ticket_tiers.price) === 0)
+    );
+
+  // Boletas disponibles para transferir (activas, sin transferencia pendiente y NO cortesía/gratuita)
   const transferableTickets = tickets.filter(
-    (t) => t.status === "valid" && !getPendingTransfer(t)
+    (t) => t.status === "valid" && !getPendingTransfer(t) && !isCourtesyTicket(t)
   );
 
   // Limpiar selección si alguna boleta ya no es transferible tras actualizarse en tiempo real

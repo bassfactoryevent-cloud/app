@@ -115,7 +115,22 @@ export async function initiateBatchTransfer(
       };
     }
 
-    // 3. Validar propiedad estricta y estado de cada boleta
+    // 3. Validar propiedad estricta, estado y que no sea cortesía/gratuita
+    const transferOrderIds = Array.from(new Set(tickets.map((t: any) => t.order_id).filter(Boolean)));
+    const transferTierIds = Array.from(new Set(tickets.map((t: any) => t.tier_id).filter(Boolean)));
+
+    const [{ data: transferOrders }, { data: transferTiers }] = await Promise.all([
+      transferOrderIds.length > 0
+        ? adminDb.from("merch_orders").select("id, payment_provider").in("id", transferOrderIds)
+        : Promise.resolve({ data: [] }),
+      transferTierIds.length > 0
+        ? adminDb.from("ticket_tiers").select("id, price").in("id", transferTierIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    const orderProviderById = new Map((transferOrders || []).map((o: any) => [o.id, o.payment_provider]));
+    const tierPriceById = new Map((transferTiers || []).map((tr: any) => [tr.id, Number(tr.price)]));
+
     for (const ticket of tickets) {
       const shortId = ticket.id.slice(0, 8).toUpperCase();
       const isOwned = isTicketOwnedByUser(ticket, user.id, currentUserEmail, userOrderIdsSet);
@@ -124,6 +139,15 @@ export async function initiateBatchTransfer(
         return {
           success: false,
           error: `La boleta #${shortId} ya no está en tu posesión (ya fue transferida y aceptada por otro usuario).`,
+        };
+      }
+
+      const provider = ticket.order_id ? orderProviderById.get(ticket.order_id) : null;
+      const tierPrice = ticket.tier_id ? tierPriceById.get(ticket.tier_id) : undefined;
+      if (provider === "courtesy" || provider === "free_event" || tierPrice === 0) {
+        return {
+          success: false,
+          error: `La boleta #${shortId} es una cortesía / entrada gratuita personal y no es transferible.`,
         };
       }
 

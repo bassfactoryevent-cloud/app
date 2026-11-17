@@ -302,9 +302,28 @@ export async function getUserTicketsData(user: {
     tiersMap = new Map((tiersData || []).map((tr: any) => [tr.id, tr]));
   }
 
+  // 8.1 Consultar payment_provider de las órdenes asociadas para identificar cortesías / entradas gratuitas
+  const ownedOrderIds = Array.from(
+    new Set(ownedRawTickets.map((t: any) => t.order_id).filter(Boolean))
+  );
+  let orderProviderMap = new Map<string, string>();
+  if (ownedOrderIds.length > 0) {
+    const { data: ordersMeta } = await adminDb
+      .from("merch_orders")
+      .select("id, payment_provider")
+      .in("id", ownedOrderIds);
+    orderProviderMap = new Map((ordersMeta || []).map((o: any) => [o.id, o.payment_provider || ""]));
+  }
+
   // Enriquecer boletas propias
   const enrichedTickets = ownedRawTickets.map((t: any) => {
     const tier = tiersMap.get(t.tier_id) || null;
+    const paymentProvider = t.order_id ? orderProviderMap.get(t.order_id) || null : null;
+    const isCourtesy =
+      paymentProvider === "courtesy" ||
+      paymentProvider === "free_event" ||
+      (tier && Number(tier.price) === 0);
+
     // Filtrar ticket_transfers para que solo considere pending reales emitidas por el dueño actual
     const rawTransfers = Array.isArray(t.ticket_transfers)
       ? t.ticket_transfers
@@ -319,6 +338,8 @@ export async function getUserTicketsData(user: {
 
     return {
       ...t,
+      payment_provider: paymentProvider,
+      is_courtesy: isCourtesy,
       ticket_transfers: cleanTransfers,
       ticket_tiers: tier,
     };

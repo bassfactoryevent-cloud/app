@@ -171,8 +171,8 @@ export default function EventCheckout({ eventId, eventName, eventImage, isFree, 
         </>
       ) : (
         <form onSubmit={handleFreeRegistration}>
-          <p style={{ opacity: 0.75, marginBottom: '1.5rem', lineHeight: 1.5, fontSize: '0.95rem' }}>
-            Este evento es de entrada libre (<strong style={{ color: '#ffffff' }}>1 cortesía por persona</strong>). Completa tus datos para recibir tu entrada oficial en PDF con código QR. Si vas con amigos, cada uno debe registrarse con su propio correo.
+          <p style={{ opacity: 0.8, marginBottom: '1.5rem', lineHeight: 1.55, fontSize: '0.95rem' }}>
+            Este evento es de entrada libre (<strong style={{ color: '#ffffff' }}>1 cortesía personal e intransferible por persona</strong>). No necesitas tener cuenta: al completar tus datos te enviamos tu entrada oficial en PDF con código QR <strong style={{ color: '#ffffff' }}>de inmediato a tu correo</strong>. Si vas con amigos, cada uno debe registrarse con su propio correo.
           </p>
 
           {errorMsg && (
@@ -325,10 +325,10 @@ export default function EventCheckout({ eventId, eventName, eventImage, isFree, 
               </div>
 
               <h3 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '0.5rem', letterSpacing: '-0.01em' }}>
-                {modalData.ticketIds.length > 1 ? '¡Entradas Generadas!' : '¡Entrada Generada!'}
+                ¡Tu boleta ya fue enviada!
               </h3>
               <p style={{ fontSize: '0.95rem', color: '#a1a1aa', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-                Tu registro gratuito para <strong style={{ color: '#ffffff' }}>{modalData.eventTitle}</strong> ha sido confirmado.
+                Tu cortesía personal e intransferible para <strong style={{ color: '#ffffff' }}>{modalData.eventTitle}</strong> quedó confirmada. No necesitas registrarte en la app para recibirla.
               </p>
 
               <div style={{
