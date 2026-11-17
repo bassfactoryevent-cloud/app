@@ -3,7 +3,6 @@ import { Resend } from "resend";
 import { getPurchaseConfirmationEmail, PurchasedItem } from "@/utils/emailTemplates";
 import { sendTicketEmail } from "@/utils/sendTicketEmail";
 
-const resend = new Resend(process.env.RESEND_API_KEY || "");
 const supabase = getAdminClient();
 
 export async function sendOrderConfirmationEmail(orderId: string, customEmail?: string) {
@@ -173,6 +172,7 @@ export async function sendOrderConfirmationEmail(orderId: string, customEmail?: 
       order.id
     );
 
+    const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
       from: "Bassfactory Ventas <ventas@bassfactory.co>",
       to: recipientEmail,

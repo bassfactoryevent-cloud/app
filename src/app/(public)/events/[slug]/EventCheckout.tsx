@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { Ticket, Minus, Plus, ShoppingCart } from "lucide-react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import Link from "next/link";
+import { Ticket, Minus, Plus, ShoppingCart, Loader2, CheckCircle2, Mail, X, AlertCircle } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
+import { createClient } from "@/utils/supabase/client";
+import { registerFreeEvent, FreeRegistrationResult } from "./actions";
 
 type TicketTier = {
   id: string;
@@ -13,9 +17,33 @@ type TicketTier = {
   sales_end?: string;
 };
 
+type SuccessModalData = Extract<FreeRegistrationResult, { success: true }>;
+
 export default function EventCheckout({ eventId, eventName, eventImage, isFree, ticketTiers }: { eventId: string, eventName?: string, eventImage?: string, isFree: boolean, ticketTiers: TicketTier[] }) {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const { addItem, openDrawer } = useCartStore();
+
+  // Free registration state
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [modalData, setModalData] = useState<SuccessModalData | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    if (!isFree) return;
+
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        if (user.email) setEmail((prev) => prev || user.email!);
+        const metaName = user.user_metadata?.full_name || user.user_metadata?.name;
+        if (metaName) setFullName((prev) => prev || metaName);
+      }
+    }).catch(() => {});
+  }, [isFree]);
 
   const updateQuantity = (tierId: string, change: number, max: number) => {
     const current = quantities[tierId] || 0;
@@ -47,14 +75,39 @@ export default function EventCheckout({ eventId, eventName, eventImage, isFree, 
       }
     });
 
-    // Reset local quantities and open drawer
     setQuantities({});
     openDrawer();
   };
 
-  const handleFreeRegistration = (e: React.FormEvent) => {
+  const handleFreeRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Registro gratuito completado. Revisa tu correo.");
+    if (submitting) return;
+
+    setErrorMsg(null);
+    setSubmitting(true);
+
+    try {
+      const result = await registerFreeEvent({
+        eventId,
+        fullName,
+        email,
+      });
+
+      if (!result.success) {
+        setErrorMsg(result.error);
+        return;
+      }
+
+      setModalData(result);
+    } catch {
+      setErrorMsg("No se pudo conectar con el servidor. Intenta nuevamente.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const closeModal = () => {
+    setModalData(null);
   };
 
   const now = new Date();
@@ -118,21 +171,260 @@ export default function EventCheckout({ eventId, eventName, eventImage, isFree, 
         </>
       ) : (
         <form onSubmit={handleFreeRegistration}>
-          <p style={{ opacity: 0.7, marginBottom: '2rem' }}>Este evento es de entrada libre. Completa tus datos para recibir tu código QR de acceso.</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
+          <p style={{ opacity: 0.75, marginBottom: '1.5rem', lineHeight: 1.5, fontSize: '0.95rem' }}>
+            Este evento es de entrada libre (<strong style={{ color: '#ffffff' }}>1 cortesía por persona</strong>). Completa tus datos para recibir tu entrada oficial en PDF con código QR. Si vas con amigos, cada uno debe registrarse con su propio correo.
+          </p>
+
+          {errorMsg && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.6rem',
+              padding: '0.85rem 1rem',
+              borderRadius: '0.5rem',
+              backgroundColor: 'rgba(239, 68, 68, 0.12)',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
+              color: '#fca5a5',
+              fontSize: '0.875rem',
+              marginBottom: '1.25rem'
+            }}>
+              <AlertCircle size={18} style={{ flexShrink: 0 }} />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.75rem' }}>
             <div>
               <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', opacity: 0.8 }}>Nombre Completo</label>
-              <input type="text" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+              <input
+                type="text"
+                required
+                minLength={2}
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Ej. Juan Pérez"
+                disabled={submitting}
+                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+              />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', opacity: 0.8 }}>Correo Electrónico (Donde enviaremos tus boletas)</label>
-              <input type="email" required style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+              <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', opacity: 0.8 }}>Correo Electrónico (Donde enviaremos tu boleta)</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="tu@correo.com"
+                disabled={submitting}
+                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+              />
             </div>
           </div>
-          <button type="submit" style={{ width: '100%', padding: '1rem', borderRadius: '0.5rem', backgroundColor: 'var(--color-magenta)', color: 'white', border: 'none', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', transition: 'all 0.2s' }}>
-            <Ticket size={20} /> Generar Entradas
+
+          <button
+            type="submit"
+            disabled={submitting}
+            style={{
+              width: '100%',
+              padding: '1rem',
+              borderRadius: '0.5rem',
+              backgroundColor: 'var(--color-magenta)',
+              color: 'white',
+              border: 'none',
+              fontWeight: 800,
+              fontSize: '1.1rem',
+              cursor: submitting ? 'wait' : 'pointer',
+              opacity: submitting ? 0.8 : 1,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.2s'
+            }}
+          >
+            {submitting ? (
+              <>
+                <Loader2 size={20} className="animate-spin" /> Generando Entrada...
+              </>
+            ) : (
+              <>
+                <Ticket size={20} /> Generar Entrada
+              </>
+            )}
           </button>
         </form>
+      )}
+
+      {/* Pop-up Modal de Confirmación */}
+      {mounted && modalData && createPortal(
+        <div
+          onClick={closeModal}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            backgroundColor: 'rgba(0, 0, 0, 0.82)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.25rem'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: 'relative',
+              width: '100%',
+              maxWidth: '460px',
+              backgroundColor: '#111115',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '1.25rem',
+              padding: '2rem',
+              color: '#ffffff',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.65)'
+            }}
+          >
+            <button
+              type="button"
+              onClick={closeModal}
+              aria-label="Cerrar"
+              style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: '#a1a1aa',
+                borderRadius: '50%',
+                width: '34px',
+                height: '34px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer'
+              }}
+            >
+              <X size={18} />
+            </button>
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(16, 185, 129, 0.14)',
+                border: '1px solid rgba(16, 185, 129, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '1.25rem',
+                color: '#10b981'
+              }}>
+                <CheckCircle2 size={34} />
+              </div>
+
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '0.5rem', letterSpacing: '-0.01em' }}>
+                {modalData.ticketIds.length > 1 ? '¡Entradas Generadas!' : '¡Entrada Generada!'}
+              </h3>
+              <p style={{ fontSize: '0.95rem', color: '#a1a1aa', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                Tu registro gratuito para <strong style={{ color: '#ffffff' }}>{modalData.eventTitle}</strong> ha sido confirmado.
+              </p>
+
+              <div style={{
+                width: '100%',
+                backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '0.75rem',
+                padding: '1rem 1.25rem',
+                marginBottom: '1.25rem',
+                textAlign: 'left',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.6rem',
+                fontSize: '0.875rem'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+                  <span style={{ color: '#a1a1aa' }}>Asistente</span>
+                  <span style={{ fontWeight: 700, textAlign: 'right' }}>{modalData.name}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+                  <span style={{ color: '#a1a1aa' }}>Correo</span>
+                  <span style={{ fontWeight: 600, textAlign: 'right', wordBreak: 'break-all' }}>{modalData.email}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+                  <span style={{ color: '#a1a1aa' }}>Código(s)</span>
+                  <span style={{ fontWeight: 800, color: 'var(--color-magenta)', fontFamily: 'monospace' }}>
+                    {modalData.ticketCodes.join(', ')}
+                  </span>
+                </div>
+              </div>
+
+              <div style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.65rem',
+                padding: '0.85rem 1rem',
+                borderRadius: '0.65rem',
+                backgroundColor: modalData.emailSent ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.1)',
+                border: modalData.emailSent ? '1px solid rgba(16, 185, 129, 0.25)' : '1px solid rgba(245, 158, 11, 0.3)',
+                fontSize: '0.825rem',
+                color: modalData.emailSent ? '#a7f3d0' : '#fde68a',
+                textAlign: 'left',
+                lineHeight: 1.45,
+                marginBottom: '1.5rem'
+              }}>
+                <Mail size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+                <span>
+                  {modalData.emailSent
+                    ? 'Enviamos tu boleta en PDF con código QR a tu correo electrónico. Si no la ves en unos minutos, revisa tu carpeta de Spam o Promociones.'
+                    : 'Tus entradas quedaron registradas, pero no pudimos confirmar el envío del correo. Puedes verlas directamente en "Mis Entradas" iniciando sesión con este correo.'}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', width: '100%' }}>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  style={{
+                    flex: 1,
+                    padding: '0.85rem 1rem',
+                    borderRadius: '0.5rem',
+                    backgroundColor: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    fontSize: '0.95rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cerrar
+                </button>
+                <Link
+                  href="/account/tickets"
+                  style={{
+                    flex: 1,
+                    padding: '0.85rem 1rem',
+                    borderRadius: '0.5rem',
+                    backgroundColor: 'var(--color-magenta)',
+                    color: '#ffffff',
+                    fontWeight: 800,
+                    fontSize: '0.95rem',
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.4rem'
+                  }}
+                >
+                  <Ticket size={17} /> Mis Entradas
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );
