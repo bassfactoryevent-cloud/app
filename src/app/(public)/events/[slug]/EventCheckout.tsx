@@ -376,13 +376,14 @@ export default function EventCheckout({ eventId, eventName, eventImage, isFree, 
           style={{
             position: 'fixed',
             inset: 0,
-            zIndex: 9999,
+            zIndex: 99999,
             backgroundColor: 'rgba(0, 0, 0, 0.82)',
             backdropFilter: 'blur(8px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '1.25rem'
+            padding: '1.25rem',
+            overflowY: 'auto'
           }}
         >
           <div

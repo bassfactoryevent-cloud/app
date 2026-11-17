@@ -632,7 +632,10 @@ export default function TicketCard({
               const shortOrderId = ticket.order_id
                 ? ticket.order_id.slice(0, 8).toUpperCase()
                 : shortId;
-              const isTransferable = ticket.status === "valid" && !pendingTransfer;
+              const isTransferable =
+                ticket.status === "valid" &&
+                !pendingTransfer &&
+                !isCourtesyTicket(ticket);
               const isSelected = selectedTicketIdsForTransfer.includes(ticket.id);
 
               return (
@@ -1403,7 +1406,8 @@ export default function TicketCard({
                   </a>
 
                   {selectedTicketForPass.status === "valid" &&
-                    !getPendingTransfer(selectedTicketForPass) && (
+                    !getPendingTransfer(selectedTicketForPass) &&
+                    !isCourtesyTicket(selectedTicketForPass) && (
                       <button
                         type="button"
                         onClick={() => {
