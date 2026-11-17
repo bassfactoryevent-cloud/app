@@ -43,7 +43,14 @@ export function LoginForm({ initialMessage }: { initialMessage?: string }) {
       }
 
       // Hard redirect to ensure new cookies and session are read fresh
-      window.location.href = data.redirectUrl || "/account";
+      const params = new URLSearchParams(window.location.search);
+      const rawRedirect = params.get("redirect");
+      const safeRedirect =
+        rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+          ? rawRedirect
+          : null;
+
+      window.location.href = safeRedirect || data.redirectUrl || "/account";
     } catch (err) {
       console.error("Login client error:", err);
       setErrorMessage("Error de conexión. Inténtalo de nuevo.");

@@ -3,7 +3,21 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Ticket, Minus, Plus, ShoppingCart, Loader2, CheckCircle2, Mail, X, AlertCircle } from "lucide-react";
+import { usePathname } from "next/navigation";
+import {
+  Ticket,
+  Minus,
+  Plus,
+  ShoppingCart,
+  Loader2,
+  CheckCircle2,
+  Mail,
+  X,
+  AlertCircle,
+  UserPlus,
+  LogIn,
+  Lock,
+} from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { createClient } from "@/utils/supabase/client";
 import { registerFreeEvent, FreeRegistrationResult } from "./actions";
@@ -20,10 +34,13 @@ type TicketTier = {
 type SuccessModalData = Extract<FreeRegistrationResult, { success: true }>;
 
 export default function EventCheckout({ eventId, eventName, eventImage, isFree, ticketTiers }: { eventId: string, eventName?: string, eventImage?: string, isFree: boolean, ticketTiers: TicketTier[] }) {
+  const pathname = usePathname();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const { addItem, openDrawer } = useCartStore();
 
-  // Free registration state
+  // Auth + Free registration state
+  const [authLoading, setAuthLoading] = useState(isFree);
+  const [authUser, setAuthUser] = useState<{ id: string; email: string; fullName: string } | null>(null);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -38,11 +55,19 @@ export default function EventCheckout({ eventId, eventName, eventImage, isFree, 
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
-        if (user.email) setEmail((prev) => prev || user.email!);
-        const metaName = user.user_metadata?.full_name || user.user_metadata?.name;
-        if (metaName) setFullName((prev) => prev || metaName);
+        const metaName = (user.user_metadata?.full_name || user.user_metadata?.name || "").trim();
+        const userEmail = (user.email || "").trim();
+        setAuthUser({ id: user.id, email: userEmail, fullName: metaName });
+        if (userEmail) setEmail(userEmail);
+        if (metaName) setFullName(metaName);
+      } else {
+        setAuthUser(null);
       }
-    }).catch(() => {});
+    }).catch(() => {
+      setAuthUser(null);
+    }).finally(() => {
+      setAuthLoading(false);
+    });
   }, [isFree]);
 
   const updateQuantity = (tierId: string, change: number, max: number) => {
@@ -81,7 +106,7 @@ export default function EventCheckout({ eventId, eventName, eventImage, isFree, 
 
   const handleFreeRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (submitting) return;
+    if (submitting || !authUser) return;
 
     setErrorMsg(null);
     setSubmitting(true);
@@ -94,6 +119,9 @@ export default function EventCheckout({ eventId, eventName, eventImage, isFree, 
       });
 
       if (!result.success) {
+        if (result.requiresAuth) {
+          setAuthUser(null);
+        }
         setErrorMsg(result.error);
         return;
       }
@@ -111,6 +139,7 @@ export default function EventCheckout({ eventId, eventName, eventImage, isFree, 
   };
 
   const now = new Date();
+  const redirectTarget = encodeURIComponent(pathname || "/events");
 
   return (
     <div style={{ backgroundColor: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -169,10 +198,97 @@ export default function EventCheckout({ eventId, eventName, eventImage, isFree, 
             <ShoppingCart size={20} /> Añadir al Carrito - ${totalPrice.toLocaleString('es-CO')}
           </button>
         </>
+      ) : authLoading ? (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', padding: '2rem 0', opacity: 0.7 }}>
+          <Loader2 size={20} className="animate-spin" /> Verificando tu cuenta...
+        </div>
+      ) : !authUser ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.6rem',
+            padding: '0.75rem 1rem',
+            borderRadius: '0.6rem',
+            backgroundColor: 'rgba(217, 4, 22, 0.12)',
+            border: '1px solid rgba(217, 4, 22, 0.35)',
+            color: '#fca5a5',
+            fontSize: '0.85rem',
+            fontWeight: 700
+          }}>
+            <Lock size={16} style={{ flexShrink: 0 }} />
+            <span>Registro obligatorio en Bassfactory</span>
+          </div>
+
+          <p style={{ opacity: 0.85, lineHeight: 1.55, fontSize: '0.95rem' }}>
+            Para obtener tu entrada gratuita (<strong style={{ color: '#ffffff' }}>1 cortesía personal e intransferible por persona</strong>), primero debes crear tu cuenta o iniciar sesión.
+          </p>
+
+          <div style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.35)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '0.75rem',
+            padding: '1rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.6rem',
+            fontSize: '0.85rem',
+            color: '#d4d4d8'
+          }}>
+            <div><strong style={{ color: '#ffffff' }}>1.</strong> Regístrate gratis (o inicia sesión con tu cuenta).</div>
+            <div><strong style={{ color: '#ffffff' }}>2.</strong> Vuelves automáticamente aquí y generas tu entrada.</div>
+            <div><strong style={{ color: '#ffffff' }}>3.</strong> Recibes tu PDF con código QR al instante en tu correo.</div>
+            <div style={{ fontSize: '0.8rem', color: '#a1a1aa', paddingTop: '0.25rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              Si vas con amigos, cada uno debe registrarse con su propia cuenta.
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <Link
+              href={`/register?redirect=${redirectTarget}`}
+              style={{
+                width: '100%',
+                padding: '0.95rem 1rem',
+                borderRadius: '0.5rem',
+                backgroundColor: 'var(--color-magenta)',
+                color: 'white',
+                fontWeight: 800,
+                fontSize: '1rem',
+                textDecoration: 'none',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <UserPlus size={19} /> Crear Cuenta Gratis
+            </Link>
+            <Link
+              href={`/login?redirect=${redirectTarget}`}
+              style={{
+                width: '100%',
+                padding: '0.85rem 1rem',
+                borderRadius: '0.5rem',
+                backgroundColor: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.14)',
+                color: 'white',
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                textDecoration: 'none',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <LogIn size={18} /> Ya tengo cuenta · Iniciar Sesión
+            </Link>
+          </div>
+        </div>
       ) : (
         <form onSubmit={handleFreeRegistration}>
           <p style={{ opacity: 0.8, marginBottom: '1.5rem', lineHeight: 1.55, fontSize: '0.95rem' }}>
-            Este evento es de entrada libre (<strong style={{ color: '#ffffff' }}>1 cortesía personal e intransferible por persona</strong>). No necesitas tener cuenta: al completar tus datos te enviamos tu entrada oficial en PDF con código QR <strong style={{ color: '#ffffff' }}>de inmediato a tu correo</strong>. Si vas con amigos, cada uno debe registrarse con su propio correo.
+            ¡Cuenta verificada! Haz clic en <strong style={{ color: '#ffffff' }}>Generar Entrada</strong> para emitir tu <strong style={{ color: '#ffffff' }}>cortesía personal e intransferible (1 por cuenta)</strong> y recibir tu PDF con código QR al instante en tu correo.
           </p>
 
           {errorMsg && (
@@ -208,15 +324,13 @@ export default function EventCheckout({ eventId, eventName, eventImage, isFree, 
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', opacity: 0.8 }}>Correo Electrónico (Donde enviaremos tu boleta)</label>
+              <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', opacity: 0.8 }}>Correo de tu Cuenta (Donde enviaremos tu boleta)</label>
               <input
                 type="email"
                 required
+                readOnly
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="tu@correo.com"
-                disabled={submitting}
-                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', backgroundColor: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)', color: '#d4d4d8', cursor: 'not-allowed' }}
               />
             </div>
           </div>
@@ -328,7 +442,7 @@ export default function EventCheckout({ eventId, eventName, eventImage, isFree, 
                 ¡Tu boleta ya fue enviada!
               </h3>
               <p style={{ fontSize: '0.95rem', color: '#a1a1aa', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-                Tu cortesía personal e intransferible para <strong style={{ color: '#ffffff' }}>{modalData.eventTitle}</strong> quedó confirmada. No necesitas registrarte en la app para recibirla.
+                Tu cortesía personal e intransferible para <strong style={{ color: '#ffffff' }}>{modalData.eventTitle}</strong> quedó confirmada.
               </p>
 
               <div style={{
@@ -353,7 +467,7 @@ export default function EventCheckout({ eventId, eventName, eventImage, isFree, 
                   <span style={{ fontWeight: 600, textAlign: 'right', wordBreak: 'break-all' }}>{modalData.email}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
-                  <span style={{ color: '#a1a1aa' }}>Código(s)</span>
+                  <span style={{ color: '#a1a1aa' }}>Código</span>
                   <span style={{ fontWeight: 800, color: 'var(--color-magenta)', fontFamily: 'monospace' }}>
                     {modalData.ticketCodes.join(', ')}
                   </span>
@@ -378,8 +492,8 @@ export default function EventCheckout({ eventId, eventName, eventImage, isFree, 
                 <Mail size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
                 <span>
                   {modalData.emailSent
-                    ? 'Enviamos tu boleta en PDF con código QR a tu correo electrónico. Si no la ves en unos minutos, revisa tu carpeta de Spam o Promociones.'
-                    : 'Tus entradas quedaron registradas, pero no pudimos confirmar el envío del correo. Puedes verlas directamente en "Mis Entradas" iniciando sesión con este correo.'}
+                    ? 'Enviamos tu boleta en PDF con código QR a tu correo electrónico y también ya está disponible en Mis Entradas. Si no ves el correo en unos minutos, revisa Spam o Promociones.'
+                    : 'Tu entrada quedó registrada en Mis Entradas, pero no pudimos confirmar el envío del correo. Puedes descargarla directamente desde Mis Entradas.'}
                 </span>
               </div>
 

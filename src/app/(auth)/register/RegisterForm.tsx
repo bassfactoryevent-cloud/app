@@ -45,6 +45,23 @@ export function RegisterForm({ initialMessage }: { initialMessage?: string }) {
 
       setSuccessMessage(data.message || "Cuenta creada con éxito.");
       setTimeout(() => {
+        const params = new URLSearchParams(window.location.search);
+        const rawRedirect = params.get("redirect");
+        const safeRedirect =
+          rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+            ? rawRedirect
+            : null;
+
+        if (data.hasSession && safeRedirect) {
+          window.location.href = safeRedirect;
+          return;
+        }
+
+        if (!data.hasSession && safeRedirect) {
+          window.location.href = `/login?message=Cuenta+creada.+Inicia+sesión+para+obtener+tu+entrada.&redirect=${encodeURIComponent(safeRedirect)}`;
+          return;
+        }
+
         window.location.href =
           data.redirectUrl ||
           "/login?message=Cuenta+creada.+Inicia+sesión+para+continuar.";

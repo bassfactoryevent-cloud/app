@@ -21,6 +21,7 @@ export type FreeRegistrationResult =
   | {
       success: false;
       error: string;
+      requiresAuth?: boolean;
     };
 
 export async function registerFreeEvent(input: {
@@ -29,9 +30,21 @@ export async function registerFreeEvent(input: {
   email: string;
 }): Promise<FreeRegistrationResult> {
   try {
-    const cleanName = (input.fullName || "").trim();
-    const cleanEmail = (input.email || "").trim().toLowerCase();
-    const qty = 1; // Estrictamente 1 cortesía por persona/correo
+    // 0. Exigir que el usuario esté registrado y autenticado en Bassfactory
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return {
+        success: false,
+        requiresAuth: true,
+        error: "Debes crear una cuenta o iniciar sesión en Bassfactory antes de generar tu entrada gratuita.",
+      };
+    }
+
+    const cleanName = (input.fullName || user.user_metadata?.full_name || user.user_metadata?.name || "").trim();
+    const cleanEmail = (user.email || input.email || "").trim().toLowerCase();
+    const qty = 1; // Estrictamente 1 cortesía personal e intransferible por persona
 
     if (!input.eventId) {
       return { success: false, error: "Evento no especificado." };
@@ -74,14 +87,14 @@ export async function registerFreeEvent(input: {
       .eq("event_id", event.id)
       .order("price", { ascending: true });
 
-    // 2.1 Restricción estricta: máximo 1 cortesía por correo para este evento
+    // 2.1 Restricción estricta: máximo 1 cortesía por usuario o correo para este evento
     const eventTierIds = (existingTiers || []).map((t: any) => t.id);
     if (eventTierIds.length > 0) {
       const { data: alreadyRegistered } = await adminDb
         .from("tickets")
         .select("id")
         .in("tier_id", eventTierIds)
-        .ilike("assigned_email", cleanEmail)
+        .or(`user_id.eq.${user.id},assigned_email.ilike.${cleanEmail}`)
         .in("status", ["valid", "scanned"])
         .limit(1);
 
@@ -89,7 +102,7 @@ export async function registerFreeEvent(input: {
         return {
           success: false,
           error:
-            "Este correo ya tiene una entrada registrada para este evento. Solo se permite 1 cortesía por persona; si vas con amigos, cada uno debe registrarse con su propio correo.",
+            "Ya tienes una entrada registrada para este evento. Solo se permite 1 cortesía personal por cuenta; si vas con amigos, cada uno debe registrarse con su propia cuenta.",
         };
       }
     }
@@ -127,32 +140,9 @@ export async function registerFreeEvent(input: {
       };
     }
 
-    // 3. Vincular con usuario autenticado si existe sesión activa; si es invitado, usar fallback de sistema para cumplir NOT NULL en tickets.user_id
-    let userId: string | null = null;
-    try {
-      const supabase = await createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.id) {
-        userId = user.id;
-      }
-    } catch {
-      // Guest registration continues without session user_id
-    }
-
-    let ticketUserId: string | null = userId;
-    if (!ticketUserId) {
-      const { data: fallbackProfile } = await adminDb
-        .from("profiles")
-        .select("id")
-        .in("role", ["superadmin", "admin"])
-        .limit(1)
-        .maybeSingle();
-
-      ticketUserId = fallbackProfile?.id || null;
-      if (!ticketUserId) {
-        return { success: false, error: "Error de configuración del sistema al asignar boleta." };
-      }
-    }
+    // 3. Usuario autenticado garantizado
+    const userId = user.id;
+    const ticketUserId = user.id;
 
     // 4. Crear orden gratuita ($0 COP) en merch_orders
     const orderId = crypto.randomUUID();
