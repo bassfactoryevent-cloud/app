@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, LogOut, Settings, Ticket } from "lucide-react";
+import { User, LogOut, Settings, Ticket, ShoppingBag, Bell } from "lucide-react";
 import { signOut } from "@/app/(auth)/actions";
 
 export default function UserMenu({ userEmail, userName, avatarUrl }: { userEmail: string; userName: string; avatarUrl?: string | null }) {
@@ -13,14 +13,15 @@ export default function UserMenu({ userEmail, userName, avatarUrl }: { userEmail
     <div style={{ position: "relative" }}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
+        className="user-menu-trigger"
         style={{ 
           background: "transparent", 
           border: "1px solid var(--glass-border)", 
           borderRadius: "99px",
-          padding: "6px 16px 6px 6px",
+          padding: "4px 12px 4px 4px",
           display: "flex",
           alignItems: "center",
-          gap: "10px",
+          gap: "8px",
           cursor: "pointer",
           color: "white"
         }}
@@ -79,13 +80,19 @@ export default function UserMenu({ userEmail, userName, avatarUrl }: { userEmail
             </div>
             
             <Link href="/account" className="menu-item" onClick={() => setIsOpen(false)}>
-              <User size={16} /> Mi Panel
+              <User size={15} /> Mi Cuenta
             </Link>
             <Link href="/account/tickets" className="menu-item" onClick={() => setIsOpen(false)}>
-              <Ticket size={16} /> Mis Tickets
+              <Ticket size={15} /> Mis Tickets
+            </Link>
+            <Link href="/account/orders" className="menu-item" onClick={() => setIsOpen(false)}>
+              <ShoppingBag size={15} /> Mis Compras
+            </Link>
+            <Link href="/account/notifications" className="menu-item" onClick={() => setIsOpen(false)}>
+              <Bell size={15} /> Notificaciones
             </Link>
             <Link href="/account/settings" className="menu-item" onClick={() => setIsOpen(false)}>
-              <Settings size={16} /> Ajustes
+              <Settings size={15} /> Ajustes
             </Link>
             
             <div style={{ height: "1px", background: "var(--glass-border)", margin: "4px 0" }} />
@@ -114,6 +121,10 @@ export default function UserMenu({ userEmail, userName, avatarUrl }: { userEmail
         @media (max-width: 600px) {
           .hide-on-mobile {
             display: none;
+          }
+          .user-menu-trigger {
+            padding: 2px !important;
+            gap: 0 !important;
           }
         }
       `}</style>

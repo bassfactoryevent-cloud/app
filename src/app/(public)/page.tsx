@@ -8,12 +8,38 @@ import HeroSpotlight from "@/components/home/HeroSpotlight";
 import StageMontageCanvas from "@/components/home/StageMontageCanvas";
 import CanvasIcon from "@/components/ui/CanvasIcon";
 import { parseHeroConfig } from "@/types/hero";
+import { getUserTicketsData } from "@/utils/userTickets";
+import HomeUserStrip from "@/components/home/HomeUserStrip";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function Home() {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const attendingEventIds = new Set<string>();
+  let userTicketsData = null;
+  let userName = "Raver";
+  if (user) {
+    const [tData, profileRes] = await Promise.all([
+      getUserTicketsData({ id: user.id, email: user.email }),
+      supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
+    ]);
+    userTicketsData = tData;
+    userName =
+      profileRes.data?.full_name ||
+      user.user_metadata?.full_name ||
+      user.email?.split("@")[0] ||
+      "Raver";
+    for (const t of tData.tickets || []) {
+      const tier = Array.isArray(t.ticket_tiers) ? t.ticket_tiers[0] : t.ticket_tiers;
+      const ev = Array.isArray(tier?.events) ? tier.events[0] : tier?.events;
+      if (ev?.id) attendingEventIds.add(ev.id);
+    }
+  }
 
   // Fetch upcoming events
   const { data: events } = await supabase
@@ -83,24 +109,49 @@ export default async function Home() {
           
           {/* COLUMNA IZQUIERDA (Contenido Principal) */}
           <div className={styles.contentColumn}>
-            
+            {user && userTicketsData && (
+              <HomeUserStrip userName={userName} ticketsData={userTicketsData} />
+            )}
+
             {/* 1. Eventos con icono Canvas Radar */}
             <HorizontalScroll title="Eventos" viewAllLink="/events" canvasIcon="radar">
-              {events && events.slice(0, 8).map(event => (
-                <Link href={`/events/${event.slug}`} key={event.id} className={styles.card}>
-                  <img src={event.cover_image || "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?q=80&w=400"} alt={event.title} className={styles.cardImage} />
-                  <h3 className={styles.cardTitle}>{event.title}</h3>
-                  <div className={styles.cardSubtitle} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.35rem' }}>
-                    <Calendar size={12} />
-                    <span>{new Date(event.start_date).toLocaleDateString('es-CO', { month: 'short', day: 'numeric' })}</span>
-                  </div>
-                  <div className={styles.cardSubtitle} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.2rem', flex: 1 }}>
-                    <MapPin size={12} />
-                    <span>{event.location || event.location_name || "Colombia"}</span>
-                  </div>
-                  <span className={styles.cardButton}>Comprar Tickets</span>
-                </Link>
-              ))}
+              {events && events.slice(0, 8).map(event => {
+                const isAttending = attendingEventIds.has(event.id);
+                return (
+                  <Link href={`/events/${event.slug}`} key={event.id} className={styles.card} style={{ position: 'relative' }}>
+                    {isAttending && (
+                      <span
+                        style={{
+                          position: 'absolute',
+                          top: '14px',
+                          left: '14px',
+                          zIndex: 2,
+                          backgroundColor: '#22c55e',
+                          color: '#052e16',
+                          fontSize: '0.65rem',
+                          fontWeight: 900,
+                          padding: '2px 7px',
+                          borderRadius: '999px',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.45)',
+                        }}
+                      >
+                        ✓ Asistes
+                      </span>
+                    )}
+                    <img src={event.cover_image || "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?q=80&w=400"} alt={event.title} className={styles.cardImage} />
+                    <h3 className={styles.cardTitle}>{event.title}</h3>
+                    <div className={styles.cardSubtitle} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.35rem' }}>
+                      <Calendar size={12} />
+                      <span>{new Date(event.start_date).toLocaleDateString('es-CO', { month: 'short', day: 'numeric' })}</span>
+                    </div>
+                    <div className={styles.cardSubtitle} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.2rem', flex: 1 }}>
+                      <MapPin size={12} />
+                      <span>{event.location || event.location_name || "Colombia"}</span>
+                    </div>
+                    <span className={styles.cardButton}>{isAttending ? 'Ver Mi Entrada' : 'Comprar Tickets'}</span>
+                  </Link>
+                );
+              })}
             </HorizontalScroll>
 
             {/* Banner Publicidad Delgado (Bajo Eventos) */}

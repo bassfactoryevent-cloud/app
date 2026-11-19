@@ -2,22 +2,47 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import SettingsForm from "@/components/account/SettingsForm";
 
+export const dynamic = "force-dynamic";
+
 export default async function AccountSettingsPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+  const [profileRes, djsRes] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+    supabase
+      .from("djs")
+      .select("id, name, photo_url, genres")
+      .order("name", { ascending: true })
+      .limit(24),
+  ]);
 
   return (
-    <div>
-      <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>Ajustes de Perfil</h1>
-      <p style={{ opacity: 0.7, marginBottom: '2rem' }}>Actualiza tu información personal.</p>
-
-      <div style={{ maxWidth: '600px', backgroundColor: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-        <SettingsForm user={user} profile={profile} />
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <div>
+        <h2 style={{ fontSize: "1.15rem", fontWeight: 800, margin: 0, color: "white" }}>
+          Ajustes y Perfil Musical
+        </h2>
+        <p
+          style={{
+            color: "var(--color-text-secondary)",
+            fontSize: "0.78rem",
+            margin: "2px 0 0 0",
+          }}
+        >
+          Personaliza tu identidad, tus géneros, DJs y seguridad para adaptar la cartelera a tu gusto.
+        </p>
       </div>
+
+      <SettingsForm
+        user={user}
+        profile={profileRes.data}
+        availableDjs={djsRes.data || []}
+      />
     </div>
   );
 }

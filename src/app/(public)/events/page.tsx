@@ -5,6 +5,7 @@ import AdBanner from "@/components/AdBanner";
 import HorizontalScroll from "@/components/ui/HorizontalScroll";
 import { Calendar, MapPin, ArrowRight, ShieldCheck, Sparkles, QrCode, CreditCard, ShoppingBag, ExternalLink } from "lucide-react";
 import styles from "./Events.module.css";
+import { getUserTicketsData } from "@/utils/userTickets";
 
 export const metadata = {
   title: "Cartelera Oficial de Eventos | Bassfactory",
@@ -15,6 +16,17 @@ export const dynamic = "force-dynamic";
 
 export default async function EventsPage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const attendingEventIds = new Set<string>();
+  if (user) {
+    const tData = await getUserTicketsData({ id: user.id, email: user.email });
+    for (const t of tData.tickets || []) {
+      const tier = Array.isArray(t.ticket_tiers) ? t.ticket_tiers[0] : t.ticket_tiers;
+      const ev = Array.isArray(tier?.events) ? tier.events[0] : tier?.events;
+      if (ev?.id) attendingEventIds.add(ev.id);
+    }
+  }
   
   // Fecha de ayer para mantener el evento visible durante el mismo día que ocurre
   const yesterday = new Date();
@@ -200,6 +212,25 @@ export default async function EventsPage() {
                       {event.status === 'cancelled' && (
                         <div className={`${styles.statusBadge} ${styles.statusCancelled}`}>
                           Cancelado
+                        </div>
+                      )}
+                      {attendingEventIds.has(event.id) && event.status === 'published' && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: '12px',
+                            right: '12px',
+                            backgroundColor: '#22c55e',
+                            color: '#052e16',
+                            fontSize: '0.7rem',
+                            fontWeight: 900,
+                            padding: '4px 10px',
+                            borderRadius: '999px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.45)',
+                            zIndex: 2,
+                          }}
+                        >
+                          ✓ Asistes
                         </div>
                       )}
                     </div>
