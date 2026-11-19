@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { createClient } from "@/utils/supabase/server";
 import { unstable_noStore as noStore } from "next/cache";
 import { ShieldCheck, Truck, CreditCard } from "lucide-react";
@@ -58,7 +59,9 @@ export default async function MerchStorefront() {
         </div>
       </header>
 
-      <MerchStoreClient products={products || []} />
+      <Suspense fallback={null}>
+        <MerchStoreClient products={products || []} />
+      </Suspense>
     </div>
   );
 }

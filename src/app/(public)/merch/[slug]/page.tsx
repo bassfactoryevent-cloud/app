@@ -2,9 +2,11 @@ import { createClient } from "@/utils/supabase/server";
 import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import AddToCartClient from "./AddToCartClient";
 import ProductGalleryClient from "./ProductGalleryClient";
+import HorizontalScroll from "@/components/ui/HorizontalScroll";
+import styles from "@/app/(public)/page.module.css";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -28,18 +30,35 @@ export default async function MerchProductPage({
 }) {
   noStore();
   const supabase = await createClient();
+  const slug = (await params).slug;
 
-  const { data: product } = await supabase
-    .from("merch_products")
-    .select(`
-      *,
-      merch_categories(name, slug),
-      merch_product_images(image_url, sort_order, is_primary),
-      merch_product_variants(id, name, stock_quantity, price_override)
-    `)
-    .eq("slug", (await params).slug)
-    .single();
+  const [productRes, relatedRes] = await Promise.all([
+    supabase
+      .from("merch_products")
+      .select(`
+        *,
+        merch_categories(name, slug),
+        merch_product_images(image_url, sort_order, is_primary),
+        merch_product_variants(id, name, stock_quantity, price_override)
+      `)
+      .eq("slug", slug)
+      .single(),
+    supabase
+      .from("merch_products")
+      .select(`
+        id,
+        title,
+        slug,
+        base_price,
+        merch_product_images(image_url, is_primary, sort_order)
+      `)
+      .eq("status", "published")
+      .neq("slug", slug)
+      .order("created_at", { ascending: false })
+      .limit(8),
+  ]);
 
+  const product = productRes.data;
   if (!product) {
     notFound();
   }
@@ -49,51 +68,66 @@ export default async function MerchProductPage({
   const primaryImage =
     images.find((i: any) => i.is_primary)?.image_url || images[0]?.image_url || null;
   const variants = product.merch_product_variants || [];
+  const relatedProducts = relatedRes.data || [];
 
   return (
-    <div style={{ maxWidth: "1120px", margin: "0 auto", padding: "1.5rem 1rem 3rem" }}>
-      {/* Breadcrumbs */}
+    <div style={{ maxWidth: "1180px", margin: "0 auto", padding: "1.25rem 1rem 3.5rem" }}>
+      {/* Clean Top Bar (replaces broken breadcrumb!) */}
       <div
         style={{
           display: "flex",
-          flexWrap: "wrap",
           alignItems: "center",
-          gap: "0.4rem",
+          justifyContent: "space-between",
+          gap: "0.75rem",
           marginBottom: "1.25rem",
-          fontSize: "0.78rem",
-          color: "var(--color-text-secondary)",
         }}
       >
         <Link
           href="/merch"
           style={{
-            color: "inherit",
-            textDecoration: "none",
             display: "inline-flex",
             alignItems: "center",
-            gap: "4px",
+            gap: "6px",
+            padding: "0.4rem 0.8rem",
+            borderRadius: "8px",
+            backgroundColor: "var(--color-surface)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            color: "white",
+            fontSize: "0.76rem",
             fontWeight: 600,
+            textDecoration: "none",
           }}
         >
-          <ArrowLeft size={13} /> Merch
+          <ArrowLeft size={14} /> Volver a Merch
         </Link>
-        <ChevronRight size={13} />
-        {product.merch_categories && (
-          <>
-            <span>{product.merch_categories.name}</span>
-            <ChevronRight size={13} />
-          </>
+
+        {product.merch_categories?.name && (
+          <Link
+            href={`/merch?category=${encodeURIComponent(product.merch_categories.name)}`}
+            style={{
+              fontSize: "0.72rem",
+              fontWeight: 700,
+              color: "var(--color-magenta)",
+              backgroundColor: "rgba(229, 9, 20, 0.1)",
+              border: "1px solid rgba(229, 9, 20, 0.25)",
+              padding: "0.3rem 0.75rem",
+              borderRadius: "999px",
+              textDecoration: "none",
+            }}
+          >
+            {product.merch_categories.name}
+          </Link>
         )}
-        <span style={{ color: "white", fontWeight: 600 }}>{product.title}</span>
       </div>
 
-      {/* Main 2-column Product Layout */}
+      {/* Main 2-column Product Stage (No heavy wrapper box!) */}
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))",
           gap: "2rem",
           alignItems: "start",
+          marginBottom: relatedProducts.length > 0 ? "2.5rem" : 0,
         }}
       >
         <ProductGalleryClient
@@ -104,32 +138,15 @@ export default async function MerchProductPage({
 
         <div
           style={{
-            backgroundColor: "var(--color-surface)",
-            border: "1px solid rgba(255,255,255,0.07)",
-            borderRadius: "12px",
-            padding: "1.25rem",
             display: "flex",
             flexDirection: "column",
-            gap: "0.85rem",
+            gap: "0.95rem",
+            paddingTop: "0.25rem",
           }}
         >
-          {product.merch_categories && (
-            <span
-              style={{
-                fontSize: "0.7rem",
-                color: "var(--color-magenta)",
-                fontWeight: 800,
-                textTransform: "uppercase",
-                letterSpacing: "0.06em",
-              }}
-            >
-              {product.merch_categories.name}
-            </span>
-          )}
-
           <h1
             style={{
-              fontSize: "clamp(1.35rem, 2.5vw, 1.85rem)",
+              fontSize: "clamp(1.4rem, 2.5vw, 1.9rem)",
               fontWeight: 800,
               margin: 0,
               lineHeight: 1.15,
@@ -148,26 +165,26 @@ export default async function MerchProductPage({
           {product.description && (
             <div
               style={{
-                marginTop: "0.5rem",
-                paddingTop: "1rem",
+                marginTop: "0.35rem",
+                paddingTop: "0.95rem",
                 borderTop: "1px solid rgba(255,255,255,0.08)",
               }}
             >
               <div
                 style={{
-                  fontSize: "0.76rem",
+                  fontSize: "0.72rem",
                   fontWeight: 700,
                   textTransform: "uppercase",
-                  letterSpacing: "0.05em",
+                  letterSpacing: "0.06em",
                   color: "var(--color-text-secondary)",
                   marginBottom: "0.4rem",
                 }}
               >
-                Detalles
+                Descripción
               </div>
               <div
                 style={{
-                  color: "rgba(255,255,255,0.82)",
+                  color: "rgba(255,255,255,0.8)",
                   lineHeight: 1.55,
                   fontSize: "0.86rem",
                 }}
@@ -177,6 +194,31 @@ export default async function MerchProductPage({
           )}
         </div>
       </div>
+
+      {/* Related Products Slider (Home Scale) */}
+      {relatedProducts.length > 0 && (
+        <div style={{ paddingTop: "1.5rem", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+          <HorizontalScroll title="Más de Merch" viewAllLink="/merch" canvasIcon="prism">
+            {relatedProducts.map((item: any) => {
+              const img =
+                item.merch_product_images?.find((i: any) => i.is_primary)?.image_url ||
+                item.merch_product_images?.[0]?.image_url ||
+                "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=400";
+              return (
+                <Link key={item.id} href={`/merch/${item.slug}`} className={styles.card}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={img} alt={item.title} className={styles.cardImage} />
+                  <h3 className={styles.cardTitle}>{item.title}</h3>
+                  <p className={styles.cardSubtitle} style={{ flex: 1 }}>
+                    ${Number(item.base_price || 0).toLocaleString("es-CO")}
+                  </p>
+                  <span className={styles.cardButton}>Ver</span>
+                </Link>
+              );
+            })}
+          </HorizontalScroll>
+        </div>
+      )}
     </div>
   );
 }

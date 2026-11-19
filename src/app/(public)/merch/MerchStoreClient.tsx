@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { Package, Search, X, ArrowRight } from "lucide-react";
 import styles from "./Merch.module.css";
 
@@ -11,8 +12,15 @@ interface MerchStoreClientProps {
 }
 
 export default function MerchStoreClient({ products }: MerchStoreClientProps) {
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const searchParams = useSearchParams();
+  const initialCat = searchParams?.get("category") || "all";
+  const [selectedCategory, setSelectedCategory] = useState(initialCat);
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const cat = searchParams?.get("category");
+    if (cat) setSelectedCategory(cat);
+  }, [searchParams]);
 
   const categories = useMemo(() => {
     const map = new Map<string, number>();
