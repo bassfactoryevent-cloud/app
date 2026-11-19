@@ -25,12 +25,16 @@ export default function DjsGridClient({ djs }: DjsGridClientProps) {
 
   return (
     <div>
-      {djs.length > 0 && (
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem", marginBottom: "1rem" }}>
-          <span style={{ fontSize: "0.76rem", color: "var(--color-text-secondary)", fontWeight: 600 }}>
-            {filteredDjs.length} {filteredDjs.length === 1 ? "artista" : "artistas"}
-          </span>
+      {/* Compact Header + Search on same row */}
+      <header className={styles.heroSection}>
+        <div>
+          <h1 className={styles.heroTitle}>Artistas &amp; DJs</h1>
+          <p className={styles.heroSubtitle}>
+            Roster oficial, presskits y booking de Bassfactory.
+          </p>
+        </div>
 
+        {djs.length > 0 && (
           <div className={styles.searchWrap}>
             <Search size={14} className={styles.searchIcon} />
             <input
@@ -51,8 +55,8 @@ export default function DjsGridClient({ djs }: DjsGridClientProps) {
               </button>
             )}
           </div>
-        </div>
-      )}
+        )}
+      </header>
 
       {filteredDjs.length === 0 ? (
         <div className={styles.emptyState}>
@@ -81,7 +85,7 @@ export default function DjsGridClient({ djs }: DjsGridClientProps) {
                       src={dj.photo_url}
                       alt={dj.name}
                       fill
-                      sizes="(max-width: 640px) 50vw, 220px"
+                      sizes="(max-width: 640px) 50vw, 240px"
                       className={styles.djImage}
                     />
                   ) : (

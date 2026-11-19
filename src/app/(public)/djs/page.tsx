@@ -24,20 +24,11 @@ export default async function PublicDjsPage() {
 
   return (
     <div className={styles.djsContainer}>
-      <header className={styles.heroSection}>
-        <div>
-          <h1 className={styles.heroTitle}>Artistas &amp; DJs</h1>
-          <p className={styles.heroSubtitle}>
-            Roster oficial, presskits y booking de Bassfactory.
-          </p>
-        </div>
-      </header>
+      <DjsGridClient djs={djs || []} />
 
       <div className={styles.adWrap}>
         <AdBanner placementName="djs_banner" />
       </div>
-
-      <DjsGridClient djs={djs || []} />
     </div>
   );
 }
