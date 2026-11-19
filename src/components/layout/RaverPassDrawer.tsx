@@ -55,13 +55,26 @@ export default function RaverPassDrawer({
   const [isPending, startTransition] = useTransition();
   const [mounted, setMounted] = useState(false);
   const [, setTick] = useState(0);
+  const [liveScannedIds, setLiveScannedIds] = useState<Record<string, string>>({});
 
   // Set mounted + refresh countdown every 30s (avoids SSR/client Date.now() hydration mismatch)
   useEffect(() => {
     setMounted(true);
     const t = setInterval(() => setTick((n) => n + 1), 30000);
-    return () => clearInterval(t);
-  }, []);
+    const onLiveScan = (e: any) => {
+      const tId = e?.detail?.ticketId;
+      const scannedAt = e?.detail?.scanned_at || new Date().toISOString();
+      if (tId) {
+        setLiveScannedIds((prev) => ({ ...prev, [tId]: scannedAt }));
+        router.refresh();
+      }
+    };
+    window.addEventListener("ticket_scanned_live", onLiveScan);
+    return () => {
+      clearInterval(t);
+      window.removeEventListener("ticket_scanned_live", onLiveScan);
+    };
+  }, [router]);
 
   const incoming = ticketsData.incomingTransfers || [];
   const tickets = ticketsData.tickets || [];
@@ -88,8 +101,16 @@ export default function RaverPassDrawer({
 
   const nextItem = upcomingTickets[0] || null;
   const nextEvent = nextItem?.event || null;
-  const nextTicket = nextItem?.ticket || null;
+  const rawNextTicket = nextItem?.ticket || null;
+  const nextTicket = rawNextTicket
+    ? {
+        ...rawNextTicket,
+        status: liveScannedIds[rawNextTicket.id] ? "scanned" : rawNextTicket.status,
+        scanned_at: liveScannedIds[rawNextTicket.id] || rawNextTicket.scanned_at,
+      }
+    : null;
   const nextTier = nextItem?.tier || null;
+  const isNextScanned = nextTicket?.status === "scanned";
 
   const isNextQrReady = Boolean(
     nextTicket &&
@@ -160,10 +181,14 @@ export default function RaverPassDrawer({
               backgroundColor:
                 incoming.length > 0
                   ? "rgba(0, 240, 255, 0.14)"
+                  : isNextScanned
+                  ? "rgba(0, 240, 255, 0.16)"
                   : "rgba(229, 9, 20, 0.16)",
               border:
                 incoming.length > 0
                   ? "1px solid rgba(0, 240, 255, 0.5)"
+                  : isNextScanned
+                  ? "1px solid rgba(0, 240, 255, 0.55)"
                   : "1px solid rgba(229, 9, 20, 0.5)",
               color: "#FFFFFF",
               fontSize: "0.72rem",
@@ -183,11 +208,15 @@ export default function RaverPassDrawer({
                 backgroundColor:
                   incoming.length > 0
                     ? "#00F0FF"
+                    : isNextScanned
+                    ? "#00F0FF"
                     : isNextQrReady
                     ? "#22c55e"
                     : "#E50914",
                 boxShadow:
                   incoming.length > 0
+                    ? "0 0 8px #00F0FF"
+                    : isNextScanned
                     ? "0 0 8px #00F0FF"
                     : isNextQrReady
                     ? "0 0 8px #22c55e"
@@ -200,6 +229,24 @@ export default function RaverPassDrawer({
                 <span className="raver-pill-desktop">{incoming.length} por aceptar</span>
                 <span className="raver-pill-mobile">{incoming.length}</span>
               </span>
+            ) : isNextScanned ? (
+              <>
+                <span className="raver-pill-desktop">EN LA RAVE · {shortTitle}</span>
+                <span className="raver-pill-mobile">EN RAVE</span>
+                <span
+                  style={{
+                    backgroundColor: "#00F0FF",
+                    color: "#000000",
+                    fontSize: "0.6rem",
+                    fontWeight: 900,
+                    padding: "2px 5px",
+                    borderRadius: "4px",
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  IN
+                </span>
+              </>
             ) : (
               <>
                 <span className="raver-pill-desktop">
@@ -711,10 +758,18 @@ export default function RaverPassDrawer({
                               fontSize: "0.65rem",
                               fontWeight: 800,
                               textTransform: "uppercase",
-                              color: isNextQrReady ? "#4ade80" : "var(--color-accent)",
+                              color: isNextScanned
+                                ? "#00F0FF"
+                                : isNextQrReady
+                                ? "#4ade80"
+                                : "var(--color-accent)",
                             }}
                           >
-                            {isNextQrReady ? "● QR Habilitado" : "Próximo Evento"}
+                            {isNextScanned
+                              ? "● EN LA RAVE EN ESTE MOMENTO"
+                              : isNextQrReady
+                              ? "● QR Habilitado"
+                              : "Próximo Evento"}
                           </span>
                           {countdownLabel && (
                             <span
@@ -781,7 +836,8 @@ export default function RaverPassDrawer({
                           cursor: "pointer",
                         }}
                       >
-                        <QrCode size={14} /> Abrir Pase QR
+                        <QrCode size={14} />{" "}
+                        {isNextScanned ? "Ver Mi Pase Activo" : "Abrir Pase QR"}
                       </button>
                       {mapsQuery && (
                         <a

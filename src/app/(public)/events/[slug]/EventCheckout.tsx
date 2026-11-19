@@ -76,6 +76,20 @@ export default function EventCheckout({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    const onLiveScan = (e: any) => {
+      const tId = e?.detail?.ticketId;
+      const scannedAt = e?.detail?.scanned_at || new Date().toISOString();
+      setExistingTicket((prev: any) =>
+        prev && (!tId || prev.id === tId)
+          ? { ...prev, status: "scanned", scanned_at: scannedAt }
+          : prev
+      );
+    };
+    window.addEventListener("ticket_scanned_live", onLiveScan);
+    return () => window.removeEventListener("ticket_scanned_live", onLiveScan);
+  }, []);
+
+  useEffect(() => {
     setMounted(true);
     if (!isFree) return;
 
@@ -363,8 +377,8 @@ export default function EventCheckout({
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
               <span style={{ color: '#a1a1aa' }}>Estado</span>
-              <span style={{ fontWeight: 800, color: '#4ade80' }}>
-                {existingTicket.status === 'scanned' ? '✓ Ingreso Validado' : '● QR Habilitado'}
+              <span style={{ fontWeight: 800, color: existingTicket.status === 'scanned' ? '#00F0FF' : '#4ade80' }}>
+                {existingTicket.status === 'scanned' ? '● EN LA RAVE EN ESTE MOMENTO' : '● QR Habilitado'}
               </span>
             </div>
           </div>

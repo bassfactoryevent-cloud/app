@@ -14,9 +14,19 @@ interface HomeUserStripProps {
 export default function HomeUserStrip({ userName, ticketsData }: HomeUserStripProps) {
   const [qrOpen, setQrOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [liveScannedIds, setLiveScannedIds] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setMounted(true);
+    const onLiveScan = (e: any) => {
+      const tId = e?.detail?.ticketId;
+      const scannedAt = e?.detail?.scanned_at || new Date().toISOString();
+      if (tId) {
+        setLiveScannedIds((prev) => ({ ...prev, [tId]: scannedAt }));
+      }
+    };
+    window.addEventListener("ticket_scanned_live", onLiveScan);
+    return () => window.removeEventListener("ticket_scanned_live", onLiveScan);
   }, []);
 
   const incoming = ticketsData.incomingTransfers || [];
@@ -42,14 +52,24 @@ export default function HomeUserStrip({ userName, ticketsData }: HomeUserStripPr
 
   const nextItem = upcomingTickets[0] || null;
   const nextEvent = nextItem?.event || null;
-  const nextTicket = nextItem?.ticket || null;
+  const rawNextTicket = nextItem?.ticket || null;
+  const nextTicket = rawNextTicket
+    ? {
+        ...rawNextTicket,
+        status: liveScannedIds[rawNextTicket.id] ? "scanned" : rawNextTicket.status,
+        scanned_at: liveScannedIds[rawNextTicket.id] || rawNextTicket.scanned_at,
+      }
+    : null;
+  const isNextScanned = nextTicket?.status === "scanned";
 
   return (
     <>
       <section
         style={{
           backgroundColor: "var(--color-surface)",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
+          border: isNextScanned
+            ? "1px solid rgba(0, 240, 255, 0.35)"
+            : "1px solid rgba(255, 255, 255, 0.08)",
           borderRadius: "10px",
           padding: "0.85rem 1rem",
           display: "flex",
@@ -72,7 +92,9 @@ export default function HomeUserStrip({ userName, ticketsData }: HomeUserStripPr
                 borderRadius: "7px",
                 objectFit: "cover",
                 flexShrink: 0,
-                border: "1px solid rgba(255,255,255,0.1)",
+                border: isNextScanned
+                  ? "1px solid rgba(0, 240, 255, 0.5)"
+                  : "1px solid rgba(255,255,255,0.1)",
               }}
             />
           ) : (
@@ -93,10 +115,29 @@ export default function HomeUserStrip({ userName, ticketsData }: HomeUserStripPr
           )}
 
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: "0.72rem", color: "var(--color-text-secondary)" }}>
-              Hola, <strong style={{ color: "white" }}>{userName.split(" ")[0]}</strong>
+            <div style={{ fontSize: "0.72rem", color: "var(--color-text-secondary)", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+              <span>
+                Hola, <strong style={{ color: "white" }}>{userName.split(" ")[0]}</strong>
+              </span>
+              {isNextScanned && (
+                <span
+                  style={{
+                    fontSize: "0.62rem",
+                    fontWeight: 900,
+                    color: "#00F0FF",
+                    backgroundColor: "rgba(0, 240, 255, 0.14)",
+                    border: "1px solid rgba(0, 240, 255, 0.4)",
+                    padding: "1px 6px",
+                    borderRadius: "999px",
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  ● En la Rave en este momento
+                </span>
+              )}
               {incoming.length > 0 && (
-                <span style={{ color: "#00F0FF", fontWeight: 700, marginLeft: "6px" }}>
+                <span style={{ color: "#00F0FF", fontWeight: 700 }}>
                   · {incoming.length} boleta por aceptar
                 </span>
               )}
@@ -112,7 +153,9 @@ export default function HomeUserStrip({ userName, ticketsData }: HomeUserStripPr
               }}
             >
               {nextEvent
-                ? `Tu próximo evento: ${nextEvent.title}`
+                ? isNextScanned
+                  ? `¡Ya estás adentro de ${nextEvent.title}!`
+                  : `Tu próximo evento: ${nextEvent.title}`
                 : "Tu ecosistema Bassfactory está listo"}
             </div>
           </div>
@@ -151,15 +194,15 @@ export default function HomeUserStrip({ userName, ticketsData }: HomeUserStripPr
                 gap: "5px",
                 padding: "0.42rem 0.8rem",
                 borderRadius: "7px",
-                backgroundColor: "var(--color-magenta)",
-                border: "none",
-                color: "white",
+                backgroundColor: isNextScanned ? "rgba(0, 240, 255, 0.16)" : "var(--color-magenta)",
+                border: isNextScanned ? "1px solid rgba(0, 240, 255, 0.45)" : "none",
+                color: isNextScanned ? "#00F0FF" : "white",
                 fontSize: "0.74rem",
-                fontWeight: 700,
+                fontWeight: 800,
                 cursor: "pointer",
               }}
             >
-              <QrCode size={13} /> Abrir QR
+              <QrCode size={13} /> {isNextScanned ? "Mi Pase Activo" : "Abrir QR"}
             </button>
           )}
 

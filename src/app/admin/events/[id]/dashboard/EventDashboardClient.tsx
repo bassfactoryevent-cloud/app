@@ -5,13 +5,13 @@ import Link from "next/link";
 import { 
   ArrowLeft, DollarSign, Ticket, Users, Activity, ScanLine, 
   CheckCircle2, Clock, Search, UserPlus, Power, Trash2, ShieldCheck, Smartphone, ExternalLink,
-  Gift, Lock, Unlock, Sparkles
+  Gift, Lock, Unlock, Sparkles, Edit2, Check, X
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 import { addStaffToEventAction, toggleStaffStatusAction, removeStaffAction } from "../staff/actions";
 import { IssueCourtesyModal } from "./IssueCourtesyModal";
-import { toggleCourtesyLock, getLiveEventDashboardData } from "./actions";
+import { toggleCourtesyLock, getLiveEventDashboardData, updateAttendeeEmailAction } from "./actions";
 
 interface EventDashboardClientProps {
   event: any;
@@ -46,6 +46,9 @@ export default function EventDashboardClient({
   const [attendeeSearch, setAttendeeSearch] = useState("");
   const [isCourtesyModalOpen, setIsCourtesyModalOpen] = useState(false);
   const [isLockingTicketId, setIsLockingTicketId] = useState<string | null>(null);
+  const [editingTicketEmailId, setEditingTicketEmailId] = useState<string | null>(null);
+  const [editedAttendeeEmail, setEditedAttendeeEmail] = useState<string>("");
+  const [isSavingEmail, setIsSavingEmail] = useState(false);
   const isSyncingRef = useRef(false);
 
   const syncDashboardData = useCallback(async () => {
@@ -77,6 +80,38 @@ export default function EventDashboardClient({
       }
     } finally {
       setIsLockingTicketId(null);
+    }
+  };
+
+  const handleSaveAttendeeEmail = async (ticketId: string) => {
+    const cleanEmail = editedAttendeeEmail.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes("@")) {
+      toast.error("Ingresa un correo electrónico válido.");
+      return;
+    }
+
+    setIsSavingEmail(true);
+    try {
+      const res = await updateAttendeeEmailAction({
+        ticketId,
+        eventId: event.id,
+        newEmailInput: cleanEmail,
+      });
+      if (!res.success) {
+        toast.error(res.error || "No se pudo actualizar el correo.");
+        return;
+      }
+      const nextEmail = res.email || cleanEmail;
+      setTickets((prev) =>
+        prev.map((t) => (t.id === ticketId ? { ...t, assigned_email: nextEmail } : t))
+      );
+      setEditingTicketEmailId(null);
+      setEditedAttendeeEmail("");
+      toast.success(`Correo actualizado y confirmado a ${nextEmail} (sin consumir envíos de correo).`);
+    } catch (err: any) {
+      toast.error(err?.message || "Error al guardar correo.");
+    } finally {
+      setIsSavingEmail(false);
     }
   };
 
@@ -534,7 +569,91 @@ export default function EventDashboardClient({
                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                           <div>
                             <div style={{ fontWeight: 700, color: "white" }}>{attendeeName}</div>
-                            <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>{attendeeEmail}</div>
+                            {editingTicketEmailId === t.id ? (
+                              <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
+                                <input
+                                  type="email"
+                                  value={editedAttendeeEmail}
+                                  onChange={(e) => setEditedAttendeeEmail(e.target.value)}
+                                  placeholder="nuevo@correo.com"
+                                  disabled={isSavingEmail}
+                                  style={{
+                                    padding: "3px 7px",
+                                    borderRadius: "5px",
+                                    backgroundColor: "rgba(0,0,0,0.65)",
+                                    border: "1px solid #00F0FF",
+                                    color: "white",
+                                    fontSize: "0.74rem",
+                                    outline: "none",
+                                    minWidth: "180px",
+                                  }}
+                                />
+                                <button
+                                  type="button"
+                                  disabled={isSavingEmail}
+                                  onClick={() => handleSaveAttendeeEmail(t.id)}
+                                  style={{
+                                    padding: "4px 7px",
+                                    borderRadius: "5px",
+                                    backgroundColor: "#22c55e",
+                                    color: "#052e16",
+                                    border: "none",
+                                    fontSize: "0.7rem",
+                                    fontWeight: 800,
+                                    cursor: "pointer",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "3px",
+                                  }}
+                                >
+                                  <Check size={12} /> Confirmar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingTicketEmailId(null);
+                                    setEditedAttendeeEmail("");
+                                  }}
+                                  style={{
+                                    padding: "4px 6px",
+                                    borderRadius: "5px",
+                                    backgroundColor: "rgba(255,255,255,0.08)",
+                                    color: "white",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <X size={12} />
+                                </button>
+                              </div>
+                            ) : (
+                              <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                                <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
+                                  {attendeeEmail}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingTicketEmailId(t.id);
+                                    setEditedAttendeeEmail(attendeeEmail === "-" ? "" : attendeeEmail);
+                                  }}
+                                  title="Corregir y confirmar correo (sin gastar envíos)"
+                                  style={{
+                                    background: "none",
+                                    border: "none",
+                                    color: "rgba(255,255,255,0.45)",
+                                    cursor: "pointer",
+                                    padding: "2px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <Edit2 size={12} />
+                                </button>
+                              </div>
+                            )}
                             {isCourtesy && (
                               <div style={{ display: "flex", flexDirection: "column", gap: "2px", marginTop: "3px" }}>
                                 <div style={{

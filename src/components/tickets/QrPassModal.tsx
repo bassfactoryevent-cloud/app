@@ -13,9 +13,13 @@ import {
   CheckCircle2,
   Sun,
   ShieldCheck,
+  Radio,
+  Users,
 } from "lucide-react";
 import QRCode from "qrcode";
 import { toast } from "sonner";
+import { createClient } from "@/utils/supabase/client";
+import { getLiveTicketStatusAction } from "@/app/(public)/account/tickets/actions";
 
 interface QrPassModalProps {
   isOpen: boolean;
@@ -35,17 +39,118 @@ export default function QrPassModal({
   const [qrUrl, setQrUrl] = useState<string>("");
   const [wakeLockActive, setWakeLockActive] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [liveStatus, setLiveStatus] = useState<string>(ticket?.status || "valid");
+  const [liveScannedAt, setLiveScannedAt] = useState<string | null>(
+    ticket?.scanned_at || null
+  );
+  const [liveRaversInside, setLiveRaversInside] = useState<number>(0);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (ticket) {
+      setLiveStatus(ticket.status || "valid");
+      setLiveScannedAt(ticket.scanned_at || null);
+    }
+  }, [ticket]);
+
+  // Realtime + 2.5s High-Frequency Sync while modal is open at the door
+  useEffect(() => {
+    if (!isOpen || !ticket?.id) return;
+
+    let active = true;
+    const supabase = createClient();
+
+    const triggerCheckInCelebration = () => {
+      if (typeof window !== "undefined" && "navigator" in window && navigator.vibrate) {
+        try {
+          navigator.vibrate([100, 40, 120]);
+        } catch {}
+      }
+      toast.success("🔥 ¡ACCESO VERIFICADO! Estás en la Rave — Bienvenido a Bassfactory.");
+    };
+
+    const syncStatus = async () => {
+      try {
+        const res = await getLiveTicketStatusAction(ticket.id);
+        if (!active || !res.success) return;
+        if (typeof res.liveAttendeeCount === "number") {
+          setLiveRaversInside(res.liveAttendeeCount);
+        }
+        if (res.status) {
+          setLiveStatus((prev) => {
+            if (prev !== "scanned" && res.status === "scanned") {
+              triggerCheckInCelebration();
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(
+                  new CustomEvent("ticket_scanned_live", {
+                    detail: { ticketId: ticket.id, scanned_at: res.scanned_at },
+                  })
+                );
+              }
+            }
+            return res.status!;
+          });
+        }
+        if (res.scanned_at) {
+          setLiveScannedAt(res.scanned_at);
+        }
+      } catch {}
+    };
+
+    syncStatus();
+
+    const channel = supabase
+      .channel(`qr-pass-live-${ticket.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "tickets",
+          filter: `id=eq.${ticket.id}`,
+        },
+        (payload) => {
+          const next = payload.new as any;
+          if (!next) return;
+          if (next.status === "scanned") {
+            setLiveStatus((prev) => {
+              if (prev !== "scanned") {
+                triggerCheckInCelebration();
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(
+                    new CustomEvent("ticket_scanned_live", {
+                      detail: { ticketId: ticket.id, scanned_at: next.scanned_at },
+                    })
+                  );
+                }
+              }
+              return "scanned";
+            });
+            if (next.scanned_at) setLiveScannedAt(next.scanned_at);
+            syncStatus();
+          }
+        }
+      )
+      .subscribe();
+
+    const timer = setInterval(syncStatus, 2500);
+
+    return () => {
+      active = false;
+      clearInterval(timer);
+      supabase.removeChannel(channel);
+    };
+  }, [isOpen, ticket?.id]);
 
   const eventStartDate = event?.start_date ? new Date(event.start_date) : null;
   const isWithin24Hours = eventStartDate
     ? eventStartDate.getTime() - Date.now() <= 24 * 60 * 60 * 1000
     : false;
   const isEnabled = Boolean(ticket && (isWithin24Hours || ticket.qr_dispatched));
-  const isScanned = ticket?.status === "scanned";
+  const isScanned = liveStatus === "scanned" || ticket?.status === "scanned";
 
   useEffect(() => {
     if (!isOpen || !ticket?.qr_hash || !isEnabled) {
@@ -323,45 +428,100 @@ export default function QrPassModal({
                 {isScanned ? (
                   <div
                     style={{
-                      width: "210px",
-                      height: "210px",
+                      width: "100%",
                       borderRadius: "12px",
-                      backgroundColor: "rgba(34, 197, 94, 0.12)",
-                      border: "1px solid rgba(34, 197, 94, 0.4)",
+                      background:
+                        "linear-gradient(135deg, rgba(0, 240, 255, 0.12) 0%, rgba(34, 197, 94, 0.14) 100%)",
+                      border: "1px solid rgba(0, 240, 255, 0.45)",
                       display: "flex",
                       flexDirection: "column",
                       alignItems: "center",
                       justifyContent: "center",
                       textAlign: "center",
-                      padding: "1rem",
+                      padding: "1.25rem 1rem",
+                      boxShadow: "0 0 32px rgba(0, 240, 255, 0.15)",
                     }}
                   >
-                    <CheckCircle2 size={42} color="#22c55e" />
                     <div
                       style={{
-                        fontSize: "0.95rem",
-                        fontWeight: 800,
-                        color: "white",
-                        marginTop: "0.6rem",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        padding: "3px 10px",
+                        borderRadius: "999px",
+                        backgroundColor: "rgba(0, 240, 255, 0.18)",
+                        border: "1px solid rgba(0, 240, 255, 0.45)",
+                        color: "#00F0FF",
+                        fontSize: "0.66rem",
+                        fontWeight: 900,
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        marginBottom: "0.65rem",
                       }}
                     >
-                      ¡Ya estás adentro!
+                      <Radio size={12} /> EN LA RAVE EN ESTE MOMENTO
                     </div>
+
+                    <CheckCircle2 size={44} color="#22c55e" />
+
+                    <div
+                      style={{
+                        fontSize: "1.05rem",
+                        fontWeight: 900,
+                        color: "white",
+                        marginTop: "0.5rem",
+                        letterSpacing: "-0.01em",
+                      }}
+                    >
+                      ¡Ya estás adentro de la fiesta!
+                    </div>
+
                     <div
                       style={{
                         fontSize: "0.75rem",
                         color: "#86efac",
                         marginTop: "0.25rem",
+                        fontWeight: 600,
                       }}
                     >
-                      Ingreso verificado en taquilla
-                      {ticket.scanned_at
-                        ? ` · ${new Date(ticket.scanned_at).toLocaleTimeString("es-CO", {
+                      Check-in verificado en puerta
+                      {liveScannedAt || ticket.scanned_at
+                        ? ` · ${new Date(
+                            liveScannedAt || ticket.scanned_at
+                          ).toLocaleTimeString("es-CO", {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}`
                         : ""}
                     </div>
+
+                    {liveRaversInside > 0 && (
+                      <div
+                        style={{
+                          marginTop: "0.85rem",
+                          padding: "0.45rem 0.85rem",
+                          borderRadius: "8px",
+                          backgroundColor: "rgba(0, 0, 0, 0.45)",
+                          border: "1px solid rgba(255, 255, 255, 0.1)",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          fontSize: "0.74rem",
+                          color: "white",
+                          fontWeight: 700,
+                        }}
+                      >
+                        <Users size={14} color="#00F0FF" />
+                        <span>
+                          <strong style={{ color: "#00F0FF" }}>
+                            {liveRaversInside}
+                          </strong>{" "}
+                          {liveRaversInside === 1
+                            ? "raver activo en sala ahora"
+                            : "ravers activos en sala ahora"}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ) : isEnabled ? (
                   <>

@@ -101,6 +101,22 @@ export default function TicketCard({
     );
   }, [tickets]);
 
+  useEffect(() => {
+    if (!selectedTicketForPass) return;
+    const latest = tickets.find((t) => t.id === selectedTicketForPass.id);
+    if (latest && latest.status !== selectedTicketForPass.status) {
+      setSelectedTicketForPass(latest);
+    }
+  }, [tickets, selectedTicketForPass]);
+
+  useEffect(() => {
+    const onLiveScan = () => {
+      onRefreshRequested?.();
+    };
+    window.addEventListener("ticket_scanned_live", onLiveScan);
+    return () => window.removeEventListener("ticket_scanned_live", onLiveScan);
+  }, [onRefreshRequested]);
+
   const totalInAccountCount = tickets.length;
   const inTransferCount = tickets.filter((t) => Boolean(getPendingTransfer(t))).length;
   const inPossessionCount = Math.max(0, totalInAccountCount - inTransferCount);
@@ -540,18 +556,19 @@ export default function TicketCard({
                         {ticket.status === "scanned" && (
                           <span
                             style={{
-                              backgroundColor: "rgba(34, 197, 94, 0.15)",
-                              color: "#22c55e",
+                              backgroundColor: "rgba(0, 240, 255, 0.16)",
+                              border: "1px solid rgba(0, 240, 255, 0.45)",
+                              color: "#00F0FF",
                               fontSize: "0.68rem",
                               fontWeight: 800,
-                              padding: "2px 6px",
+                              padding: "2px 7px",
                               borderRadius: "4px",
                               display: "inline-flex",
                               alignItems: "center",
                               gap: "4px",
                             }}
                           >
-                            <CheckCircle2 size={11} /> INGRESADO
+                            <CheckCircle2 size={11} /> EN LA RAVE EN ESTE MOMENTO
                           </span>
                         )}
 

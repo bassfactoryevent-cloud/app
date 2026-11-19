@@ -4,9 +4,9 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { 
   Search, Eye, ShieldCheck, UserCheck, UserX, ChevronLeft, 
-  ChevronRight, Sparkles, Filter, MoreVertical, Edit2, UserPlus, X, Lock, Mail, User
+  ChevronRight, Sparkles, Filter, MoreVertical, Edit2, UserPlus, X, Lock, Mail, User, Check
 } from "lucide-react";
-import { updateUserRole, toggleUserStatus, createUserAction } from "./actions";
+import { updateUserRole, toggleUserStatus, createUserAction, updateUserEmailAdminAction } from "./actions";
 import { toast } from "sonner";
 
 interface UsersClientProps {
@@ -20,6 +20,8 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [editingEmailUserId, setEditingEmailUserId] = useState<string | null>(null);
+  const [editedEmailValue, setEditedEmailValue] = useState<string>("");
   const [isPending, startTransition] = useTransition();
 
   // Create User Modal State
@@ -91,6 +93,26 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
         toast.success(`Usuario ${nextStatus ? "activado" : "desactivado"} correctamente`);
       } else {
         toast.error(res.error || "Error al cambiar estado");
+      }
+    });
+  };
+
+  const handleSaveUserEmail = (userId: string) => {
+    const cleanEmail = editedEmailValue.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes("@")) {
+      toast.error("Ingresa un correo electrónico válido.");
+      return;
+    }
+
+    startTransition(async () => {
+      const res = await updateUserEmailAdminAction(userId, cleanEmail);
+      if (res.success) {
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, email: res.email || cleanEmail } : u));
+        setEditingEmailUserId(null);
+        setEditedEmailValue("");
+        toast.success(`Correo actualizado y confirmado a ${res.email || cleanEmail} (boletas sincronizadas, sin gastar cuota de correo).`);
+      } else {
+        toast.error(res.error || "Error al actualizar el correo.");
       }
     });
   };
@@ -295,9 +317,91 @@ export function UsersClient({ initialUsers }: UsersClientProps) {
                               {isSuperAdmin && <span style={{ fontSize: "0.75rem", color: "#eab308" }}>👑</span>}
                               {isScanner && <span style={{ fontSize: "0.75rem", color: "#06b6d4" }}>🚪</span>}
                             </div>
-                            {user.email && (
-                              <div style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)" }}>
-                                {user.email}
+                            {editingEmailUserId === user.id ? (
+                              <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
+                                <input
+                                  type="email"
+                                  value={editedEmailValue}
+                                  onChange={(e) => setEditedEmailValue(e.target.value)}
+                                  placeholder="nuevo@correo.com"
+                                  disabled={isPending}
+                                  style={{
+                                    padding: "3px 7px",
+                                    borderRadius: "5px",
+                                    backgroundColor: "rgba(0,0,0,0.65)",
+                                    border: "1px solid #00F0FF",
+                                    color: "white",
+                                    fontSize: "0.76rem",
+                                    outline: "none",
+                                    minWidth: "185px",
+                                  }}
+                                />
+                                <button
+                                  type="button"
+                                  disabled={isPending}
+                                  onClick={() => handleSaveUserEmail(user.id)}
+                                  title="Confirmar nuevo correo"
+                                  style={{
+                                    padding: "4px 7px",
+                                    borderRadius: "5px",
+                                    backgroundColor: "#22c55e",
+                                    color: "#052e16",
+                                    border: "none",
+                                    fontSize: "0.72rem",
+                                    fontWeight: 800,
+                                    cursor: "pointer",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "3px",
+                                  }}
+                                >
+                                  <Check size={12} /> Confirmar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingEmailUserId(null);
+                                    setEditedEmailValue("");
+                                  }}
+                                  title="Cancelar"
+                                  style={{
+                                    padding: "4px 6px",
+                                    borderRadius: "5px",
+                                    backgroundColor: "rgba(255,255,255,0.08)",
+                                    color: "white",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <X size={12} />
+                                </button>
+                              </div>
+                            ) : (
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)" }}>
+                                  {user.email || "Sin correo"}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingEmailUserId(user.id);
+                                    setEditedEmailValue(user.email || "");
+                                  }}
+                                  title="Corregir y confirmar correo (sin gastar envíos)"
+                                  style={{
+                                    background: "none",
+                                    border: "none",
+                                    color: "rgba(255,255,255,0.45)",
+                                    cursor: "pointer",
+                                    padding: "2px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <Edit2 size={12} />
+                                </button>
                               </div>
                             )}
                             <div style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", marginTop: "2px" }}>

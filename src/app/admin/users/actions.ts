@@ -178,3 +178,93 @@ export async function createUserAction(formData: {
     return { success: false, error: err.message || "Error interno al crear usuario." };
   }
 }
+
+/**
+ * Permite al administrador corregir y confirmar de inmediato el correo electrónico
+ * de un usuario en Supabase Auth, sincronizando sus boletas y órdenes,
+ * SIN enviar ningún correo automático para no gastar la cuota de Resend / SMTP.
+ */
+export async function updateUserEmailAdminAction(
+  userId: string,
+  newEmailInput: string
+): Promise<{ success: boolean; email?: string; error?: string }> {
+  try {
+    const cleanNewEmail = (newEmailInput || "").trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!userId || !cleanNewEmail || !emailRegex.test(cleanNewEmail)) {
+      return { success: false, error: "Por favor ingresa un correo electrónico válido." };
+    }
+
+    // Obtener el correo anterior del usuario para sincronizar órdenes/boletas asociadas por email
+    const { data: existingAuth } = await adminDb.auth.admin.getUserById(userId);
+    const oldEmail = (existingAuth?.user?.email || "").trim().toLowerCase();
+
+    if (oldEmail === cleanNewEmail) {
+      return { success: false, error: "El usuario ya tiene ese correo electrónico asignado." };
+    }
+
+    // 1. Actualizar y autoconfirmar en Supabase Auth (sin enviar correo SMTP)
+    const { error: authErr } = await adminDb.auth.admin.updateUserById(userId, {
+      email: cleanNewEmail,
+      email_confirm: true,
+    });
+
+    if (authErr) {
+      const msg = (authErr.message || "").toLowerCase();
+      if (msg.includes("already") || msg.includes("exists") || msg.includes("duplicate")) {
+        return {
+          success: false,
+          error: "Ese correo electrónico ya pertenece a otra cuenta registrada.",
+        };
+      }
+      return {
+        success: false,
+        error: authErr.message || "No se pudo actualizar el correo en Supabase Auth.",
+      };
+    }
+
+    // 2. Sincronizar todas las boletas, órdenes y transferencias pendientes
+    await Promise.all([
+      adminDb
+        .from("tickets")
+        .update({ assigned_email: cleanNewEmail })
+        .eq("user_id", userId),
+      oldEmail
+        ? adminDb
+            .from("tickets")
+            .update({ assigned_email: cleanNewEmail })
+            .ilike("assigned_email", oldEmail)
+        : Promise.resolve(),
+      adminDb
+        .from("merch_orders")
+        .update({ customer_email: cleanNewEmail })
+        .eq("user_id", userId),
+      oldEmail
+        ? adminDb
+            .from("merch_orders")
+            .update({ customer_email: cleanNewEmail })
+            .ilike("customer_email", oldEmail)
+        : Promise.resolve(),
+      oldEmail
+        ? adminDb
+            .from("ticket_transfers")
+            .update({ to_email: cleanNewEmail })
+            .ilike("to_email", oldEmail)
+            .eq("status", "pending")
+        : Promise.resolve(),
+    ]);
+
+    revalidatePath("/admin/users");
+    revalidatePath(`/admin/users/${userId}`);
+    revalidatePath("/admin/events");
+
+    return { success: true, email: cleanNewEmail };
+  } catch (err: any) {
+    console.error("Error in updateUserEmailAdminAction:", err);
+    return {
+      success: false,
+      error: err?.message || "Error inesperado al actualizar el correo.",
+    };
+  }
+}

@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Html5Qrcode } from "html5-qrcode";
 import { signOut } from "../(auth)/actions";
+import { createClient } from "@/utils/supabase/client";
 
 interface RecentScanItem {
   id: string;
@@ -24,6 +25,7 @@ interface AssignedEvent {
   location_name: string;
   start_date: string;
   total_capacity: number;
+  issued_count?: number;
   scanned_count: number;
   my_scanned_count: number;
   my_recent_scans: RecentScanItem[];
@@ -72,12 +74,44 @@ export default function MobileScannerClient({ user, events }: MobileScannerClien
   const isProcessingRef = useRef(false);
   const activeEvent = events.find(e => e.id === selectedEventId) || events[0];
 
-  const totalCapacity = activeEvent?.total_capacity || 0;
+  const totalCapacity = activeEvent?.issued_count || activeEvent?.total_capacity || 0;
   const currentTotalScanned = scannedCounts[selectedEventId] || 0;
   const currentMyScanned = myScannedCounts[selectedEventId] || 0;
   const pendingToEnter = Math.max(0, totalCapacity - currentTotalScanned);
   const occupancyPercentage = totalCapacity > 0 ? Math.min(100, Math.round((currentTotalScanned / totalCapacity) * 100)) : 0;
   const myRecentScans = recentScansMap[selectedEventId] || [];
+
+  // Sincronización en tiempo real entre múltiples celulares de puerta
+  useEffect(() => {
+    if (!selectedEventId) return;
+    const supabase = createClient();
+
+    const channel = supabase
+      .channel(`scanner-door-live-${selectedEventId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "tickets" },
+        (payload) => {
+          const updated = payload.new as any;
+          const old = payload.old as any;
+          if (
+            updated?.status === "scanned" &&
+            old?.status !== "scanned" &&
+            updated?.scanned_by !== user.id
+          ) {
+            setScannedCounts((prev) => ({
+              ...prev,
+              [selectedEventId]: (prev[selectedEventId] || 0) + 1,
+            }));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedEventId, user.id]);
 
   // Reproducir sonidos y vibración háptica
   const playFeedback = (isSuccess: boolean) => {

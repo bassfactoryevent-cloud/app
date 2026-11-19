@@ -15,10 +15,14 @@ import {
   Headphones,
   Sparkles,
   User,
+  Mail,
+  Edit2,
+  X,
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { optimizeImage } from "@/utils/imageOptimizer";
 import { signOut } from "@/app/(auth)/actions";
+import { updateMyEmailAction } from "@/app/(public)/account/actions";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 
 const GENRE_OPTIONS = [
@@ -81,6 +85,13 @@ export default function SettingsForm({
   const [raverTag, setRaverTag] = useState<string>(meta.raver_tag || "");
   const [city, setCity] = useState<string>(meta.city || "Medellín");
   const [whatsapp, setWhatsapp] = useState<string>(meta.whatsapp || "");
+
+  // Editable email state (instant confirmation without sending email)
+  const [currentEmail, setCurrentEmail] = useState<string>(user?.email || "");
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [newEmailInput, setNewEmailInput] = useState<string>(user?.email || "");
+  const [confirmEmailInput, setConfirmEmailInput] = useState<string>("");
+  const [isUpdatingEmail, setIsUpdatingEmail] = useState(false);
 
   // Musical preferences state
   const [selectedGenres, setSelectedGenres] = useState<string[]>(
@@ -217,6 +228,42 @@ export default function SettingsForm({
       toast.error(err?.message || "No se pudo actualizar la contraseña.");
     } finally {
       setIsUpdatingPassword(false);
+    }
+  };
+
+  const handleConfirmEmailUpdate = async () => {
+    const cleanNew = newEmailInput.trim().toLowerCase();
+    const cleanConfirm = confirmEmailInput.trim().toLowerCase();
+
+    if (!cleanNew || !cleanNew.includes("@")) {
+      toast.error("Ingresa un correo electrónico válido.");
+      return;
+    }
+    if (cleanNew !== cleanConfirm) {
+      toast.error("Los correos ingresados no coinciden. Verifica que esté bien escrito.");
+      return;
+    }
+
+    setIsUpdatingEmail(true);
+    try {
+      const res = await updateMyEmailAction(cleanNew);
+      if (!res.success) {
+        toast.error(res.error || "No se pudo actualizar el correo.");
+        return;
+      }
+      const finalEmail = res.email || cleanNew;
+      setCurrentEmail(finalEmail);
+      setNewEmailInput(finalEmail);
+      setConfirmEmailInput("");
+      setIsEditingEmail(false);
+      await supabase.auth.refreshSession().catch(() => {});
+      window.dispatchEvent(new Event("profile_updated"));
+      router.refresh();
+      toast.success("¡Correo actualizado, confirmado y vinculado a tus boletas!");
+    } catch (err: any) {
+      toast.error(err?.message || "Error al actualizar correo.");
+    } finally {
+      setIsUpdatingEmail(false);
     }
   };
 
@@ -462,21 +509,150 @@ export default function SettingsForm({
             </div>
 
             <div>
-              <label htmlFor="email" style={{ ...labelStyle, color: "var(--color-text-secondary)" }}>
-                Correo Electrónico (Vinculado a tus boletas)
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={user.email}
-                disabled
+              <div
                 style={{
-                  ...inputStyle,
-                  opacity: 0.55,
-                  cursor: "not-allowed",
-                  backgroundColor: "rgba(0,0,0,0.25)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "0.5rem",
+                  marginBottom: "0.35rem",
                 }}
-              />
+              >
+                <label htmlFor="email" style={{ ...labelStyle, marginBottom: 0 }}>
+                  Correo Electrónico (Vinculado a tus boletas)
+                </label>
+                {!isEditingEmail ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewEmailInput(currentEmail);
+                      setConfirmEmailInput(currentEmail);
+                      setIsEditingEmail(true);
+                    }}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      background: "rgba(0, 240, 255, 0.1)",
+                      border: "1px solid rgba(0, 240, 255, 0.3)",
+                      color: "var(--color-accent)",
+                      padding: "2px 8px",
+                      borderRadius: "6px",
+                      fontSize: "0.7rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <Edit2 size={11} /> Corregir correo
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingEmail(false)}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "3px",
+                      background: "transparent",
+                      border: "none",
+                      color: "var(--color-text-secondary)",
+                      fontSize: "0.7rem",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <X size={12} /> Cancelar
+                  </button>
+                )}
+              </div>
+
+              {!isEditingEmail ? (
+                <div
+                  style={{
+                    ...inputStyle,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    backgroundColor: "rgba(0,0,0,0.28)",
+                  }}
+                >
+                  <span style={{ wordBreak: "break-all" }}>{currentEmail}</span>
+                  <span
+                    style={{
+                      fontSize: "0.66rem",
+                      fontWeight: 800,
+                      color: "#4ade80",
+                      backgroundColor: "rgba(34, 197, 94, 0.12)",
+                      border: "1px solid rgba(34, 197, 94, 0.3)",
+                      padding: "1px 6px",
+                      borderRadius: "999px",
+                      flexShrink: 0,
+                    }}
+                  >
+                    ✓ Confirmado
+                  </span>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    backgroundColor: "rgba(0, 0, 0, 0.45)",
+                    border: "1px solid rgba(0, 240, 255, 0.3)",
+                    borderRadius: "8px",
+                    padding: "0.75rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.6rem",
+                  }}
+                >
+                  <div>
+                    <label style={{ ...labelStyle, fontSize: "0.7rem" }}>
+                      Nuevo Correo Electrónico
+                    </label>
+                    <input
+                      type="email"
+                      value={newEmailInput}
+                      onChange={(e) => setNewEmailInput(e.target.value)}
+                      placeholder="tucorreo@gmail.com"
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ ...labelStyle, fontSize: "0.7rem" }}>
+                      Repite el Correo para Confirmarlo
+                    </label>
+                    <input
+                      type="email"
+                      value={confirmEmailInput}
+                      onChange={(e) => setConfirmEmailInput(e.target.value)}
+                      placeholder="Confirma tu correo exacto"
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
+                    <button
+                      type="button"
+                      disabled={isUpdatingEmail}
+                      onClick={handleConfirmEmailUpdate}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "5px",
+                        padding: "0.45rem 0.9rem",
+                        borderRadius: "6px",
+                        backgroundColor: "#22c55e",
+                        color: "#052e16",
+                        border: "none",
+                        fontSize: "0.74rem",
+                        fontWeight: 800,
+                        cursor: isUpdatingEmail ? "wait" : "pointer",
+                      }}
+                    >
+                      <Mail size={13} />
+                      {isUpdatingEmail ? "Actualizando..." : "Confirmar y Actualizar Correo"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

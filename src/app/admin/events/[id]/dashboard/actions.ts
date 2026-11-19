@@ -254,6 +254,113 @@ export async function toggleCourtesyLock(ticketId: string, eventId: string, curr
   }
 }
 
+/**
+ * Corrige y confirma de inmediato el correo electrónico de un asistente desde el dashboard
+ * del evento (actualiza Supabase Auth, la boleta y la orden) SIN enviar ningún correo
+ * para no consumir la cuota disponible de Resend / SMTP.
+ */
+export async function updateAttendeeEmailAction(params: {
+  ticketId: string;
+  eventId: string;
+  newEmailInput: string;
+}): Promise<{ success: boolean; email?: string; error?: string }> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "No autorizado" };
+
+    const { data: profile } = await adminDb
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile || (profile.role !== "admin" && profile.role !== "superadmin")) {
+      return { success: false, error: "Permisos insuficientes." };
+    }
+
+    const cleanNewEmail = (params.newEmailInput || "").trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!cleanNewEmail || !emailRegex.test(cleanNewEmail)) {
+      return { success: false, error: "Por favor ingresa un correo electrónico válido." };
+    }
+
+    const { data: ticket, error: tErr } = await adminDb
+      .from("tickets")
+      .select("id, user_id, order_id, assigned_email")
+      .eq("id", params.ticketId)
+      .single();
+
+    if (tErr || !ticket) {
+      return { success: false, error: "Boleta no encontrada." };
+    }
+
+    const oldEmail = (ticket.assigned_email || "").trim().toLowerCase();
+
+    // Si el ticket tiene un user_id asociado, verificar si ese usuario no es un admin que emitió cortesía a un no-registrado
+    if (ticket.user_id) {
+      const { data: targetProfile } = await adminDb
+        .from("profiles")
+        .select("role")
+        .eq("id", ticket.user_id)
+        .maybeSingle();
+
+      const isTicketOwnerRegularUser =
+        !targetProfile ||
+        (targetProfile.role !== "admin" && targetProfile.role !== "superadmin") ||
+        ticket.user_id === user.id && oldEmail === (user.email || "").toLowerCase();
+
+      if (isTicketOwnerRegularUser) {
+        const { error: authErr } = await adminDb.auth.admin.updateUserById(ticket.user_id, {
+          email: cleanNewEmail,
+          email_confirm: true,
+        });
+
+        if (authErr) {
+          const msg = (authErr.message || "").toLowerCase();
+          if (msg.includes("already") || msg.includes("exists") || msg.includes("duplicate")) {
+            return {
+              success: false,
+              error: "Ese correo electrónico ya pertenece a otra cuenta registrada.",
+            };
+          }
+          return {
+            success: false,
+            error: authErr.message || "No se pudo actualizar el correo en Auth.",
+          };
+        }
+      }
+    }
+
+    // Actualizar boleta y orden asociada
+    await Promise.all([
+      adminDb
+        .from("tickets")
+        .update({ assigned_email: cleanNewEmail })
+        .eq("id", ticket.id),
+      ticket.order_id
+        ? adminDb
+            .from("merch_orders")
+            .update({ customer_email: cleanNewEmail })
+            .eq("id", ticket.order_id)
+        : Promise.resolve(),
+    ]);
+
+    revalidatePath(`/admin/events/${params.eventId}/dashboard`);
+    revalidatePath("/admin/users");
+
+    return { success: true, email: cleanNewEmail };
+  } catch (err: any) {
+    console.error("Error in updateAttendeeEmailAction:", err);
+    return {
+      success: false,
+      error: err?.message || "Error al actualizar el correo del asistente.",
+    };
+  }
+}
+
 export async function getLiveEventDashboardData(eventId: string) {
   try {
     const { healStalePendingTransfers } = await import("@/utils/userTickets");

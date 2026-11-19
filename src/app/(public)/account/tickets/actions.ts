@@ -39,6 +39,61 @@ export async function getLiveAccountTicketsAction(): Promise<{
   }
 }
 
+export async function getLiveTicketStatusAction(ticketId: string): Promise<{
+  success: boolean;
+  status?: string;
+  scanned_at?: string | null;
+  liveAttendeeCount?: number;
+}> {
+  try {
+    if (!ticketId) return { success: false };
+
+    const { data: ticket } = await adminDb
+      .from("tickets")
+      .select("id, status, scanned_at, tier_id")
+      .eq("id", ticketId)
+      .maybeSingle();
+
+    if (!ticket) return { success: false };
+
+    let liveAttendeeCount = 0;
+    if (ticket.tier_id) {
+      const { data: tier } = await adminDb
+        .from("ticket_tiers")
+        .select("event_id")
+        .eq("id", ticket.tier_id)
+        .maybeSingle();
+
+      if (tier?.event_id) {
+        const { data: eventTiers } = await adminDb
+          .from("ticket_tiers")
+          .select("id")
+          .eq("event_id", tier.event_id);
+
+        const tierIds = (eventTiers || []).map((t: any) => t.id);
+        if (tierIds.length > 0) {
+          const { count } = await adminDb
+            .from("tickets")
+            .select("*", { count: "exact", head: true })
+            .in("tier_id", tierIds)
+            .eq("status", "scanned");
+          liveAttendeeCount = count || 0;
+        }
+      }
+    }
+
+    return {
+      success: true,
+      status: ticket.status,
+      scanned_at: ticket.scanned_at,
+      liveAttendeeCount,
+    };
+  } catch (err) {
+    console.error("Error in getLiveTicketStatusAction:", err);
+    return { success: false };
+  }
+}
+
 export async function initiateTransfer(
   ticketId: string,
   name: string,

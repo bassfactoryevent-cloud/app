@@ -62,12 +62,25 @@ export default function AccountOverviewClient({
   const [qrOpen, setQrOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [, setTick] = useState(0);
+  const [liveScannedIds, setLiveScannedIds] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setMounted(true);
     const t = setInterval(() => setTick((n) => n + 1), 30000);
-    return () => clearInterval(t);
-  }, []);
+    const onLiveScan = (e: any) => {
+      const tId = e?.detail?.ticketId;
+      const scannedAt = e?.detail?.scanned_at || new Date().toISOString();
+      if (tId) {
+        setLiveScannedIds((prev) => ({ ...prev, [tId]: scannedAt }));
+        router.refresh();
+      }
+    };
+    window.addEventListener("ticket_scanned_live", onLiveScan);
+    return () => {
+      clearInterval(t);
+      window.removeEventListener("ticket_scanned_live", onLiveScan);
+    };
+  }, [router]);
 
   const incoming = ticketsData.incomingTransfers || [];
   const tickets = ticketsData.tickets || [];
@@ -97,8 +110,16 @@ export default function AccountOverviewClient({
 
   const nextItem = upcomingTickets[0] || null;
   const nextEvent = nextItem?.event || null;
-  const nextTicket = nextItem?.ticket || null;
+  const rawNextTicket = nextItem?.ticket || null;
+  const nextTicket = rawNextTicket
+    ? {
+        ...rawNextTicket,
+        status: liveScannedIds[rawNextTicket.id] ? "scanned" : rawNextTicket.status,
+        scanned_at: liveScannedIds[rawNextTicket.id] || rawNextTicket.scanned_at,
+      }
+    : null;
   const nextTier = nextItem?.tier || null;
+  const isNextScanned = nextTicket?.status === "scanned";
 
   const isNextQrReady = Boolean(
     nextTicket &&
@@ -367,12 +388,20 @@ export default function AccountOverviewClient({
                     fontWeight: 800,
                     textTransform: "uppercase",
                     letterSpacing: "0.06em",
-                    color: isNextQrReady ? "#4ade80" : "var(--color-accent)",
-                    backgroundColor: isNextQrReady
+                    color: isNextScanned
+                      ? "#00F0FF"
+                      : isNextQrReady
+                      ? "#4ade80"
+                      : "var(--color-accent)",
+                    backgroundColor: isNextScanned
+                      ? "rgba(0, 240, 255, 0.14)"
+                      : isNextQrReady
                       ? "rgba(34, 197, 94, 0.12)"
                       : "rgba(0, 240, 255, 0.1)",
                     border: `1px solid ${
-                      isNextQrReady
+                      isNextScanned
+                        ? "rgba(0, 240, 255, 0.45)"
+                        : isNextQrReady
                         ? "rgba(34, 197, 94, 0.3)"
                         : "rgba(0, 240, 255, 0.25)"
                     }`,
@@ -380,7 +409,11 @@ export default function AccountOverviewClient({
                     borderRadius: "999px",
                   }}
                 >
-                  {isNextQrReady ? "● QR Activo en Taquilla" : "Tu Próximo Evento"}
+                  {isNextScanned
+                    ? "● EN LA RAVE EN ESTE MOMENTO"
+                    : isNextQrReady
+                    ? "● QR Activo en Taquilla"
+                    : "Tu Próximo Evento"}
                 </span>
 
                 {mounted && nextEvent?.start_date && (
@@ -468,15 +501,22 @@ export default function AccountOverviewClient({
                     gap: "5px",
                     padding: "0.45rem 0.9rem",
                     borderRadius: "7px",
-                    backgroundColor: "var(--color-magenta)",
-                    color: "white",
-                    border: "none",
+                    backgroundColor: isNextScanned
+                      ? "rgba(0, 240, 255, 0.16)"
+                      : "var(--color-magenta)",
+                    color: isNextScanned ? "#00F0FF" : "white",
+                    border: isNextScanned ? "1px solid rgba(0, 240, 255, 0.45)" : "none",
                     fontSize: "0.76rem",
-                    fontWeight: 700,
+                    fontWeight: 800,
                     cursor: "pointer",
                   }}
                 >
-                  <QrCode size={14} /> {isNextQrReady ? "Abrir Pase QR" : "Estado del Pase"}
+                  <QrCode size={14} />{" "}
+                  {isNextScanned
+                    ? "Ver Mi Pase Activo"
+                    : isNextQrReady
+                    ? "Abrir Pase QR"
+                    : "Estado del Pase"}
                 </button>
 
                 {mapsQuery && (

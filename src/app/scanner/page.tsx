@@ -151,20 +151,25 @@ export default async function ScannerPortalPage() {
   const tierNameMap = new Map((tiers || []).map((t: any) => [t.id, t.name]));
   const allTierIds = (tiers || []).map((t: any) => t.id);
 
+  let issuedCountMap: { [eventId: string]: number } = {};
   let scannedCountMap: { [eventId: string]: number } = {};
   let myScannedCountMap: { [eventId: string]: number } = {};
   let myRecentScansMap: { [eventId: string]: any[] } = {};
 
   if (allTierIds.length > 0) {
-    const { data: scannedTickets } = await adminDb
+    const { data: allEventTickets } = await adminDb
       .from("tickets")
       .select("id, tier_id, status, scanned_at, scanned_by, assigned_name")
       .in("tier_id", allTierIds)
-      .eq("status", "scanned");
+      .in("status", ["valid", "scanned"]);
 
-    (scannedTickets || []).forEach((t: any) => {
+    (allEventTickets || []).forEach((t: any) => {
       const eId = tierEventMap.get(t.tier_id);
-      if (eId) {
+      if (!eId) return;
+
+      issuedCountMap[eId] = (issuedCountMap[eId] || 0) + 1;
+
+      if (t.status === "scanned") {
         scannedCountMap[eId] = (scannedCountMap[eId] || 0) + 1;
         if (t.scanned_by === user.id) {
           myScannedCountMap[eId] = (myScannedCountMap[eId] || 0) + 1;
@@ -192,7 +197,8 @@ export default async function ScannerPortalPage() {
     cover_image: ev.cover_image,
     location_name: ev.location_name,
     start_date: ev.start_date,
-    total_capacity: Number(ev.total_capacity) || 0,
+    total_capacity: Number(ev.total_capacity) || issuedCountMap[ev.id] || 0,
+    issued_count: issuedCountMap[ev.id] || 0,
     scanned_count: scannedCountMap[ev.id] || 0,
     my_scanned_count: myScannedCountMap[ev.id] || 0,
     my_recent_scans: myRecentScansMap[ev.id] || []
