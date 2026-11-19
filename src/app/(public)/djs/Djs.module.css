@@ -87,6 +87,86 @@
   width: 100%;
 }
 
+/* GENRE FILTER PILLS */
+.filterPills {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.filterPill {
+  padding: 0.36rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filterPill:hover {
+  color: white;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.filterPillActive {
+  background: rgba(229, 9, 20, 0.16);
+  border-color: var(--color-magenta);
+  color: white;
+  font-weight: 700;
+}
+
+.genreTag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.eventsSection {
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.bookingCta {
+  margin-top: 1.75rem;
+  background-color: var(--color-surface);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.bookingCtaBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.55rem 1.05rem;
+  border-radius: 8px;
+  background-color: var(--color-magenta);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.bookingCtaBtn:hover {
+  opacity: 0.9;
+}
+
 /* DJS GRID (Exact Home Scale) */
 .djsGrid {
   display: grid;
