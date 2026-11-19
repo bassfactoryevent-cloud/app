@@ -2,15 +2,22 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
+import styles from "./Blog.module.css";
 
-export default function BlogFilters({ categories }: { categories: any[] }) {
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export default function BlogFilters({ categories }: { categories: Category[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   const currentCategory = searchParams.get("category");
   const currentQ = searchParams.get("q") || "";
-  
+
   const [searchValue, setSearchValue] = useState(currentQ);
 
   const createQueryString = useCallback(
@@ -26,72 +33,67 @@ export default function BlogFilters({ categories }: { categories: any[] }) {
     [searchParams]
   );
 
+  const pushQuery = (queryStr: string) => {
+    router.push(queryStr ? `/blog?${queryStr}` : "/blog");
+  };
+
   const handleCategoryClick = (slug: string) => {
     const newCategory = currentCategory === slug ? "" : slug;
-    router.push(`/blog?${createQueryString("category", newCategory)}`);
+    pushQuery(createQueryString("category", newCategory));
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push(`/blog?${createQueryString("q", searchValue)}`);
+    pushQuery(createQueryString("q", searchValue.trim()));
+  };
+
+  const handleClearSearch = () => {
+    setSearchValue("");
+    pushQuery(createQueryString("q", ""));
   };
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1.5rem', width: '100%', marginBottom: '2rem' }}>
-      
-      {/* Category Pills */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', flex: 1 }}>
-        <button 
+    <div className={styles.filterBar}>
+      <div className={styles.filterPills}>
+        <button
+          type="button"
           onClick={() => handleCategoryClick("")}
-          style={{
-            padding: '0.5rem 1rem',
-            borderRadius: '100px',
-            fontSize: '0.875rem',
-            fontWeight: 600,
-            cursor: 'pointer',
-            border: '1px solid',
-            transition: 'all 0.2s',
-            backgroundColor: !currentCategory ? 'var(--color-magenta)' : 'transparent',
-            borderColor: !currentCategory ? 'var(--color-magenta)' : 'rgba(255,255,255,0.2)',
-            color: 'white'
-          }}
+          className={`${styles.filterPill} ${!currentCategory ? styles.filterPillActive : ""}`}
         >
           Todos
         </button>
-        {categories.map(cat => (
-          <button 
+        {categories.map((cat) => (
+          <button
+            type="button"
             key={cat.id}
             onClick={() => handleCategoryClick(cat.slug)}
-            style={{
-              padding: '0.5rem 1rem',
-              borderRadius: '100px',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              border: '1px solid',
-              transition: 'all 0.2s',
-              backgroundColor: currentCategory === cat.slug ? 'var(--color-magenta)' : 'transparent',
-              borderColor: currentCategory === cat.slug ? 'var(--color-magenta)' : 'rgba(255,255,255,0.2)',
-              color: 'white'
-            }}
+            className={`${styles.filterPill} ${currentCategory === cat.slug ? styles.filterPillActive : ""}`}
           >
             {cat.name}
           </button>
         ))}
       </div>
 
-      {/* Search Bar */}
-      <form onSubmit={handleSearch} style={{ display: 'flex', alignItems: 'center', backgroundColor: '#111', borderRadius: '100px', padding: '0.5rem 1rem', border: '1px solid rgba(255,255,255,0.1)', maxWidth: '300px', width: '100%' }}>
-        <Search size={18} style={{ opacity: 0.5, marginRight: '0.5rem' }} />
-        <input 
-          type="text" 
-          placeholder="Buscar artículos..." 
+      <form onSubmit={handleSearch} className={styles.searchWrap}>
+        <Search size={14} className={styles.searchIcon} />
+        <input
+          type="text"
+          placeholder="Buscar artículos..."
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
-          style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', width: '100%', fontSize: '0.875rem' }}
+          className={styles.searchInput}
         />
+        {searchValue && (
+          <button
+            type="button"
+            onClick={handleClearSearch}
+            className={styles.searchClear}
+            aria-label="Limpiar búsqueda"
+          >
+            <X size={13} />
+          </button>
+        )}
       </form>
-
     </div>
   );
 }
