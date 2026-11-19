@@ -5,15 +5,30 @@ import CartIcon from "@/components/CartIcon";
 import { createClient } from "@/utils/supabase/server";
 import UserMenu from "./UserMenu";
 import { MobileBottomNav } from "./MobileBottomNav";
+import RaverPassDrawer from "./RaverPassDrawer";
+import { getUserTicketsData } from "@/utils/userTickets";
+import { getUserNotifications } from "@/utils/notifications";
 
 export default async function Header() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   let profile = null;
+  let ticketsData = null;
+  let notifications: any[] = [];
+
   if (user) {
-    const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
-    profile = data;
+    const [profileRes, tData] = await Promise.all([
+      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+      getUserTicketsData({ id: user.id, email: user.email }),
+    ]);
+    profile = profileRes.data;
+    ticketsData = tData;
+    notifications = await getUserNotifications({
+      id: user.id,
+      email: user.email,
+      role: profile?.role,
+    });
   }
 
   return (
@@ -51,13 +66,26 @@ export default async function Header() {
 
           {/* Desktop Navigation */}
           <nav className={styles.desktopNav}>
+            <Link href="/" className={styles.navLink}>Inicio</Link>
             <Link href="/events" className={styles.navLink}>Eventos</Link>
             <Link href="/djs" className={styles.navLink}>DJs & Booking</Link>
             <Link href="/merch" className={styles.navLink}>Merch</Link>
             <Link href="/blog" className={styles.navLink}>Cultura</Link>
+            {user && (
+              <Link href="/account" className={`${styles.navLink} ${styles.navLinkAccount}`}>
+                Mi Cuenta
+              </Link>
+            )}
           </nav>
 
           <div className={styles.actionsGroup}>
+            {user && ticketsData && (
+              <RaverPassDrawer
+                ticketsData={ticketsData}
+                notifications={notifications}
+              />
+            )}
+
             <CartIcon />
             
             {user ? (
@@ -75,8 +103,12 @@ export default async function Header() {
         </div>
       </div>
 
-      {/* Mobile B2B Bottom Navigation */}
-      <MobileBottomNav />
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav
+        isLoggedIn={Boolean(user)}
+        ticketsCount={ticketsData?.tickets?.length || 0}
+        incomingCount={ticketsData?.incomingTransfers?.length || 0}
+      />
     </header>
   );
 }

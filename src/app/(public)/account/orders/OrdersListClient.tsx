@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { 
   Package, 
@@ -25,6 +25,9 @@ interface OrdersListClientProps {
 }
 
 export default function OrdersListClient({ initialOrders, orderTicketsMap }: OrdersListClientProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   // Filtros
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEvent, setSelectedEvent] = useState("all");
@@ -164,17 +167,17 @@ export default function OrdersListClient({ initialOrders, orderTicketsMap }: Ord
   const isFiltering = searchTerm !== "" || selectedEvent !== "all" || selectedStatus !== "all" || selectedDateRange !== "all";
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
       
       {/* BARRA DE FILTROS Y CONTROLES */}
       <div style={{
-        backgroundColor: 'rgba(255, 255, 255, 0.02)',
+        backgroundColor: 'var(--color-surface)',
         border: '1px solid rgba(255, 255, 255, 0.08)',
-        borderRadius: '1rem',
-        padding: '1.25rem 1.5rem',
+        borderRadius: '10px',
+        padding: '0.9rem 1rem',
         display: 'flex',
         flexDirection: 'column',
-        gap: '1.25rem'
+        gap: '0.85rem'
       }}>
         
         {/* Fila 1: Buscador y Selectores principales */}
@@ -284,7 +287,7 @@ export default function OrdersListClient({ initialOrders, orderTicketsMap }: Ord
               <option value="all" style={{ backgroundColor: '#121216' }}>Cualquier fecha</option>
               <option value="30_days" style={{ backgroundColor: '#121216' }}>Últimos 30 días</option>
               <option value="90_days" style={{ backgroundColor: '#121216' }}>Últimos 3 meses</option>
-              <option value="this_year" style={{ backgroundColor: '#121216' }}>Este año (2026)</option>
+              <option value="this_year" style={{ backgroundColor: '#121216' }}>Este año ({new Date().getFullYear()})</option>
             </select>
           </div>
 
@@ -437,7 +440,7 @@ export default function OrdersListClient({ initialOrders, orderTicketsMap }: Ord
           </button>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {paginatedOrders.map((order) => {
             const statusConfig = getStatusConfig(order.status);
             const tickets = orderTicketsMap[order.id] || [];
@@ -447,23 +450,23 @@ export default function OrdersListClient({ initialOrders, orderTicketsMap }: Ord
               <div 
                 key={order.id} 
                 style={{ 
-                  backgroundColor: 'rgba(255,255,255,0.02)', 
-                  borderRadius: '1rem', 
-                  border: '1px solid rgba(255,255,255,0.07)', 
+                  backgroundColor: 'var(--color-surface)', 
+                  borderRadius: '10px', 
+                  border: '1px solid rgba(255,255,255,0.08)', 
                   overflow: 'hidden',
                   transition: 'border-color 0.2s ease'
                 }}
               >
                 {/* Header de la Orden */}
                 <div style={{ 
-                  padding: '1.25rem 1.5rem', 
-                  borderBottom: '1px solid rgba(255,255,255,0.05)', 
-                  backgroundColor: 'rgba(0,0,0,0.25)',
+                  padding: '0.85rem 1rem', 
+                  borderBottom: '1px solid rgba(255,255,255,0.06)', 
+                  backgroundColor: 'rgba(0,0,0,0.28)',
                   display: 'flex', 
                   justifyContent: 'space-between', 
                   alignItems: 'center', 
                   flexWrap: 'wrap', 
-                  gap: '1rem' 
+                  gap: '0.65rem' 
                 }}>
                   <div>
                     <div style={{ fontSize: '0.825rem', color: 'var(--color-text-secondary)', marginBottom: '0.25rem' }}>
@@ -528,16 +531,30 @@ export default function OrdersListClient({ initialOrders, orderTicketsMap }: Ord
                                 </div>
                               </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                {order.status === 'paid' ? (
-                                  <>
-                                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', padding: '0.35rem 0.75rem', borderRadius: '1rem' }}>
-                                      ✓ Confirmada
-                                    </span>
-                                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', padding: '0.35rem 0.75rem', borderRadius: '1rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                      <Clock size={12} /> QR se genera 1 día antes
-                                    </span>
-                                  </>
-                                ) : order.status === 'pending' ? (
+                                {order.status === 'paid' ? (() => {
+                                  const evStart = event?.start_date ? new Date(event.start_date).getTime() : null;
+                                  const isQrActive = Boolean(t.qr_dispatched || (mounted && evStart && evStart - Date.now() <= 24 * 60 * 60 * 1000));
+                                  return (
+                                    <>
+                                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#22c55e', backgroundColor: 'rgba(34,197,94,0.12)', padding: '0.28rem 0.65rem', borderRadius: '999px' }}>
+                                        ✓ Confirmada
+                                      </span>
+                                      <span style={{
+                                        fontSize: '0.72rem',
+                                        fontWeight: 600,
+                                        color: isQrActive ? '#4ade80' : '#f59e0b',
+                                        backgroundColor: isQrActive ? 'rgba(34,197,94,0.1)' : 'rgba(245,158,11,0.1)',
+                                        padding: '0.28rem 0.65rem',
+                                        borderRadius: '999px',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px'
+                                      }}>
+                                        <Clock size={12} /> {isQrActive ? 'QR Habilitado' : 'QR 24h antes'}
+                                      </span>
+                                    </>
+                                  );
+                                })() : order.status === 'pending' ? (
                                   <>
                                     <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#eab308', backgroundColor: 'rgba(234,179,8,0.12)', padding: '0.35rem 0.75rem', borderRadius: '1rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                       <Clock size={12} /> Pago en Verificación
@@ -636,9 +653,16 @@ export default function OrdersListClient({ initialOrders, orderTicketsMap }: Ord
                   </div>
 
                   {order.tracking_number && (
-                    <div style={{ padding: '1rem', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '0.5rem', borderLeft: '4px solid var(--color-magenta)' }}>
-                      <div style={{ fontSize: '0.85rem', opacity: 0.7 }}>Número de Seguimiento de Envío:</div>
-                      <div style={{ fontWeight: 700, fontFamily: 'monospace', fontSize: '1.1rem', color: 'white' }}>{order.tracking_number}</div>
+                    <div style={{ padding: '0.85rem 1rem', backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: '8px', borderLeft: '3px solid var(--color-magenta)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <span style={{ fontSize: '0.78rem', color: 'var(--color-text-secondary)' }}>Guía de Seguimiento:</span>
+                        <span style={{ fontWeight: 700, fontFamily: 'monospace', fontSize: '0.92rem', color: 'white' }}>{order.tracking_number}</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
+                        <div style={{ height: '4px', borderRadius: '99px', backgroundColor: '#22c55e' }} />
+                        <div style={{ height: '4px', borderRadius: '99px', backgroundColor: order.status === 'shipped' || order.status === 'delivered' ? '#a855f7' : 'rgba(255,255,255,0.12)' }} />
+                        <div style={{ height: '4px', borderRadius: '99px', backgroundColor: order.status === 'delivered' ? '#22c55e' : 'rgba(255,255,255,0.12)' }} />
+                      </div>
                     </div>
                   )}
 

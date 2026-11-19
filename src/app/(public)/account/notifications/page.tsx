@@ -7,11 +7,12 @@ export const dynamic = "force-dynamic";
 
 export default async function AccountNotificationsPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
 
-  // Fetch user role
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
@@ -20,34 +21,30 @@ export default async function AccountNotificationsPage() {
 
   const userRole = profile?.role || "user";
 
-  // Generate actionable notifications from user database activity
   const notifications = await getUserNotifications({
     id: user.id,
     email: user.email,
-    role: userRole
+    role: userRole,
   });
 
   return (
-    <div style={{ paddingBottom: "4rem" }}>
-      <div style={{ marginBottom: "2rem" }}>
-        <h1 style={{ 
-          fontSize: "clamp(1.75rem, 3vw, 2.25rem)", 
-          fontWeight: 800, 
-          marginBottom: "0.5rem", 
-          fontFamily: "Outfit, sans-serif",
-          color: "white"
-        }}>
-          Centro de Notificaciones
-        </h1>
-        <p style={{ color: "var(--color-text-secondary)", fontSize: "1rem", margin: 0 }}>
-          Avisos inmediatos sobre tus compras, facturas oficiales, logística de envíos y boletas de eventos.
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <div>
+        <h2 style={{ fontSize: "1.15rem", fontWeight: 800, margin: 0, color: "white" }}>
+          Avisos y Notificaciones
+        </h2>
+        <p
+          style={{
+            color: "var(--color-text-secondary)",
+            fontSize: "0.78rem",
+            margin: "2px 0 0 0",
+          }}
+        >
+          Actividad reciente de tus boletas, facturas y envíos.
         </p>
       </div>
 
-      <NotificationsClient 
-        notifications={notifications} 
-        userRole={userRole} 
-      />
+      <NotificationsClient notifications={notifications} userRole={userRole} />
     </div>
   );
 }
