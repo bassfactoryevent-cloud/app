@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,7 +23,12 @@ import {
 
 export default function MobileNavDrawer({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const publicLinks = [
     { href: "/", label: "Inicio", icon: <Home size={16} /> },
@@ -52,20 +58,23 @@ export default function MobileNavDrawer({ isLoggedIn }: { isLoggedIn: boolean })
         <Menu size={19} />
       </button>
 
-      <AnimatePresence>
-        {open && (
-          <div
-            onClick={() => setOpen(false)}
-            style={{
-              position: "fixed",
-              inset: 0,
-              backgroundColor: "rgba(0,0,0,0.75)",
-              backdropFilter: "blur(6px)",
-              zIndex: 130,
-              display: "flex",
-              justifyContent: "flex-start",
-            }}
-          >
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {open && (
+              <div
+                onClick={() => setOpen(false)}
+                style={{
+                  position: "fixed",
+                  inset: 0,
+                  height: "100dvh",
+                  backgroundColor: "rgba(0,0,0,0.78)",
+                  backdropFilter: "blur(6px)",
+                  zIndex: 9999,
+                  display: "flex",
+                  justifyContent: "flex-start",
+                }}
+              >
             <motion.aside
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
@@ -265,7 +274,9 @@ export default function MobileNavDrawer({ isLoggedIn }: { isLoggedIn: boolean })
             </motion.aside>
           </div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+          document.body
+        )}
 
       <style jsx>{`
         .mobile-hamburger-btn {

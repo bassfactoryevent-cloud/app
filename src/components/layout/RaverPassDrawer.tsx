@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -463,21 +464,24 @@ export default function RaverPassDrawer({
         </div>
       </div>
 
-      {/* Slide-Over Quick Access Drawer */}
-      <AnimatePresence>
-        {isDrawerOpen && (
-          <div
-            onClick={() => setIsDrawerOpen(false)}
-            style={{
-              position: "fixed",
-              inset: 0,
-              backgroundColor: "rgba(0,0,0,0.72)",
-              backdropFilter: "blur(6px)",
-              zIndex: 115,
-              display: "flex",
-              justifyContent: "flex-end",
-            }}
-          >
+      {/* Slide-Over Quick Access Drawer (portaled to body to escape header backdrop-filter) */}
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {isDrawerOpen && (
+              <div
+                onClick={() => setIsDrawerOpen(false)}
+                style={{
+                  position: "fixed",
+                  inset: 0,
+                  height: "100dvh",
+                  backgroundColor: "rgba(0,0,0,0.75)",
+                  backdropFilter: "blur(6px)",
+                  zIndex: 9999,
+                  display: "flex",
+                  justifyContent: "flex-end",
+                }}
+              >
             <motion.aside
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
@@ -886,7 +890,9 @@ export default function RaverPassDrawer({
             </motion.aside>
           </div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+          document.body
+        )}
 
       {/* Global Modo Taquilla QR Modal */}
       <QrPassModal

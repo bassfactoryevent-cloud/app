@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -33,6 +34,11 @@ export default function QrPassModal({
 }: QrPassModalProps) {
   const [qrUrl, setQrUrl] = useState<string>("");
   const [wakeLockActive, setWakeLockActive] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const eventStartDate = event?.start_date ? new Date(event.start_date) : null;
   const isWithin24Hours = eventStartDate
@@ -80,7 +86,7 @@ export default function QrPassModal({
     };
   }, [isOpen]);
 
-  if (!ticket) return null;
+  if (!ticket || !mounted) return null;
 
   const coverImage = event?.cover_image || event?.image_url;
   const shortId = ticket.id?.slice(0, 8).toUpperCase() || "";
@@ -117,7 +123,7 @@ export default function QrPassModal({
       )
     : "24h antes del evento";
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <div
@@ -125,9 +131,10 @@ export default function QrPassModal({
           style={{
             position: "fixed",
             inset: 0,
+            height: "100dvh",
             backgroundColor: "rgba(0, 0, 0, 0.88)",
             backdropFilter: "blur(10px)",
-            zIndex: 120,
+            zIndex: 10000,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -570,6 +577,7 @@ export default function QrPassModal({
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
