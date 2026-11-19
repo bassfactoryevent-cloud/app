@@ -47,9 +47,14 @@ export default function EventsGridClient({
     return events.filter((e) => {
       if (e.status === "cancelled") return false;
       if (e.status === "postponed") return true;
-      const refDate = e.end_date || e.start_date;
-      if (!refDate) return true;
-      return new Date(refDate).getTime() >= yesterdayMs;
+      const startMs = e.start_date ? new Date(e.start_date).getTime() : null;
+      const endMs = e.end_date ? new Date(e.end_date).getTime() : null;
+      const effectiveMs =
+        startMs !== null && endMs !== null
+          ? Math.max(startMs, endMs)
+          : startMs ?? endMs;
+      if (effectiveMs === null) return true;
+      return effectiveMs >= yesterdayMs;
     });
   }, [events, yesterdayMs]);
 
