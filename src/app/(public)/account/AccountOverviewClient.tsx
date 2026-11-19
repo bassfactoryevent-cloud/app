@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import QrPassModal from "@/components/tickets/QrPassModal";
+import { isEventToday } from "@/utils/eventTime";
 import {
   acceptIncomingTransfersAction,
   rejectIncomingTransfersAction,
@@ -706,6 +707,23 @@ export default function AccountOverviewClient({
                         display: "block",
                       }}
                     />
+                    {isEventToday(ev.start_date) && (
+                      <span
+                        style={{
+                          position: "absolute",
+                          top: "6px",
+                          right: "6px",
+                          backgroundColor: "#E50914",
+                          color: "#ffffff",
+                          fontSize: "0.6rem",
+                          fontWeight: 900,
+                          padding: "2px 6px",
+                          borderRadius: "999px",
+                        }}
+                      >
+                        ● HOY
+                      </span>
+                    )}
                     {userHasTicket ? (
                       <span
                         style={{

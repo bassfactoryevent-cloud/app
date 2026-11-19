@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Calendar, MapPin, ArrowRight, Search, X } from "lucide-react";
+import { isEventToday } from "@/utils/eventTime";
 import styles from "./Events.module.css";
 
 interface EventsGridClientProps {
@@ -206,12 +207,14 @@ export default function EventsGridClient({
             const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
             const isAttending = attendingSet.has(event.id);
             const matchForYou = !isAttending && isLoggedIn && isForYou(event);
+            const isToday = isEventToday(event.start_date);
 
             return (
               <Link
                 href={`/events/${event.slug}`}
                 key={event.id}
                 className={styles.eventCard}
+                style={isToday ? { borderColor: "rgba(229, 9, 20, 0.55)" } : undefined}
               >
                 <div className={styles.imageWrapper}>
                   {event.cover_image ? (
@@ -236,14 +239,33 @@ export default function EventsGridClient({
                     </div>
                   )}
 
-                  {date && (
+                  {isToday ? (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "0.45rem",
+                        left: "0.45rem",
+                        backgroundColor: "#E50914",
+                        color: "#ffffff",
+                        fontSize: "0.65rem",
+                        fontWeight: 900,
+                        padding: "3px 8px",
+                        borderRadius: "999px",
+                        boxShadow: "0 0 12px rgba(229, 9, 20, 0.7)",
+                        zIndex: 2,
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      ● HOY
+                    </div>
+                  ) : date ? (
                     <div className={styles.dateBadge}>
                       <div className={styles.dateMonth}>
                         {date.toLocaleDateString("es-CO", { month: "short" })}
                       </div>
                       <div className={styles.dateDay}>{date.getDate()}</div>
                     </div>
-                  )}
+                  ) : null}
 
                   {event.status === "postponed" && (
                     <div className={`${styles.statusBadge} ${styles.statusPostponed}`}>

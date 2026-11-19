@@ -2,6 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { getUserNotifications } from "@/utils/notifications";
 import { getUserTicketsData } from "@/utils/userTickets";
+import { getUpcomingCutoffIso } from "@/utils/eventTime";
 import AccountOverviewClient from "./AccountOverviewClient";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +40,7 @@ export default async function AccountDashboardPage() {
         .from("events")
         .select("id, title, slug, start_date, location_name, cover_image, description, event_djs(dj_id)")
         .eq("status", "published")
-        .gte("start_date", new Date().toISOString())
+        .gte("start_date", getUpcomingCutoffIso())
         .order("start_date", { ascending: true })
         .limit(8),
     ]);

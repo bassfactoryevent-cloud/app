@@ -10,6 +10,7 @@ import CanvasIcon from "@/components/ui/CanvasIcon";
 import { parseHeroConfig } from "@/types/hero";
 import { getUserTicketsData } from "@/utils/userTickets";
 import HomeUserStrip from "@/components/home/HomeUserStrip";
+import { getUpcomingCutoffIso, isEventToday } from "@/utils/eventTime";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -41,12 +42,12 @@ export default async function Home() {
     }
   }
 
-  // Fetch upcoming events
+  // Fetch upcoming events (includes today's ongoing/tonight events)
   const { data: events } = await supabase
     .from('events')
     .select('*')
     .eq('status', 'published')
-    .gte('start_date', new Date().toISOString())
+    .gte('start_date', getUpcomingCutoffIso())
     .order('start_date', { ascending: true })
     .limit(8);
 
@@ -117,8 +118,29 @@ export default async function Home() {
             <HorizontalScroll title="Eventos" viewAllLink="/events" canvasIcon="radar">
               {events && events.slice(0, 8).map(event => {
                 const isAttending = attendingEventIds.has(event.id);
+                const isToday = isEventToday(event.start_date);
                 return (
-                  <Link href={`/events/${event.slug}`} key={event.id} className={styles.card} style={{ position: 'relative' }}>
+                  <Link href={`/events/${event.slug}`} key={event.id} className={styles.card} style={{ position: 'relative', borderColor: isToday ? 'rgba(229, 9, 20, 0.55)' : undefined }}>
+                    {isToday && (
+                      <span
+                        style={{
+                          position: 'absolute',
+                          top: '14px',
+                          right: '14px',
+                          zIndex: 2,
+                          backgroundColor: '#E50914',
+                          color: '#ffffff',
+                          fontSize: '0.62rem',
+                          fontWeight: 900,
+                          padding: '2px 7px',
+                          borderRadius: '999px',
+                          boxShadow: '0 0 10px rgba(229, 9, 20, 0.6)',
+                          letterSpacing: '0.04em',
+                        }}
+                      >
+                        ● HOY
+                      </span>
+                    )}
                     {isAttending && (
                       <span
                         style={{
