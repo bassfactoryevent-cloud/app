@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { QrCode, Ticket, Headphones, ShoppingBag, ArrowRight, Inbox } from "lucide-react";
+import { QrCode, Ticket, ArrowRight, Inbox } from "lucide-react";
 import QrPassModal from "@/components/tickets/QrPassModal";
 import type { UserTicketsPayload } from "@/utils/userTickets";
 
@@ -180,25 +180,6 @@ export default function HomeUserStrip({ userName, ticketsData }: HomeUserStripPr
             }}
           >
             <Ticket size={13} /> Tickets ({tickets.length})
-          </Link>
-
-          <Link
-            href="/djs"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "5px",
-              padding: "0.42rem 0.75rem",
-              borderRadius: "7px",
-              backgroundColor: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              color: "white",
-              fontSize: "0.74rem",
-              fontWeight: 600,
-              textDecoration: "none",
-            }}
-          >
-            <Headphones size={13} /> Booking
           </Link>
 
           <Link

@@ -5,6 +5,7 @@ import CartIcon from "@/components/CartIcon";
 import { createClient } from "@/utils/supabase/server";
 import UserMenu from "./UserMenu";
 import { MobileBottomNav } from "./MobileBottomNav";
+import MobileNavDrawer from "./MobileNavDrawer";
 import RaverPassDrawer from "./RaverPassDrawer";
 import { getUserTicketsData } from "@/utils/userTickets";
 import { getUserNotifications } from "@/utils/notifications";
@@ -50,7 +51,8 @@ export default async function Header() {
       {/* Main Glassmorphism Header */}
       <div className={styles.mainHeader}>
         <div className={styles.headerInner}>
-          <div className={styles.logoContainer}>
+          <div className={styles.logoContainer} style={{ gap: "0.5rem" }}>
+            <MobileNavDrawer isLoggedIn={Boolean(user)} />
             <Link href="/" className={styles.logoLink}>
               <Image
                 src="/Bass-Factory-Blanco-Sin-Letras.png"
