@@ -77,13 +77,13 @@
 }
 
 .filterPill:hover {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(229, 9, 20, 0.35);
   color: #ffffff;
 }
 
 .filterPillActive {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(229, 9, 20, 0.16);
+  border-color: rgba(229, 9, 20, 0.55);
   color: #ffffff;
 }
 
@@ -147,11 +147,13 @@
   text-decoration: none;
   color: inherit;
   margin-bottom: 1.5rem;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
 }
 
 .principalCard:hover {
-  border-color: rgba(255, 255, 255, 0.16);
+  background: var(--color-surface-hover);
+  border-color: rgba(229, 9, 20, 0.45);
+  transform: translateY(-2px);
 }
 
 @media (max-width: 768px) {
@@ -206,9 +208,9 @@
   text-transform: uppercase;
   padding: 0.18rem 0.5rem;
   border-radius: 5px;
-  background: rgba(230, 0, 126, 0.14);
-  border: 1px solid rgba(230, 0, 126, 0.35);
-  color: #ff4fa3;
+  background: #e50914;
+  border: 1px solid rgba(229, 9, 20, 0.6);
+  color: #ffffff;
 }
 
 .categoryText {
@@ -249,9 +251,16 @@
 }
 
 .readMore {
-  color: #ffffff;
-  font-weight: 600;
+  color: #e50914;
+  font-weight: 700;
   font-size: 0.74rem;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.principalCard:hover .readMore,
+.postCard:hover .readMore {
+  color: #ff3b44;
+  transform: translateX(2px);
 }
 
 /* POSTS GRID */
@@ -278,11 +287,12 @@
   gap: 0.5rem;
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
 }
 
 .postCard:hover {
-  border-color: rgba(255, 255, 255, 0.16);
+  background: var(--color-surface-hover);
+  border-color: rgba(229, 9, 20, 0.4);
   transform: translateY(-2px);
 }
 
