@@ -3,7 +3,6 @@ import { Resend } from "resend";
 
 export const dynamic = "force-dynamic";
 
-const resend = new Resend(process.env.RESEND_API_KEY || "");
 const CONTACT_INBOX = process.env.CONTACT_INBOX_EMAIL || "danielopzj@gmail.com";
 
 function esc(v: unknown) {
@@ -60,6 +59,7 @@ export async function POST(req: Request) {
     if (!process.env.RESEND_API_KEY) {
       console.warn("RESEND_API_KEY missing — contact request:", rows, message);
     } else {
+      const resend = new Resend(process.env.RESEND_API_KEY);
       const { error } = await resend.emails.send({
         from: "Bassfactory <tickets@bassfactory.co>",
         to: [CONTACT_INBOX],
