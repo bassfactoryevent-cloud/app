@@ -48,6 +48,7 @@ export async function getUserNotifications(user: { id: string; email?: string | 
         id,
         created_at,
         status,
+        qr_dispatched,
         order_id,
         tier_id,
         ticket_tiers (
@@ -64,7 +65,17 @@ export async function getUserNotifications(user: { id: string; email?: string | 
       .order("created_at", { ascending: false });
 
     // Group tickets by order/event for clean notifications
-    const ticketOrderMap: Record<string, { count: number; eventTitle: string; tierName: string; createdAt: string }> = {};
+    const ticketOrderMap: Record<
+      string,
+      {
+        count: number;
+        eventTitle: string;
+        tierName: string;
+        createdAt: string;
+        qrDispatched: boolean;
+        eventStartDate?: string | null;
+      }
+    > = {};
     if (userTickets) {
       for (const t of userTickets) {
         const tier = Array.isArray(t.ticket_tiers) ? t.ticket_tiers[0] : t.ticket_tiers;
@@ -76,10 +87,15 @@ export async function getUserNotifications(user: { id: string; email?: string | 
             count: 0,
             eventTitle: event?.title || "Evento Bassfactory",
             tierName: tier?.name || "General",
-            createdAt: t.created_at
+            createdAt: t.created_at,
+            qrDispatched: Boolean((t as any).qr_dispatched),
+            eventStartDate: event?.start_date || null,
           };
         }
         ticketOrderMap[key].count += 1;
+        if ((t as any).qr_dispatched) {
+          ticketOrderMap[key].qrDispatched = true;
+        }
       }
     }
 
@@ -95,14 +111,23 @@ export async function getUserNotifications(user: { id: string; email?: string | 
 
         // Notification: Order Payment / Invoice
         if (order.status === "paid") {
+          const isFreeOrCourtesy =
+            order.payment_provider === "free_event" ||
+            order.payment_provider === "courtesy" ||
+            Number(order.total_amount) === 0;
+
           notifications.push({
             id: `notif-order-${order.id}`,
             category: "order",
-            title: `¡Pago Confirmado! • Factura ${invoiceNum}`,
-            message: `Tu compra #${shortId} por $${formattedAmount} COP fue aprobada con éxito. Ya puedes ver o descargar tu factura electrónica oficial.`,
+            title: isFreeOrCourtesy
+              ? `¡Registro Gratuito Confirmado! • Ref #${shortId}`
+              : `¡Pago Confirmado! • Factura ${invoiceNum}`,
+            message: isFreeOrCourtesy
+              ? `Tu entrada gratuita / cortesía #${shortId} fue emitida con éxito y enviada con su código QR a tu correo electrónico.`
+              : `Tu compra #${shortId} por $${formattedAmount} COP fue aprobada con éxito. Ya puedes ver o descargar tu factura electrónica oficial.`,
             createdAt: order.created_at,
-            actionText: "Ver Factura Oficial",
-            actionHref: `/orders/${order.id}/invoice`,
+            actionText: isFreeOrCourtesy ? "Ver Mis Boletas" : "Ver Factura Oficial",
+            actionHref: isFreeOrCourtesy ? "/account/tickets" : `/orders/${order.id}/invoice`,
             meta: {
               orderId: order.id,
               invoiceNumber: invoiceNum,
@@ -158,13 +183,22 @@ export async function getUserNotifications(user: { id: string; email?: string | 
 
     // Notification: Tickets confirmed & antifraud notice
     for (const [key, tGroup] of Object.entries(ticketOrderMap)) {
+      const isWithin24h = tGroup.eventStartDate
+        ? new Date(tGroup.eventStartDate).getTime() - Date.now() <= 24 * 60 * 60 * 1000
+        : false;
+      const isQrReady = tGroup.qrDispatched || isWithin24h;
+
       notifications.push({
         id: `notif-ticket-${key}`,
         category: "ticket",
-        title: `🎟️ Entradas Confirmadas • ${tGroup.eventTitle}`,
-        message: `Tienes ${tGroup.count} entrada(s) (${tGroup.tierName}) aseguradas. Recuerda que por protocolos de seguridad antifraude, tu código QR oficial se generará y habilitará exactamente 1 día antes del evento.`,
+        title: isQrReady
+          ? `🎟️ QR Habilitado • ${tGroup.eventTitle}`
+          : `🎟️ Entradas Confirmadas • ${tGroup.eventTitle}`,
+        message: isQrReady
+          ? `Tu código QR oficial y descarga en PDF (${tGroup.tierName}) ya están habilitados para ingreso en taquilla.`
+          : `Tienes ${tGroup.count} entrada(s) (${tGroup.tierName}) aseguradas. Por seguridad antifraude, tu código QR oficial se habilita 24 horas antes del evento.`,
         createdAt: tGroup.createdAt,
-        actionText: "Ver Mis Boletas",
+        actionText: isQrReady ? "Abrir Pase QR" : "Ver Mis Boletas",
         actionHref: "/account/tickets",
       });
     }

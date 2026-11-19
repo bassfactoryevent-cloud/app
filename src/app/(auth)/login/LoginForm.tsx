@@ -44,7 +44,7 @@ export function LoginForm({ initialMessage }: { initialMessage?: string }) {
 
       // Hard redirect to ensure new cookies and session are read fresh
       const params = new URLSearchParams(window.location.search);
-      const rawRedirect = params.get("redirect");
+      const rawRedirect = params.get("redirect") || params.get("returnUrl");
       const safeRedirect =
         rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
           ? rawRedirect

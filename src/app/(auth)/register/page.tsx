@@ -7,10 +7,13 @@ export const dynamic = "force-dynamic";
 export default async function RegisterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ message?: string }>;
+  searchParams: Promise<{ message?: string; redirect?: string; email?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
   const message = resolvedSearchParams?.message;
+  const redirect = resolvedSearchParams?.redirect;
+  const initialEmail = resolvedSearchParams?.email;
+  const redirectQuery = redirect ? `?redirect=${encodeURIComponent(redirect)}` : "";
 
   return (
     <>
@@ -21,7 +24,7 @@ export default async function RegisterPage({
         </p>
       </div>
 
-      <RegisterForm initialMessage={message} />
+      <RegisterForm initialMessage={message} initialEmail={initialEmail} />
 
       <div
         style={{
@@ -33,7 +36,7 @@ export default async function RegisterPage({
       >
         ¿Ya tienes una cuenta?{" "}
         <Link
-          href="/login"
+          href={`/login${redirectQuery}`}
           style={{
             color: "#D90416",
             fontWeight: 700,

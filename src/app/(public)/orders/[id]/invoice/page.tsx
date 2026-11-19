@@ -20,7 +20,7 @@ export default async function OrderInvoicePage({
   const { data: { user } } = await authSupabase.auth.getUser();
 
   if (!user) {
-    redirect(`/login?returnUrl=/orders/${orderId}/invoice`);
+    redirect(`/login?redirect=/orders/${orderId}/invoice`);
   }
 
   // 1. Fetch order
@@ -181,7 +181,11 @@ export default async function OrderInvoicePage({
   const totalAmount = Number(order.total_amount || (subtotal + shippingCost));
 
   const hasPhysicalMerch = Boolean(merchItems && merchItems.length > 0);
-  const isCourtesyOrder = order.payment_provider === 'courtesy' || Boolean(order.shipping_address && order.shipping_address.includes('admin:'));
+  const isCourtesyOrder =
+    order.payment_provider === 'courtesy' ||
+    order.payment_provider === 'free_event' ||
+    Boolean(order.shipping_address && order.shipping_address.includes('admin:')) ||
+    (!hasPhysicalMerch && totalAmount === 0);
 
   return (
     <div style={{ maxWidth: '850px', margin: '2rem auto', padding: '0 1.25rem' }}>

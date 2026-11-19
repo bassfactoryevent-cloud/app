@@ -7,10 +7,12 @@ export const dynamic = "force-dynamic";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ message?: string }>;
+  searchParams: Promise<{ message?: string; redirect?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
   const message = resolvedSearchParams?.message;
+  const redirect = resolvedSearchParams?.redirect;
+  const redirectQuery = redirect ? `?redirect=${encodeURIComponent(redirect)}` : "";
 
   return (
     <>
@@ -33,7 +35,7 @@ export default async function LoginPage({
       >
         ¿Aún no tienes una cuenta?{" "}
         <Link
-          href="/register"
+          href={`/register${redirectQuery}`}
           style={{
             color: "#D90416",
             fontWeight: 700,

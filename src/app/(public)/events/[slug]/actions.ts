@@ -13,6 +13,7 @@ export type FreeRegistrationResult =
       paymentId: string;
       ticketIds: string[];
       ticketCodes: string[];
+      ticket?: any;
       eventTitle: string;
       name: string;
       email: string;
@@ -191,7 +192,7 @@ export async function registerFreeEvent(input: {
     const { data: insertedTickets, error: ticketsError } = await adminDb
       .from("tickets")
       .insert(ticketsToInsert)
-      .select("id");
+      .select("id, qr_hash, status, tier_id, assigned_name, assigned_email, qr_dispatched, created_at");
 
     if (ticketsError || !insertedTickets || insertedTickets.length === 0) {
       console.error("Free event tickets insert error:", ticketsError);
@@ -216,6 +217,18 @@ export async function registerFreeEvent(input: {
 
     revalidatePath(`/events/${event.slug}`);
     revalidatePath("/account/tickets");
+    revalidatePath("/account");
+    revalidatePath("/");
+
+    const primaryTicket = {
+      ...insertedTickets[0],
+      qr_dispatched: true,
+      ticket_tiers: {
+        id: tier.id,
+        name: tier.name,
+        price: tier.price,
+      },
+    };
 
     return {
       success: true,
@@ -223,6 +236,7 @@ export async function registerFreeEvent(input: {
       paymentId,
       ticketIds: insertedTickets.map((t: any) => t.id),
       ticketCodes: insertedTickets.map((t: any) => `#${t.id.slice(0, 8).toUpperCase()}`),
+      ticket: primaryTicket,
       eventTitle: event.title,
       name: cleanName,
       email: cleanEmail,

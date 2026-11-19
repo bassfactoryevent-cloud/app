@@ -891,10 +891,12 @@ export default function AccountOverviewClient({
                     )}
 
                     <div style={{ fontSize: "0.9rem", fontWeight: 800, color: "white" }}>
-                      ${Number(ord.total_amount).toLocaleString("es-CO")} COP
+                      {Number(ord.total_amount) === 0
+                        ? "Entrada Gratuita ($0 COP)"
+                        : `$${Number(ord.total_amount).toLocaleString("es-CO")} COP`}
                     </div>
 
-                    {isPaid && (
+                    {isPaid && Number(ord.total_amount) > 0 && (
                       <Link
                         href={`/orders/${ord.id}/invoice`}
                         style={{
@@ -912,6 +914,26 @@ export default function AccountOverviewClient({
                         }}
                       >
                         <FileText size={12} /> Factura
+                      </Link>
+                    )}
+                    {isPaid && Number(ord.total_amount) === 0 && (
+                      <Link
+                        href="/account/tickets"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          fontSize: "0.72rem",
+                          fontWeight: 700,
+                          color: "var(--color-accent)",
+                          backgroundColor: "rgba(0,240,255,0.08)",
+                          border: "1px solid rgba(0,240,255,0.22)",
+                          padding: "0.3rem 0.6rem",
+                          borderRadius: "6px",
+                          textDecoration: "none",
+                        }}
+                      >
+                        <Ticket size={12} /> Ver Boleta
                       </Link>
                     )}
                   </div>

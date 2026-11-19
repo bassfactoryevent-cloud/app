@@ -603,24 +603,30 @@ export default function OrdersListClient({ initialOrders, orderTicketsMap }: Ord
                   <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                     {order.status === 'paid' ? (
                       <>
-                        <Link
-                          href={`/orders/${order.id}/invoice`}
-                          style={{
-                            fontSize: '0.825rem',
-                            fontWeight: 700,
-                            color: 'rgba(255, 255, 255, 0.85)',
-                            textDecoration: 'none',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.45rem',
-                            padding: '0.45rem 0.95rem',
-                            borderRadius: '0.375rem',
-                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                            border: '1px solid rgba(255, 255, 255, 0.12)'
-                          }}
-                        >
-                          <FileText size={14} style={{ opacity: 0.7 }} /> Ver Factura Oficial
-                        </Link>
+                        {Number(order.total_amount) > 0 && order.payment_provider !== 'free_event' && order.payment_provider !== 'courtesy' ? (
+                          <Link
+                            href={`/orders/${order.id}/invoice`}
+                            style={{
+                              fontSize: '0.825rem',
+                              fontWeight: 700,
+                              color: 'rgba(255, 255, 255, 0.85)',
+                              textDecoration: 'none',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.45rem',
+                              padding: '0.45rem 0.95rem',
+                              borderRadius: '0.375rem',
+                              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                              border: '1px solid rgba(255, 255, 255, 0.12)'
+                            }}
+                          >
+                            <FileText size={14} style={{ opacity: 0.7 }} /> Ver Factura Oficial
+                          </Link>
+                        ) : (
+                          <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.65)', fontWeight: 600 }}>
+                            Cortesía / Registro Gratuito Oficial ($0 COP)
+                          </span>
+                        )}
 
                         {tickets.length > 0 && (
                           <Link 

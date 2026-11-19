@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
+import { getAdminClient } from "@/utils/supabase/admin";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +9,9 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => ({}));
     const { email, password } = body;
 
-    if (!email || !password) {
+    const cleanEmail = (email || "").trim().toLowerCase();
+
+    if (!cleanEmail || !password) {
       return NextResponse.json(
         { error: "Por favor ingresa tu correo y contraseña." },
         { status: 400 }
@@ -18,23 +21,48 @@ export async function POST(req: Request) {
     const supabase = await createClient();
 
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
+      email: cleanEmail,
       password,
     });
 
     if (error || !data.user) {
+      const msg = (error?.message || "").toLowerCase();
+      if (msg.includes("email not confirmed")) {
+        return NextResponse.json(
+          { error: "Tu correo electrónico aún no ha sido confirmado. Revisa tu bandeja de entrada o spam." },
+          { status: 401 }
+        );
+      }
+      if (msg.includes("rate limit") || msg.includes("too many")) {
+        return NextResponse.json(
+          { error: "Demasiados intentos seguidos. Espera unos segundos e inténtalo de nuevo." },
+          { status: 429 }
+        );
+      }
       return NextResponse.json(
         { error: "No se pudo iniciar sesión. Verifica tu correo y contraseña." },
         { status: 401 }
       );
     }
 
-    // Role check for appropriate landing redirect
-    const { data: profile } = await supabase
+    // Ensure profile exists and check role for appropriate landing redirect
+    const adminDb = getAdminClient();
+    const { data: profile } = await adminDb
       .from("profiles")
       .select("role")
       .eq("id", data.user.id)
-      .single();
+      .maybeSingle();
+
+    if (!profile) {
+      await adminDb.from("profiles").insert({
+        id: data.user.id,
+        full_name:
+          data.user.user_metadata?.full_name ||
+          data.user.user_metadata?.name ||
+          cleanEmail.split("@")[0],
+        role: "customer",
+      });
+    }
 
     let redirectUrl = "/account";
     if (profile && (profile.role === "admin" || profile.role === "superadmin")) {

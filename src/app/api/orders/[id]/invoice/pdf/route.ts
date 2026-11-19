@@ -189,7 +189,11 @@ export async function GET(
     const shippingCost = Number(order.shipping_cost || 0);
     const totalAmount = Number(order.total_amount || (subtotal + shippingCost));
 
-    const isCourtesy = order.payment_provider === "courtesy" || Boolean(order.shipping_address && order.shipping_address.includes("admin:"));
+    const isCourtesy =
+      order.payment_provider === "courtesy" ||
+      order.payment_provider === "free_event" ||
+      Boolean(order.shipping_address && order.shipping_address.includes("admin:")) ||
+      totalAmount === 0;
     const hasPhysicalMerch = items.some((it: any) => it.type === "merch");
 
     // 6. Generate PDF stream

@@ -17,9 +17,12 @@ import {
   UserPlus,
   LogIn,
   Lock,
+  QrCode,
+  Download,
 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { createClient } from "@/utils/supabase/client";
+import QrPassModal from "@/components/tickets/QrPassModal";
 import { registerFreeEvent, FreeRegistrationResult } from "./actions";
 
 type TicketTier = {
@@ -33,16 +36,40 @@ type TicketTier = {
 
 type SuccessModalData = Extract<FreeRegistrationResult, { success: true }>;
 
-export default function EventCheckout({ eventId, eventName, eventImage, isFree, ticketTiers }: { eventId: string, eventName?: string, eventImage?: string, isFree: boolean, ticketTiers: TicketTier[] }) {
+export default function EventCheckout({
+  eventId,
+  eventName,
+  eventImage,
+  eventStartDate,
+  eventLocation,
+  isFree,
+  ticketTiers,
+  initialAuthUser = null,
+  initialExistingTicket = null,
+}: {
+  eventId: string;
+  eventName?: string;
+  eventImage?: string;
+  eventStartDate?: string;
+  eventLocation?: string;
+  isFree: boolean;
+  ticketTiers: TicketTier[];
+  initialAuthUser?: { id: string; email: string; fullName: string } | null;
+  initialExistingTicket?: any | null;
+}) {
   const pathname = usePathname();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const { addItem, openDrawer } = useCartStore();
 
-  // Auth + Free registration state
-  const [authLoading, setAuthLoading] = useState(isFree);
-  const [authUser, setAuthUser] = useState<{ id: string; email: string; fullName: string } | null>(null);
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  // Auth + Free registration state (pre-hydrated from server to avoid flash)
+  const [authLoading, setAuthLoading] = useState(isFree && !initialAuthUser);
+  const [authUser, setAuthUser] = useState<{ id: string; email: string; fullName: string } | null>(
+    initialAuthUser
+  );
+  const [existingTicket, setExistingTicket] = useState<any | null>(initialExistingTicket);
+  const [qrPassOpen, setQrPassOpen] = useState(false);
+  const [fullName, setFullName] = useState(initialAuthUser?.fullName || "");
+  const [email, setEmail] = useState(initialAuthUser?.email || "");
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [modalData, setModalData] = useState<SuccessModalData | null>(null);
@@ -55,20 +82,20 @@ export default function EventCheckout({ eventId, eventName, eventImage, isFree, 
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
-        const metaName = (user.user_metadata?.full_name || user.user_metadata?.name || "").trim();
+        const metaName = (user.user_metadata?.full_name || user.user_metadata?.name || initialAuthUser?.fullName || "").trim();
         const userEmail = (user.email || "").trim();
         setAuthUser({ id: user.id, email: userEmail, fullName: metaName });
         if (userEmail) setEmail(userEmail);
-        if (metaName) setFullName(metaName);
+        if (metaName) setFullName((prev) => prev || metaName);
       } else {
         setAuthUser(null);
       }
     }).catch(() => {
-      setAuthUser(null);
+      if (!initialAuthUser) setAuthUser(null);
     }).finally(() => {
       setAuthLoading(false);
     });
-  }, [isFree]);
+  }, [isFree, initialAuthUser]);
 
   const updateQuantity = (tierId: string, change: number, max: number) => {
     const current = quantities[tierId] || 0;
@@ -126,6 +153,9 @@ export default function EventCheckout({ eventId, eventName, eventImage, isFree, 
         return;
       }
 
+      if (result.ticket) {
+        setExistingTicket(result.ticket);
+      }
       setModalData(result);
     } catch {
       setErrorMsg("No se pudo conectar con el servidor. Intenta nuevamente.");
@@ -283,6 +313,129 @@ export default function EventCheckout({ eventId, eventName, eventImage, isFree, 
             >
               <LogIn size={18} /> Ya tengo cuenta · Iniciar Sesión
             </Link>
+          </div>
+        </div>
+      ) : existingTicket ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.6rem',
+            padding: '0.75rem 1rem',
+            borderRadius: '0.6rem',
+            backgroundColor: 'rgba(34, 197, 94, 0.14)',
+            border: '1px solid rgba(34, 197, 94, 0.4)',
+            color: '#4ade80',
+            fontSize: '0.88rem',
+            fontWeight: 800
+          }}>
+            <CheckCircle2 size={18} style={{ flexShrink: 0 }} />
+            <span>¡Ya tienes tu entrada oficial para este evento!</span>
+          </div>
+
+          <div style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.45)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '0.75rem',
+            padding: '1rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.55rem',
+            fontSize: '0.85rem'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
+              <span style={{ color: '#a1a1aa' }}>Titular</span>
+              <span style={{ fontWeight: 700, color: '#ffffff', textAlign: 'right' }}>
+                {existingTicket.assigned_name || fullName || authUser.fullName || 'Asistente Oficial'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
+              <span style={{ color: '#a1a1aa' }}>Correo</span>
+              <span style={{ fontWeight: 600, color: '#d4d4d8', textAlign: 'right', wordBreak: 'break-all' }}>
+                {existingTicket.assigned_email || email || authUser.email}
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
+              <span style={{ color: '#a1a1aa' }}>Código Boleta</span>
+              <span style={{ fontWeight: 800, color: 'var(--color-magenta)', fontFamily: 'monospace' }}>
+                #{String(existingTicket.id || '').slice(0, 8).toUpperCase()}
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
+              <span style={{ color: '#a1a1aa' }}>Estado</span>
+              <span style={{ fontWeight: 800, color: '#4ade80' }}>
+                {existingTicket.status === 'scanned' ? '✓ Ingreso Validado' : '● QR Habilitado'}
+              </span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+            <button
+              type="button"
+              onClick={() => setQrPassOpen(true)}
+              style={{
+                width: '100%',
+                padding: '0.95rem 1rem',
+                borderRadius: '0.5rem',
+                backgroundColor: 'var(--color-magenta)',
+                color: '#ffffff',
+                border: 'none',
+                fontWeight: 800,
+                fontSize: '1rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <QrCode size={19} /> Abrir Pase QR (Modo Taquilla)
+            </button>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
+              <a
+                href={`/api/tickets/${existingTicket.id}/pdf`}
+                target="_blank"
+                rel="noopener noreferrer"
+                download={`Boleta-${String(existingTicket.id || '').slice(0, 8).toUpperCase()}.pdf`}
+                style={{
+                  padding: '0.8rem 0.75rem',
+                  borderRadius: '0.5rem',
+                  backgroundColor: 'rgba(255,255,255,0.07)',
+                  border: '1px solid rgba(255,255,255,0.14)',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem'
+                }}
+              >
+                <Download size={16} /> Descargar PDF
+              </a>
+
+              <Link
+                href="/account/tickets"
+                style={{
+                  padding: '0.8rem 0.75rem',
+                  borderRadius: '0.5rem',
+                  backgroundColor: 'rgba(255,255,255,0.07)',
+                  border: '1px solid rgba(255,255,255,0.14)',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem'
+                }}
+              >
+                <Ticket size={16} /> Mis Entradas
+              </Link>
+            </div>
           </div>
         </div>
       ) : (
@@ -498,49 +651,93 @@ export default function EventCheckout({ eventId, eventName, eventImage, isFree, 
                 </span>
               </div>
 
-              <div style={{ display: 'flex', gap: '0.75rem', width: '100%' }}>
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  style={{
-                    flex: 1,
-                    padding: '0.85rem 1rem',
-                    borderRadius: '0.5rem',
-                    backgroundColor: 'rgba(255,255,255,0.08)',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    color: '#ffffff',
-                    fontWeight: 700,
-                    fontSize: '0.95rem',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Cerrar
-                </button>
-                <Link
-                  href="/account/tickets"
-                  style={{
-                    flex: 1,
-                    padding: '0.85rem 1rem',
-                    borderRadius: '0.5rem',
-                    backgroundColor: 'var(--color-magenta)',
-                    color: '#ffffff',
-                    fontWeight: 800,
-                    fontSize: '0.95rem',
-                    textDecoration: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.4rem'
-                  }}
-                >
-                  <Ticket size={17} /> Mis Entradas
-                </Link>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', width: '100%' }}>
+                {existingTicket && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      closeModal();
+                      setQrPassOpen(true);
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '0.9rem 1rem',
+                      borderRadius: '0.5rem',
+                      backgroundColor: 'var(--color-magenta)',
+                      color: '#ffffff',
+                      border: 'none',
+                      fontWeight: 800,
+                      fontSize: '0.95rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.45rem'
+                    }}
+                  >
+                    <QrCode size={18} /> Ver Mi Código QR Ahora
+                  </button>
+                )}
+
+                <div style={{ display: 'flex', gap: '0.75rem', width: '100%' }}>
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    style={{
+                      flex: 1,
+                      padding: '0.85rem 1rem',
+                      borderRadius: '0.5rem',
+                      backgroundColor: 'rgba(255,255,255,0.08)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '0.9rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Cerrar
+                  </button>
+                  <Link
+                    href="/account/tickets"
+                    style={{
+                      flex: 1,
+                      padding: '0.85rem 1rem',
+                      borderRadius: '0.5rem',
+                      backgroundColor: 'rgba(255,255,255,0.12)',
+                      border: '1px solid rgba(255,255,255,0.18)',
+                      color: '#ffffff',
+                      fontWeight: 800,
+                      fontSize: '0.9rem',
+                      textDecoration: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.4rem'
+                    }}
+                  >
+                    <Ticket size={17} /> Mis Entradas
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
         </div>,
         document.body
       )}
+
+      {/* Modal Modo Taquilla para mostrar QR directo en la página del evento */}
+      <QrPassModal
+        isOpen={qrPassOpen}
+        onClose={() => setQrPassOpen(false)}
+        ticket={existingTicket}
+        event={{
+          id: eventId,
+          title: eventName || 'Evento Bassfactory',
+          cover_image: eventImage,
+          start_date: eventStartDate,
+          location_name: eventLocation,
+        }}
+      />
     </div>
   );
 }

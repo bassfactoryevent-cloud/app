@@ -4,6 +4,7 @@ import { Calendar, MapPin, Music, Briefcase } from "lucide-react";
 import EventCheckout from "./EventCheckout";
 import AdBanner from "@/components/AdBanner";
 import { ShareButtons } from "@/components/ui/ShareButtons";
+import { getUserTicketsData } from "@/utils/userTickets";
 import styles from "../../../admin/components/TiptapEditor.module.css"; // Reuse tiptap styles for rendering
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
@@ -15,8 +16,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function EventPage({ params }: { params: Promise<{ slug: string }> }) {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   
   // Obtener evento con sus relaciones
   const { data: event } = await supabase
@@ -32,6 +37,37 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
 
   if (!event || !["published", "postponed", "cancelled"].includes(event.status)) {
     notFound();
+  }
+
+  let initialAuthUser: { id: string; email: string; fullName: string } | null = null;
+  let existingTicket: any = null;
+
+  if (user) {
+    const [profileRes, tData] = await Promise.all([
+      supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
+      getUserTicketsData({ id: user.id, email: user.email }),
+    ]);
+
+    const fullName = (
+      profileRes.data?.full_name ||
+      user.user_metadata?.full_name ||
+      user.user_metadata?.name ||
+      ""
+    ).trim();
+
+    initialAuthUser = {
+      id: user.id,
+      email: (user.email || "").trim(),
+      fullName,
+    };
+
+    const eventTierIds = new Set((event.ticket_tiers || []).map((t: any) => t.id));
+    existingTicket = (tData.tickets || []).find((t: any) => {
+      if (t.tier_id && eventTierIds.has(t.tier_id)) return true;
+      const tier = Array.isArray(t.ticket_tiers) ? t.ticket_tiers[0] : t.ticket_tiers;
+      const ev = Array.isArray(tier?.events) ? tier.events[0] : tier?.events;
+      return ev?.id === event.id;
+    }) || null;
   }
 
   const djs = event.event_djs?.map((ed: any) => ed.djs) || [];
@@ -156,8 +192,12 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
               eventId={event.id}
               eventName={event.title}
               eventImage={event.cover_image}
+              eventStartDate={event.start_date}
+              eventLocation={event.location_name}
               isFree={event.is_free} 
               ticketTiers={event.ticket_tiers || []} 
+              initialAuthUser={initialAuthUser}
+              initialExistingTicket={existingTicket}
             />
           )}
         </div>

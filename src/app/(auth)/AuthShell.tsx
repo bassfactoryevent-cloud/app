@@ -1,11 +1,38 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, QrCode, ShieldCheck, Sparkles, Lock } from "lucide-react";
 import styles from "./AuthLayout.module.css";
+
+function ModeTabs({ isRegister }: { isRegister?: boolean }) {
+  const searchParams = useSearchParams();
+  const redirect = searchParams?.get("redirect");
+  const redirectQuery = redirect ? `?redirect=${encodeURIComponent(redirect)}` : "";
+
+  return (
+    <div className={styles.modeTabs} role="tablist" aria-label="Modo de acceso">
+      <Link
+        href={`/login${redirectQuery}`}
+        role="tab"
+        aria-selected={!isRegister}
+        className={`${styles.modeTab} ${!isRegister ? styles.modeTabActive : ""}`}
+      >
+        Iniciar Sesión
+      </Link>
+      <Link
+        href={`/register${redirectQuery}`}
+        role="tab"
+        aria-selected={isRegister}
+        className={`${styles.modeTab} ${isRegister ? styles.modeTabActive : ""}`}
+      >
+        Crear Cuenta
+      </Link>
+    </div>
+  );
+}
 
 export function AuthShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -143,24 +170,30 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
               </div>
 
               {/* Segmented Mode Switcher */}
-              <div className={styles.modeTabs} role="tablist" aria-label="Modo de acceso">
-                <Link
-                  href="/login"
-                  role="tab"
-                  aria-selected={!isRegister}
-                  className={`${styles.modeTab} ${!isRegister ? styles.modeTabActive : ""}`}
-                >
-                  Iniciar Sesión
-                </Link>
-                <Link
-                  href="/register"
-                  role="tab"
-                  aria-selected={isRegister}
-                  className={`${styles.modeTab} ${isRegister ? styles.modeTabActive : ""}`}
-                >
-                  Crear Cuenta
-                </Link>
-              </div>
+              <Suspense
+                fallback={
+                  <div className={styles.modeTabs} role="tablist" aria-label="Modo de acceso">
+                    <Link
+                      href="/login"
+                      role="tab"
+                      aria-selected={!isRegister}
+                      className={`${styles.modeTab} ${!isRegister ? styles.modeTabActive : ""}`}
+                    >
+                      Iniciar Sesión
+                    </Link>
+                    <Link
+                      href="/register"
+                      role="tab"
+                      aria-selected={isRegister}
+                      className={`${styles.modeTab} ${isRegister ? styles.modeTabActive : ""}`}
+                    >
+                      Crear Cuenta
+                    </Link>
+                  </div>
+                }
+              >
+                <ModeTabs isRegister={isRegister} />
+              </Suspense>
 
               {/* Dynamic Form Content */}
               {children}

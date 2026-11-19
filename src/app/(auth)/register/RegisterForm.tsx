@@ -13,9 +13,15 @@ import {
   EyeOff,
 } from "lucide-react";
 
-export function RegisterForm({ initialMessage }: { initialMessage?: string }) {
+export function RegisterForm({
+  initialMessage,
+  initialEmail,
+}: {
+  initialMessage?: string;
+  initialEmail?: string;
+}) {
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialEmail || "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
