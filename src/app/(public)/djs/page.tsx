@@ -125,7 +125,9 @@ export default async function PublicDjsPage() {
                     <MapPin size={12} />
                     <span>{event.location_name || "Colombia"}</span>
                   </div>
-                  <span className={homeStyles.cardButton}>Comprar Tickets</span>
+                  <span className={homeStyles.cardButton}>
+                    {isToday || event.is_free ? "Adquirir Entrada" : "Comprar Tickets"}
+                  </span>
                 </Link>
               );
             })}

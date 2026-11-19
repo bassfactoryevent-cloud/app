@@ -318,7 +318,7 @@ export default function EventsGridClient({
                       )}
                     </div>
                     <span className={styles.ctaLink}>
-                      {isAttending ? "Mi Entrada" : "Boletas"} <ArrowRight size={13} />
+                      {isAttending ? "Mi Entrada" : isToday || event.is_free ? "Adquirir" : "Boletas"} <ArrowRight size={13} />
                     </span>
                   </div>
                 </div>

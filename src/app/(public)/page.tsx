@@ -170,7 +170,7 @@ export default async function Home() {
                       <MapPin size={12} />
                       <span>{event.location || event.location_name || "Colombia"}</span>
                     </div>
-                    <span className={styles.cardButton}>{isAttending ? 'Ver Mi Entrada' : 'Comprar Tickets'}</span>
+                    <span className={styles.cardButton}>{isAttending ? 'Ver Mi Entrada' : (isToday || event.is_free) ? 'Adquirir Entrada' : 'Comprar Tickets'}</span>
                   </Link>
                 );
               })}
@@ -308,9 +308,9 @@ export default async function Home() {
         <div className={styles.registrationBanner}>
           <h2>Únete al Movimiento</h2>
           <p>Regístrate para recibir acceso anticipado a tickets, descuentos en merch y noticias exclusivas.</p>
-          <form className={styles.registrationForm}>
-            <input type="email" placeholder="Tu correo electrónico" className={styles.pillInput} required />
-            <button type="button" className={styles.pillButton}>Registrarse</button>
+          <form action="/register" method="GET" className={styles.registrationForm}>
+            <input type="email" name="email" placeholder="Tu correo electrónico" className={styles.pillInput} required />
+            <button type="submit" className={styles.pillButton}>Registrarse</button>
           </form>
         </div>
 
