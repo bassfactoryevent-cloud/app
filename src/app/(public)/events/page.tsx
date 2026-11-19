@@ -1,42 +1,60 @@
 import { createClient } from "@/utils/supabase/server";
+import { unstable_noStore as noStore } from "next/cache";
 import Link from "next/link";
 import Image from "next/image";
 import AdBanner from "@/components/AdBanner";
 import HorizontalScroll from "@/components/ui/HorizontalScroll";
-import { Calendar, MapPin, ArrowRight, ShieldCheck, Sparkles, QrCode, CreditCard, ShoppingBag, ExternalLink } from "lucide-react";
+import {
+  ShieldCheck,
+  QrCode,
+  CreditCard,
+  ShoppingBag,
+} from "lucide-react";
 import styles from "./Events.module.css";
 import { getUserTicketsData } from "@/utils/userTickets";
+import EventsGridClient from "./EventsGridClient";
 
 export const metadata = {
-  title: "Cartelera Oficial de Eventos | Bassfactory",
-  description: "Reserva tus entradas oficiales para los mejores festivales, shows y raves de música electrónica en Colombia. Boletería 100% garantizada con QR dinámico.",
+  title: "Eventos | Bassfactory",
+  description:
+    "Fechas confirmadas y boletería oficial Bassfactory con QR antifraude.",
 };
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function EventsPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  noStore();
 
-  const attendingEventIds = new Set<string>();
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const attendingEventIds: string[] = [];
+  const meta = user?.user_metadata || {};
+  const favoriteGenres: string[] = Array.isArray(meta.favorite_genres)
+    ? meta.favorite_genres
+    : [];
+  const followedDjs: string[] = Array.isArray(meta.followed_djs)
+    ? meta.followed_djs
+    : [];
+
   if (user) {
     const tData = await getUserTicketsData({ id: user.id, email: user.email });
     for (const t of tData.tickets || []) {
       const tier = Array.isArray(t.ticket_tiers) ? t.ticket_tiers[0] : t.ticket_tiers;
       const ev = Array.isArray(tier?.events) ? tier.events[0] : tier?.events;
-      if (ev?.id) attendingEventIds.add(ev.id);
+      if (ev?.id && !attendingEventIds.includes(ev.id)) {
+        attendingEventIds.push(ev.id);
+      }
     }
   }
-  
-  // Fecha de ayer para mantener el evento visible durante el mismo día que ocurre
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
 
-  // Fetch en paralelo: eventos, productos de merch, patrocinadores oficiales y pautas laterales
   const [eventsRes, merchRes, sponsorsRes, adsRes] = await Promise.all([
     supabase
       .from("events")
-      .select("*, ticket_tiers(*)")
+      .select("*, ticket_tiers(*), event_djs(dj_id)")
       .in("status", ["published", "postponed", "cancelled"])
       .order("start_date", { ascending: true }),
     supabase
@@ -66,262 +84,165 @@ export default async function EventsPage() {
       .eq("is_active", true)
       .eq("ad_campaigns.is_active", true)
       .eq("ad_placements.is_active", true)
-      .in("ad_placements.name", ["events_vertical_left", "events_vertical_right"])
+      .in("ad_placements.name", ["events_vertical_left", "events_vertical_right"]),
   ]);
 
-  // Filtrar eventos pasados
-  const events = (eventsRes.data || []).filter(e => {
-    if (e.status === "postponed" || e.status === "cancelled") return true;
-    if (e.status === "published") {
-      const now = new Date();
-      if (e.end_date) {
-        return new Date(e.end_date) >= now;
-      }
-      if (e.start_date) {
-        return new Date(e.start_date) >= yesterday;
-      }
-      return true;
-    }
-    return false;
-  });
-
+  const allEvents = eventsRes.data || [];
   const merchProducts = merchRes.data || [];
   const sponsors = sponsorsRes.data || [];
 
   const now = new Date();
   const hasLeftAd = (adsRes.data || []).some((a: any) => {
-    const pName = Array.isArray(a.ad_placements) ? a.ad_placements[0]?.name : a.ad_placements?.name;
-    const campaign = Array.isArray(a.ad_campaigns) ? a.ad_campaigns[0] : a.ad_campaigns;
-    return pName === "events_vertical_left" && (!campaign?.end_date || new Date(campaign.end_date) >= now);
+    const pName = Array.isArray(a.ad_placements)
+      ? a.ad_placements[0]?.name
+      : a.ad_placements?.name;
+    const campaign = Array.isArray(a.ad_campaigns)
+      ? a.ad_campaigns[0]
+      : a.ad_campaigns;
+    return (
+      pName === "events_vertical_left" &&
+      (!campaign?.end_date || new Date(campaign.end_date) >= now)
+    );
   });
 
   const hasRightAd = (adsRes.data || []).some((a: any) => {
-    const pName = Array.isArray(a.ad_placements) ? a.ad_placements[0]?.name : a.ad_placements?.name;
-    const campaign = Array.isArray(a.ad_campaigns) ? a.ad_campaigns[0] : a.ad_campaigns;
-    return pName === "events_vertical_right" && (!campaign?.end_date || new Date(campaign.end_date) >= now);
+    const pName = Array.isArray(a.ad_placements)
+      ? a.ad_placements[0]?.name
+      : a.ad_placements?.name;
+    const campaign = Array.isArray(a.ad_campaigns)
+      ? a.ad_campaigns[0]
+      : a.ad_campaigns;
+    return (
+      pName === "events_vertical_right" &&
+      (!campaign?.end_date || new Date(campaign.end_date) >= now)
+    );
   });
 
-  const gridClass = hasLeftAd && hasRightAd
-    ? styles.mainGridBoth
-    : hasLeftAd
-    ? styles.mainGridLeftOnly
-    : hasRightAd
-    ? styles.mainGridRightOnly
-    : styles.mainGridNoAds;
+  const gridClass =
+    hasLeftAd && hasRightAd
+      ? styles.mainGridBoth
+      : hasLeftAd
+      ? styles.mainGridLeftOnly
+      : hasRightAd
+      ? styles.mainGridRightOnly
+      : styles.mainGridNoAds;
 
   return (
     <div className={styles.eventsContainer}>
-      
-      {/* 1. HERO ACTIVATION SECTION */}
+      {/* COMPACT HERO HEADER (Home Scale + Short Copy) */}
       <header className={styles.heroSection}>
-        <div className={styles.heroBadge}>
-          <Sparkles size={14} />
-          Cartelera Oficial & Taquilla Verificada
-        </div>
-        <h1 className={styles.heroTitle}>
-          Próximos <span className={styles.heroTitleGradient}>Eventos</span>
-        </h1>
-        <p className={styles.heroSubtitle}>
-          El epicentro de los mejores festivales, clubs y raves de música electrónica. Reserva tus entradas oficiales con seguridad garantizada y activación de QR dinámico.
-        </p>
+        <div className={styles.heroTopRow}>
+          <div>
+            <h1 className={styles.heroTitle}>Eventos</h1>
+            <p className={styles.heroSubtitle}>
+              Fechas confirmadas y boletería oficial.
+            </p>
+          </div>
 
-        <div className={styles.guaranteesBar}>
-          <div className={styles.guaranteeItem}>
-            <ShieldCheck size={16} className={styles.guaranteeIcon} />
-            <span>Boletería 100% Original</span>
-          </div>
-          <div className={styles.guaranteeItem}>
-            <QrCode size={16} className={styles.guaranteeIcon} />
-            <span>QR Dinámico Anti-Clonación</span>
-          </div>
-          <div className={styles.guaranteeItem}>
-            <CreditCard size={16} className={styles.guaranteeIcon} />
-            <span>Pagos Seguros con Bold</span>
+          <div className={styles.guaranteesBar}>
+            <div className={styles.guaranteeItem}>
+              <ShieldCheck size={14} className={styles.guaranteeIcon} />
+              <span>Entradas oficiales</span>
+            </div>
+            <div className={styles.guaranteeItem}>
+              <QrCode size={14} className={styles.guaranteeIcon} />
+              <span>QR antifraude</span>
+            </div>
+            <div className={styles.guaranteeItem}>
+              <CreditCard size={14} className={styles.guaranteeIcon} />
+              <span>Pagos con Bold</span>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* 2. DYNAMIC MAIN LAYOUT: BANNER IZQUIERDO | EVENTOS | BANNER DERECHO */}
+      {/* MAIN GRID + OPTIONAL SIDEBAR ADS */}
       <div className={gridClass}>
-        
-        {/* COLUMNA IZQUIERDA: BANNER VERTICAL (SOLO SI HAY PAUTA ACTIVA) */}
         {hasLeftAd && (
           <aside className={styles.sidebarCol}>
             <AdBanner placementName="events_vertical_left" />
           </aside>
         )}
 
-        {/* COLUMNA CENTRAL: CARTELERA DE EVENTOS */}
         <main className={styles.eventsCol}>
-          {/* BANNER MOBILE SUPERIOR (SOLO VISIBLE EN MÓVIL / PANTALLAS PEQUEÑAS) */}
           {hasLeftAd && (
             <div className={styles.mobileAdSlot}>
               <AdBanner placementName="events_vertical_left" />
             </div>
           )}
 
-          {(!events || events.length === 0) ? (
-            <div className={styles.emptyState}>
-              <Calendar size={48} opacity={0.3} style={{ margin: '0 auto 1.25rem', color: 'var(--color-magenta)' }} />
-              <h3 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '0.5rem', color: 'white' }}>No hay eventos programados en este momento</h3>
-              <p style={{ opacity: 0.6, maxWidth: '420px', margin: '0 auto', fontSize: '0.9rem', lineHeight: 1.5 }}>Estamos preparando las próximas fechas. Síguenos en nuestras redes oficiales para los anuncios en primicia.</p>
-            </div>
-          ) : (
-            <div className={styles.eventsGrid}>
-              {events.map(event => {
-                const date = event.start_date ? new Date(event.start_date) : null;
-                const minPrice = event.ticket_tiers && event.ticket_tiers.length > 0 
-                  ? Math.min(...event.ticket_tiers.map((t: any) => parseFloat(t.price))) 
-                  : 0;
+          <EventsGridClient
+            events={allEvents}
+            attendingEventIds={attendingEventIds}
+            favoriteGenres={favoriteGenres}
+            followedDjs={followedDjs}
+            isLoggedIn={Boolean(user)}
+          />
 
-                return (
-                  <Link 
-                    href={`/events/${event.slug}`} 
-                    key={event.id} 
-                    className={styles.eventCard}
-                  >
-                    <div className={styles.imageWrapper}>
-                      {event.cover_image ? (
-                        <img 
-                          src={event.cover_image} 
-                          alt={event.title} 
-                          className={styles.coverImage} 
-                        />
-                      ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', opacity: 0.2 }}>
-                          <Calendar size={64} />
-                        </div>
-                      )}
-
-                      {date && (
-                        <div className={styles.dateBadge}>
-                          <div className={styles.dateMonth}>
-                            {date.toLocaleDateString('es-ES', { month: 'short' })}
-                          </div>
-                          <div className={styles.dateDay}>
-                            {date.getDate()}
-                          </div>
-                        </div>
-                      )}
-
-                      {event.status === 'postponed' && (
-                        <div className={`${styles.statusBadge} ${styles.statusPostponed}`}>
-                          Aplazado
-                        </div>
-                      )}
-                      {event.status === 'cancelled' && (
-                        <div className={`${styles.statusBadge} ${styles.statusCancelled}`}>
-                          Cancelado
-                        </div>
-                      )}
-                      {attendingEventIds.has(event.id) && event.status === 'published' && (
-                        <div
-                          style={{
-                            position: 'absolute',
-                            top: '12px',
-                            right: '12px',
-                            backgroundColor: '#22c55e',
-                            color: '#052e16',
-                            fontSize: '0.7rem',
-                            fontWeight: 900,
-                            padding: '4px 10px',
-                            borderRadius: '999px',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.45)',
-                            zIndex: 2,
-                          }}
-                        >
-                          ✓ Asistes
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className={styles.cardBody}>
-                      <h3 className={styles.eventTitle}>{event.title}</h3>
-                      
-                      <div className={styles.locationRow}>
-                        <MapPin size={15} style={{ color: 'var(--color-magenta)', flexShrink: 0 }} />
-                        <span>{event.location_name || 'Locación por confirmar'}</span>
-                      </div>
-
-                      <div className={styles.cardFooter}>
-                        <div>
-                          {event.is_free ? (
-                            <span className={styles.priceFree}>Entrada Libre</span>
-                          ) : (
-                            <span className={styles.priceTag}>
-                              {minPrice > 0 ? `Desde $${minPrice.toLocaleString('es-CO')}` : 'Boletas Disponibles'}
-                            </span>
-                          )}
-                        </div>
-                        <div className={styles.ctaLink}>
-                          Ver boletas <ArrowRight size={15} />
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-
-          {/* BANNER MOBILE INFERIOR (SOLO VISIBLE EN MÓVIL / PANTALLAS PEQUEÑAS) */}
           {hasRightAd && (
-            <div className={styles.mobileAdSlot} style={{ marginTop: '1.75rem' }}>
+            <div className={styles.mobileAdSlot} style={{ marginTop: "1.25rem" }}>
               <AdBanner placementName="events_vertical_right" />
             </div>
           )}
         </main>
 
-        {/* COLUMNA DERECHA: BANNER VERTICAL (SOLO SI HAY PAUTA ACTIVA) */}
         {hasRightAd && (
           <aside className={styles.sidebarCol}>
             <AdBanner placementName="events_vertical_right" />
           </aside>
         )}
-
       </div>
 
-      {/* 3. MERCH OFICIAL CAROUSEL */}
+      {/* MERCH OFICIAL */}
       {merchProducts.length > 0 && (
         <section className={styles.merchSection}>
-          <HorizontalScroll 
-            title="Merch Oficial & Drops" 
-            subtitle="Prendas exclusivas, accesorios y cultura del movimiento Bassfactory."
+          <HorizontalScroll
+            title="Merch Oficial"
             viewAllLink="/merch"
+            canvasIcon="prism"
           >
             {merchProducts.map((product: any) => {
               const images = product.merch_product_images || [];
-              const primaryImage = images.find((img: any) => img.is_primary)?.image_url || images[0]?.image_url;
+              const primaryImage =
+                images.find((img: any) => img.is_primary)?.image_url ||
+                images[0]?.image_url;
 
               return (
-                <Link 
-                  key={product.id} 
-                  href={`/merch/${product.slug}`} 
+                <Link
+                  key={product.id}
+                  href={`/merch/${product.slug}`}
                   className={styles.merchCard}
                 >
                   <div className={styles.merchImgWrap}>
                     {primaryImage ? (
-                      <Image 
-                        src={primaryImage} 
-                        alt={product.title} 
-                        fill 
-                        style={{ objectFit: 'cover' }} 
+                      <Image
+                        src={primaryImage}
+                        alt={product.title}
+                        fill
+                        style={{ objectFit: "cover" }}
                       />
                     ) : (
-                      <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', opacity: 0.3 }}>
-                        <ShoppingBag size={48} />
+                      <div
+                        style={{
+                          display: "flex",
+                          height: "100%",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          opacity: 0.3,
+                        }}
+                      >
+                        <ShoppingBag size={36} />
                       </div>
                     )}
-                    <span className={styles.merchBadge}>Oficial</span>
                   </div>
 
                   <div className={styles.merchBody}>
                     <span className={styles.merchCategory}>
-                      {product.merch_categories?.name || 'Tienda'}
+                      {product.merch_categories?.name || "Merch"}
                     </span>
                     <h4 className={styles.merchTitle}>{product.title}</h4>
                     <span className={styles.merchPrice}>
-                      ${Number(product.base_price || 0).toLocaleString('es-CO')} COP
+                      ${Number(product.base_price || 0).toLocaleString("es-CO")}
                     </span>
                   </div>
                 </Link>
@@ -331,45 +252,28 @@ export default async function EventsPage() {
         </section>
       )}
 
-      {/* 4. PATROCINADORES OFICIALES (SPONSORS) */}
+      {/* ALIADOS */}
       {sponsors.length > 0 && (
         <section className={styles.sponsorsSection}>
           <div className={styles.sponsorsHeader}>
-            <div className={styles.sponsorsBadge}>
-              <Sparkles size={13} />
-              Alianzas Oficiales
-            </div>
-            <h3 className={styles.sponsorsTitle}>Patrocinadores & Marcas Aliadas</h3>
-            <p className={styles.sponsorsSubtitle}>
-              Marcas y proyectos que impulsan la cultura y el crecimiento de la escena electrónica en Colombia.
-            </p>
+            <h3 className={styles.sponsorsTitle}>Aliados</h3>
           </div>
 
           <div className={styles.sponsorsGrid}>
             {sponsors.map((s: any) => {
               const hasLink = Boolean(s.website_url);
-              const CardTag = hasLink ? 'a' : 'div';
-              const linkProps = hasLink ? { href: s.website_url, target: '_blank', rel: 'noopener noreferrer' } : {};
+              const CardTag = hasLink ? "a" : "div";
+              const linkProps = hasLink
+                ? { href: s.website_url, target: "_blank", rel: "noopener noreferrer" }
+                : {};
 
               return (
-                <CardTag 
-                  key={s.id} 
-                  {...linkProps}
-                  className={styles.sponsorCard}
-                >
+                <CardTag key={s.id} {...linkProps} className={styles.sponsorCard}>
                   {s.logo_url ? (
-                    <img 
-                      src={s.logo_url} 
-                      alt={s.name} 
-                      className={styles.sponsorLogo} 
-                    />
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={s.logo_url} alt={s.name} className={styles.sponsorLogo} />
                   ) : (
-                    <span className={styles.sponsorNameFallback}>
-                      {s.name}
-                    </span>
-                  )}
-                  {hasLink && (
-                    <ExternalLink size={12} style={{ marginLeft: '0.5rem', opacity: 0.4 }} />
+                    <span className={styles.sponsorNameFallback}>{s.name}</span>
                   )}
                 </CardTag>
               );
@@ -377,7 +281,6 @@ export default async function EventsPage() {
           </div>
         </section>
       )}
-
     </div>
   );
 }
