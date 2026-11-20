@@ -1,5 +1,4 @@
 import { createClient } from "@/utils/supabase/server";
-import { unstable_noStore as noStore } from "next/cache";
 import Link from "next/link";
 import { Calendar, MapPin, ArrowRight } from "lucide-react";
 import AdBanner from "@/components/AdBanner";
@@ -15,10 +14,8 @@ export const metadata = {
 };
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 export default async function PublicDjsPage() {
-  noStore();
   const supabase = await createClient();
 
   const [djsRes, eventsRes] = await Promise.all([

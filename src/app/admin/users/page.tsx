@@ -19,7 +19,7 @@ export default async function UsersPage() {
   // 2. Obtener correos y roles de auth.users para enriquecer la tabla
   let usersWithEmail = profiles || [];
   try {
-    const { data: authUsers } = await adminDb.auth.admin.listUsers();
+    const { data: authUsers } = await adminDb.auth.admin.listUsers({ page: 1, perPage: 1000 });
     if (authUsers?.users) {
       const emailMap = new Map(authUsers.users.map(u => [u.id, u.email]));
       const metaRoleMap = new Map(authUsers.users.map(u => [u.id, u.user_metadata?.role]));

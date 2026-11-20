@@ -68,32 +68,44 @@ export async function getAssignmentsForUser(userId: string): Promise<StaffAssign
 
 export async function assignUserToEvent(eventId: string, userId: string, assignedBy = "Admin"): Promise<{ success: boolean; error?: string }> {
   try {
-    const [all, { data: userProfile }, { data: event }] = await Promise.all([
+    const [all, { data: userProfile }, { data: event }, authRes] = await Promise.all([
       getAllStaffAssignments(),
-      adminDb.from("profiles").select("id, full_name, role").eq("id", userId).single(),
-      adminDb.from("events").select("id, title").eq("id", eventId).single(),
+      adminDb.from("profiles").select("id, full_name, role").eq("id", userId).maybeSingle(),
+      adminDb.from("events").select("id, title").eq("id", eventId).maybeSingle(),
+      adminDb.auth.admin.getUserById(userId).catch(() => ({ data: { user: null } })),
     ]);
 
-    if (!userProfile) return { success: false, error: "Usuario no encontrado" };
+    const authUser = authRes?.data?.user;
+    if (!userProfile && !authUser) return { success: false, error: "Usuario no encontrado" };
     if (!event) return { success: false, error: "Evento no encontrado" };
 
-    // Get email from auth.users
-    let userEmail = "";
-    try {
-      const { data: authData } = await adminDb.auth.admin.getUserById(userId);
-      userEmail = authData?.user?.email || "";
-    } catch {
-      userEmail = "";
+    const userEmail = authUser?.email || "";
+    const resolvedFullName =
+      userProfile?.full_name ||
+      authUser?.user_metadata?.full_name ||
+      authUser?.user_metadata?.name ||
+      (userEmail ? userEmail.split("@")[0] : "Personal de Puerta");
+
+    // Ensure profile row exists
+    if (!userProfile && authUser) {
+      try {
+        await adminDb.from("profiles").upsert({
+          id: userId,
+          full_name: resolvedFullName,
+          role: "customer",
+          is_active: true,
+        });
+      } catch {}
     }
 
     // Check if already assigned
     const exists = all.find((a) => a.event_id === eventId && a.user_id === userId);
     if (exists) {
       // If it exists, reactivate it if inactive
-      if (!exists.is_active) {
-        exists.is_active = true;
-        await saveStaffAssignments(all);
-      }
+      exists.is_active = true;
+      exists.user_name = resolvedFullName;
+      if (userEmail) exists.user_email = userEmail;
+      await saveStaffAssignments(all);
       return { success: true };
     }
 
@@ -101,7 +113,7 @@ export async function assignUserToEvent(eventId: string, userId: string, assigne
     const newAssignment: StaffAssignment = {
       id: crypto.randomUUID(),
       user_id: userId,
-      user_name: userProfile.full_name || "Personal de Puerta",
+      user_name: resolvedFullName,
       user_email: userEmail,
       event_id: eventId,
       event_title: event.title,
@@ -114,9 +126,11 @@ export async function assignUserToEvent(eventId: string, userId: string, assigne
     await saveStaffAssignments(all);
 
     // Also ensure user has at least 'scanner' role in auth metadata & profile
-    if (userProfile.role === "customer" || !userProfile.role) {
+    if (!userProfile || userProfile.role === "customer" || !userProfile.role) {
       try {
-        await adminDb.auth.admin.updateUserById(userId, { user_metadata: { role: "scanner" } });
+        await adminDb.auth.admin.updateUserById(userId, {
+          user_metadata: { ...(authUser?.user_metadata || {}), role: "scanner" },
+        });
         await adminDb.from("profiles").update({ role: "scanner" }).eq("id", userId);
       } catch {
         // Safe fallback if enum restricts it

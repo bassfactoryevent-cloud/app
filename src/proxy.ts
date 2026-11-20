@@ -54,19 +54,35 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const pathname = request.nextUrl.pathname;
+  const isProtectedAccount = pathname.startsWith("/account");
+  const isProtectedAdmin = pathname.startsWith("/admin");
+
+  // Solo consultar Auth/BD en el proxy para rutas protegidas (/account y /admin)
+  // o si el usuario tiene cookies de sesión activas que puedan requerir refresco
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-"));
+
+  if (!isProtectedAccount && !isProtectedAdmin && !hasAuthCookie) {
+    return supabaseResponse;
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   // Proteger rutas de /account
-  if (request.nextUrl.pathname.startsWith("/account") && !user) {
+  if (isProtectedAccount && !user) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
   // Proteger rutas de /admin
-  if (request.nextUrl.pathname.startsWith("/admin")) {
+  if (isProtectedAdmin) {
     if (!user) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
-    
+
     // Verificar rol
     const { data: profile } = await supabase
       .from("profiles")

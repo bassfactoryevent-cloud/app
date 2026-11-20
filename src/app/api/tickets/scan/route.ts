@@ -16,17 +16,12 @@ export async function POST(req: Request) {
 
     const adminDb = getAdminClient();
 
-    // 2. Control de acceso: Verificar rol administrativo / staff
+    // 2. Control de acceso: Verificar rol administrativo / staff o asignación explícita de puerta
     const { data: profile } = await adminDb
       .from("profiles")
       .select("role, full_name")
       .eq("id", user.id)
-      .single();
-
-    const allowedRoles = ["admin", "superadmin", "promoter", "scanner"];
-    if (!profile || !allowedRoles.includes(profile.role)) {
-      return NextResponse.json({ error: "Acceso denegado: Se requieren permisos de control de acceso / taquilla." }, { status: 403 });
-    }
+      .maybeSingle();
 
     const { qr_hash, event_id } = await req.json();
 
@@ -34,9 +29,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Datos de escaneo incompletos (qr_hash y event_id requeridos)." }, { status: 400 });
     }
 
+    const metaRole = user.user_metadata?.role;
+    const effectiveRole =
+      metaRole === "scanner"
+        ? "scanner"
+        : profile?.role || metaRole || "customer";
+
     // 2.1 Verificación de asignación al evento (Previene que ex-trabajadores sigan escaneando)
     const { isUserAllowedToScanEvent } = await import("@/utils/staffAssignments");
-    const isAllowed = await isUserAllowedToScanEvent(user.id, profile.role, event_id);
+    const isAllowed = await isUserAllowedToScanEvent(user.id, effectiveRole, event_id);
     if (!isAllowed) {
       return NextResponse.json({ 
         error: "Acceso Denegado / Revocado: No tienes asignación activa para leer entradas en este evento." 

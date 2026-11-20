@@ -23,9 +23,11 @@ export default function AccountLayout({
   useEffect(() => {
     const fetchProfileAndBadges = async () => {
       const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const [userRes, b] = await Promise.all([
+        supabase.auth.getUser(),
+        getAccountBadgesAction().catch(() => null),
+      ]);
+      const user = userRes.data?.user;
       if (user) {
         setUserEmail(user.email || "");
         setUserMeta(user.user_metadata || {});
@@ -36,36 +38,35 @@ export default function AccountLayout({
           .maybeSingle();
         setProfile(data || { full_name: user.user_metadata?.name });
       }
-
-      try {
-        const b = await getAccountBadgesAction();
+      if (b) {
         setBadges(b);
-        if (b && b.notificationsCount > 0 && typeof window !== "undefined") {
-          const seenAt = localStorage.getItem("bf_seen_notifs_at");
-          const isOnNotifPage = pathname.startsWith("/account/notifications");
-          if (isOnNotifPage && b.latestNotificationAt) {
-            localStorage.setItem("bf_seen_notifs_at", b.latestNotificationAt);
-            setHasUnreadNotifs(false);
-          } else if (
-            b.latestNotificationAt &&
-            (!seenAt || new Date(b.latestNotificationAt) > new Date(seenAt))
-          ) {
-            setHasUnreadNotifs(true);
-          } else {
-            setHasUnreadNotifs(false);
-          }
-        } else {
-          setHasUnreadNotifs(false);
-        }
-      } catch {
-        // Ignore badge fetch errors silently
       }
     };
     fetchProfileAndBadges();
 
     window.addEventListener("profile_updated", fetchProfileAndBadges);
     return () => window.removeEventListener("profile_updated", fetchProfileAndBadges);
-  }, [pathname]);
+  }, []);
+
+  useEffect(() => {
+    if (badges && badges.notificationsCount > 0 && typeof window !== "undefined") {
+      const seenAt = localStorage.getItem("bf_seen_notifs_at");
+      const isOnNotifPage = pathname.startsWith("/account/notifications");
+      if (isOnNotifPage && badges.latestNotificationAt) {
+        localStorage.setItem("bf_seen_notifs_at", badges.latestNotificationAt);
+        setHasUnreadNotifs(false);
+      } else if (
+        badges.latestNotificationAt &&
+        (!seenAt || new Date(badges.latestNotificationAt) > new Date(seenAt))
+      ) {
+        setHasUnreadNotifs(true);
+      } else {
+        setHasUnreadNotifs(false);
+      }
+    } else {
+      setHasUnreadNotifs(false);
+    }
+  }, [pathname, badges]);
 
   const navItems = [
     {

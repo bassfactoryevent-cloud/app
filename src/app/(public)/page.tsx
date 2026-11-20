@@ -1,5 +1,5 @@
 import styles from "./page.module.css";
-import { createClient } from "@/utils/supabase/server";
+import { createClient, getCachedUser } from "@/utils/supabase/server";
 import Link from "next/link";
 import HorizontalScroll from "@/components/ui/HorizontalScroll";
 import { Calendar, MapPin } from "lucide-react";
@@ -16,19 +16,56 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function Home() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [supabase, user] = await Promise.all([createClient(), getCachedUser()]);
+
+  // Ejecutar TODAS las consultas del Home en un único Promise.all paralelo (0 cascada)
+  const [
+    userContextRes,
+    eventsRes,
+    merchRes,
+    postsRes,
+    principalPostsRes,
+    heroSettingsRes,
+  ] = await Promise.all([
+    user
+      ? Promise.all([
+          getUserTicketsData({ id: user.id, email: user.email }),
+          supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
+        ])
+      : Promise.resolve(null),
+    supabase
+      .from("events")
+      .select("id, title, slug, start_date, location_name, cover_image, description, is_free")
+      .eq("status", "published")
+      .gte("start_date", getUpcomingCutoffIso())
+      .order("start_date", { ascending: true })
+      .limit(8),
+    supabase
+      .from("merch_products")
+      .select("id, title, slug, base_price, description, merch_product_images(image_url, is_primary, sort_order)")
+      .eq("status", "published")
+      .order("created_at", { ascending: false })
+      .limit(8),
+    supabase
+      .from("posts")
+      .select("id, title, slug, excerpt, cover_image, is_principal, created_at, categories (name, slug)")
+      .eq("is_published", true)
+      .order("created_at", { ascending: false })
+      .limit(8),
+    supabase
+      .from("posts")
+      .select("id, title, slug, excerpt, cover_image, is_principal, created_at, categories (name, slug)")
+      .eq("is_published", true)
+      .eq("is_principal", true)
+      .limit(1),
+    supabase.from("hero_settings").select("*").eq("id", 1).single(),
+  ]);
 
   const attendingEventIds = new Set<string>();
   let userTicketsData = null;
   let userName = "Raver";
-  if (user) {
-    const [tData, profileRes] = await Promise.all([
-      getUserTicketsData({ id: user.id, email: user.email }),
-      supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
-    ]);
+  if (user && userContextRes) {
+    const [tData, profileRes] = userContextRes;
     userTicketsData = tData;
     userName =
       profileRes.data?.full_name ||
@@ -42,52 +79,11 @@ export default async function Home() {
     }
   }
 
-  // Fetch upcoming events (includes today's ongoing/tonight events)
-  const { data: events } = await supabase
-    .from('events')
-    .select('*')
-    .eq('status', 'published')
-    .gte('start_date', getUpcomingCutoffIso())
-    .order('start_date', { ascending: true })
-    .limit(8);
-
-  // Fetch DJs
-  const { data: djs } = await supabase
-    .from('djs')
-    .select('*')
-    .limit(10);
-
-  // Fetch Merch
-  const { data: merch } = await supabase
-    .from('merch_products')
-    .select('*, merch_product_images(image_url, is_primary, sort_order)')
-    .eq('status', 'published')
-    .order('created_at', { ascending: false })
-    .limit(8);
-
-  // Fetch Blog Posts
-  const { data: posts } = await supabase
-    .from('posts')
-    .select('*, categories (name, slug)')
-    .eq('is_published', true)
-    .order('created_at', { ascending: false })
-    .limit(8);
-
-  // Fetch Principal Blog Post
-  const { data: principalPosts } = await supabase
-    .from('posts')
-    .select('*, categories (name, slug)')
-    .eq('is_published', true)
-    .eq('is_principal', true)
-    .limit(1);
-  const principalPost = principalPosts?.[0];
-
-  // Fetch Hero Settings
-  const { data: heroSettings } = await supabase
-    .from('hero_settings')
-    .select('*')
-    .eq('id', 1)
-    .single();
+  const events = eventsRes.data;
+  const merch = merchRes.data;
+  const posts = postsRes.data;
+  const principalPost = principalPostsRes.data?.[0];
+  const heroSettings = heroSettingsRes.data;
 
   // Parse Hero Spotlight Multi-Slide configuration
   const heroConfig = parseHeroConfig(heroSettings, {

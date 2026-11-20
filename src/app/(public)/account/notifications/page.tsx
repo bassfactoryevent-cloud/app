@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient, getCachedUser } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import NotificationsClient from "./NotificationsClient";
 import { getUserNotifications } from "@/utils/notifications";
@@ -6,10 +6,7 @@ import { getUserNotifications } from "@/utils/notifications";
 export const dynamic = "force-dynamic";
 
 export default async function AccountNotificationsPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [supabase, user] = await Promise.all([createClient(), getCachedUser()]);
 
   if (!user) redirect("/login");
 

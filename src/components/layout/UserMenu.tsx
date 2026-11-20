@@ -3,10 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, LogOut, Settings, Ticket, ShoppingBag, Bell } from "lucide-react";
+import { User, LogOut, Settings, Ticket, ShoppingBag, Bell, ScanLine, ShieldCheck } from "lucide-react";
 import { signOut } from "@/app/(auth)/actions";
 
-export default function UserMenu({ userEmail, userName, avatarUrl }: { userEmail: string; userName: string; avatarUrl?: string | null }) {
+export default function UserMenu({ userEmail, userName, avatarUrl, userRole }: { userEmail: string; userName: string; avatarUrl?: string | null; userRole?: string | null }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -79,6 +79,31 @@ export default function UserMenu({ userEmail, userName, avatarUrl }: { userEmail
                 <p style={{ fontSize: "12px", color: "var(--color-text-secondary)", margin: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{userEmail}</p>
             </div>
             
+            {(userRole === "scanner" || userRole === "admin" || userRole === "superadmin") && (
+              <Link
+                href="/scanner"
+                className="menu-item"
+                onClick={() => setIsOpen(false)}
+                style={{
+                  color: "#06b6d4",
+                  fontWeight: 800,
+                  backgroundColor: "rgba(6, 182, 212, 0.1)",
+                  border: "1px solid rgba(6, 182, 212, 0.28)",
+                }}
+              >
+                <ScanLine size={15} /> Escáner de Puerta
+              </Link>
+            )}
+            {(userRole === "admin" || userRole === "superadmin") && (
+              <Link
+                href="/admin"
+                className="menu-item"
+                onClick={() => setIsOpen(false)}
+                style={{ color: "#ec4899", fontWeight: 700 }}
+              >
+                <ShieldCheck size={15} /> Panel Admin
+              </Link>
+            )}
             <Link href="/account" className="menu-item" onClick={() => setIsOpen(false)}>
               <User size={15} /> Mi Cuenta
             </Link>

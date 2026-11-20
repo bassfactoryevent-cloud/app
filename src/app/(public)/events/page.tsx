@@ -1,5 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
-import { unstable_noStore as noStore } from "next/cache";
+import { createClient, getCachedUser } from "@/utils/supabase/server";
 import Link from "next/link";
 import Image from "next/image";
 import AdBanner from "@/components/AdBanner";
@@ -24,12 +23,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function EventsPage() {
-  noStore();
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [supabase, user] = await Promise.all([createClient(), getCachedUser()]);
 
   const attendingEventIds: string[] = [];
   const meta = user?.user_metadata || {};
@@ -40,18 +34,8 @@ export default async function EventsPage() {
     ? meta.followed_djs
     : [];
 
-  if (user) {
-    const tData = await getUserTicketsData({ id: user.id, email: user.email });
-    for (const t of tData.tickets || []) {
-      const tier = Array.isArray(t.ticket_tiers) ? t.ticket_tiers[0] : t.ticket_tiers;
-      const ev = Array.isArray(tier?.events) ? tier.events[0] : tier?.events;
-      if (ev?.id && !attendingEventIds.includes(ev.id)) {
-        attendingEventIds.push(ev.id);
-      }
-    }
-  }
-
-  const [eventsRes, merchRes, sponsorsRes, adsRes] = await Promise.all([
+  const [tData, eventsRes, merchRes, sponsorsRes, adsRes] = await Promise.all([
+    user ? getUserTicketsData({ id: user.id, email: user.email }) : Promise.resolve(null),
     supabase
       .from("events")
       .select("*, ticket_tiers(*), event_djs(dj_id)")
@@ -86,6 +70,16 @@ export default async function EventsPage() {
       .eq("ad_placements.is_active", true)
       .in("ad_placements.name", ["events_vertical_left", "events_vertical_right"]),
   ]);
+
+  if (tData) {
+    for (const t of tData.tickets || []) {
+      const tier = Array.isArray(t.ticket_tiers) ? t.ticket_tiers[0] : t.ticket_tiers;
+      const ev = Array.isArray(tier?.events) ? tier.events[0] : tier?.events;
+      if (ev?.id && !attendingEventIds.includes(ev.id)) {
+        attendingEventIds.push(ev.id);
+      }
+    }
+  }
 
   const allEvents = eventsRes.data || [];
   const merchProducts = merchRes.data || [];

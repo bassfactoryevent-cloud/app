@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { createClient } from "@/utils/supabase/server";
-import { unstable_noStore as noStore } from "next/cache";
 import { ShieldCheck, Truck, CreditCard } from "lucide-react";
 import styles from "./Merch.module.css";
 import MerchStoreClient from "./MerchStoreClient";
@@ -11,10 +10,8 @@ export const metadata = {
 };
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 export default async function MerchStorefront() {
-  noStore();
   const supabase = await createClient();
 
   const { data: products } = await supabase

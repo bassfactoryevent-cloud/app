@@ -86,7 +86,7 @@ export default async function EventDashboardPage({ params }: { params: Promise<{
   const [assignments, { data: profiles }, { data: authUsers }] = await Promise.all([
     getAssignmentsForEvent(id),
     adminDb.from("profiles").select("id, full_name, role").order("created_at", { ascending: false }),
-    adminDb.auth.admin.listUsers()
+    adminDb.auth.admin.listUsers({ page: 1, perPage: 1000 })
   ]);
 
   const emailMap = new Map((authUsers?.users || []).map((u) => [u.id, u.email]));

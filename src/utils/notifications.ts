@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { getAdminClient } from "@/utils/supabase/admin";
 
 const adminDb = getAdminClient();
@@ -20,49 +21,61 @@ export interface AppNotification {
   };
 }
 
-export async function getUserNotifications(user: { id: string; email?: string | null; role?: string }): Promise<AppNotification[]> {
-  const notifications: AppNotification[] = [];
+const fetchUserNotificationsInternal = cache(
+  async (
+    userId: string,
+    cleanEmail: string,
+    role: string
+  ): Promise<AppNotification[]> => {
+    const notifications: AppNotification[] = [];
 
-  try {
-    // 1. Fetch user orders
-    const { data: userOrders } = await adminDb
-      .from("merch_orders")
-      .select(`
-        *,
-        merch_order_items (
-          id,
-          product_name,
-          variant_name,
-          quantity,
-          unit_price,
-          total_price
-        )
-      `)
-      .or(`user_id.eq.${user.id},customer_email.eq.${user.email || 'non-existent-email'}`)
-      .order("created_at", { ascending: false });
-
-    // 2. Fetch user tickets with tier and event info
-    const { data: userTickets } = await adminDb
-      .from("tickets")
-      .select(`
-        id,
-        created_at,
-        status,
-        qr_dispatched,
-        order_id,
-        tier_id,
-        ticket_tiers (
-          name,
-          price,
-          events (
-            title,
-            start_date,
-            location_name
+    try {
+      // 1. Fetch user orders and user tickets IN PARALLEL
+      const [userOrdersRes, userTicketsRes] = await Promise.all([
+        adminDb
+          .from("merch_orders")
+          .select(`
+            *,
+            merch_order_items (
+              id,
+              product_name,
+              variant_name,
+              quantity,
+              unit_price,
+              total_price
+            )
+          `)
+          .or(
+            `user_id.eq.${userId},customer_email.eq.${
+              cleanEmail || "non-existent-email"
+            }`
           )
-        )
-      `)
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false }),
+        adminDb
+          .from("tickets")
+          .select(`
+            id,
+            created_at,
+            status,
+            qr_dispatched,
+            order_id,
+            tier_id,
+            ticket_tiers (
+              name,
+              price,
+              events (
+                title,
+                start_date,
+                location_name
+              )
+            )
+          `)
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false }),
+      ]);
+
+      const userOrders = userOrdersRes.data || [];
+      const userTickets = userTicketsRes.data || [];
 
     // Group tickets by order/event for clean notifications
     const ticketOrderMap: Record<
@@ -204,24 +217,35 @@ export async function getUserNotifications(user: { id: string; email?: string | 
     }
 
     // 3. ADMIN NOTIFICATIONS (If user is Admin, provide actionable operational alerts)
-    if (user.role === "admin") {
-      // Recent Merch Orders to ship
-      const { data: recentMerchOrders } = await adminDb
-        .from("merch_orders")
-        .select(`
-          id,
-          customer_name,
-          customer_email,
-          shipping_city,
-          total_amount,
-          tracking_number,
-          status,
-          created_at,
-          merch_order_items (product_name, quantity)
-        `)
-        .eq("status", "paid")
-        .order("created_at", { ascending: false })
-        .limit(5);
+    if (role === "admin") {
+      // Recent Merch Orders to ship and Recent Platform Sales IN PARALLEL
+      const [recentMerchOrdersRes, allRecentOrdersRes] = await Promise.all([
+        adminDb
+          .from("merch_orders")
+          .select(`
+            id,
+            customer_name,
+            customer_email,
+            shipping_city,
+            total_amount,
+            tracking_number,
+            status,
+            created_at,
+            merch_order_items (product_name, quantity)
+          `)
+          .eq("status", "paid")
+          .order("created_at", { ascending: false })
+          .limit(5),
+        adminDb
+          .from("merch_orders")
+          .select("id, customer_name, total_amount, created_at, payment_id")
+          .eq("status", "paid")
+          .order("created_at", { ascending: false })
+          .limit(3),
+      ]);
+
+      const recentMerchOrders = recentMerchOrdersRes.data;
+      const allRecentOrders = allRecentOrdersRes.data;
 
       if (recentMerchOrders) {
         for (const mo of recentMerchOrders) {
@@ -240,14 +264,6 @@ export async function getUserNotifications(user: { id: string; email?: string | 
           }
         }
       }
-
-      // Recent Platform Sales
-      const { data: allRecentOrders } = await adminDb
-        .from("merch_orders")
-        .select("id, customer_name, total_amount, created_at, payment_id")
-        .eq("status", "paid")
-        .order("created_at", { ascending: false })
-        .limit(3);
 
       if (allRecentOrders) {
         for (const ro of allRecentOrders) {
@@ -294,4 +310,17 @@ export async function getUserNotifications(user: { id: string; email?: string | 
 
   // Sort strictly newest first
   return notifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+);
+
+export async function getUserNotifications(user: {
+  id: string;
+  email?: string | null;
+  role?: string;
+}): Promise<AppNotification[]> {
+  return fetchUserNotificationsInternal(
+    user.id,
+    (user.email || "").trim().toLowerCase(),
+    user.role || ""
+  );
 }

@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient, getCachedUser } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import { Calendar, MapPin, Music, Briefcase } from "lucide-react";
 import EventCheckout from "./EventCheckout";
@@ -20,20 +20,33 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function EventPage({ params }: { params: Promise<{ slug: string }> }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  // Obtener evento con sus relaciones
-  const { data: event } = await supabase
-    .from("events")
-    .select(`
-      *,
-      ticket_tiers(*),
-      event_djs(djs(*)),
-      event_sponsors(sponsors(*))
-    `)
-    .eq("slug", (await params).slug)
-    .single();
+  const [{ slug }, supabase, user] = await Promise.all([
+    params,
+    createClient(),
+    getCachedUser(),
+  ]);
+
+  // Obtener evento y datos de usuario en paralelo
+  const [eventRes, userContextRes] = await Promise.all([
+    supabase
+      .from("events")
+      .select(`
+        *,
+        ticket_tiers(*),
+        event_djs(djs(*)),
+        event_sponsors(sponsors(*))
+      `)
+      .eq("slug", slug)
+      .single(),
+    user
+      ? Promise.all([
+          supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
+          getUserTicketsData({ id: user.id, email: user.email }),
+        ])
+      : Promise.resolve(null),
+  ]);
+
+  const event = eventRes.data;
 
   if (!event || !["published", "postponed", "cancelled"].includes(event.status)) {
     notFound();
@@ -42,11 +55,8 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
   let initialAuthUser: { id: string; email: string; fullName: string } | null = null;
   let existingTicket: any = null;
 
-  if (user) {
-    const [profileRes, tData] = await Promise.all([
-      supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
-      getUserTicketsData({ id: user.id, email: user.email }),
-    ]);
+  if (user && userContextRes) {
+    const [profileRes, tData] = userContextRes;
 
     const fullName = (
       profileRes.data?.full_name ||

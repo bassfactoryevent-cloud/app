@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
+import { createClient, getCachedUser } from "@/utils/supabase/server";
 import { getAdminClient } from "@/utils/supabase/admin";
 import { getUserTicketsData } from "@/utils/userTickets";
 import { getUserNotifications } from "@/utils/notifications";
@@ -19,10 +19,7 @@ export async function updateMyEmailAction(newEmailInput: string): Promise<{
   error?: string;
 }> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getCachedUser();
 
     if (!user) {
       return { success: false, error: "Debes iniciar sesión para actualizar tu correo." };
@@ -118,10 +115,7 @@ export interface AccountBadgesPayload {
 }
 
 export async function getAccountBadgesAction(): Promise<AccountBadgesPayload | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [supabase, user] = await Promise.all([createClient(), getCachedUser()]);
 
   if (!user) return null;
 

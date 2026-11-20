@@ -1,14 +1,11 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient, getCachedUser } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import SettingsForm from "@/components/account/SettingsForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function AccountSettingsPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [supabase, user] = await Promise.all([createClient(), getCachedUser()]);
 
   if (!user) redirect("/login");
 

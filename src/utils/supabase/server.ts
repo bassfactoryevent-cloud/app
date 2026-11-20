@@ -1,7 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { cache } from 'react'
 
-export async function createClient() {
+export const createClient = cache(async () => {
   const cookieStore = await cookies()
 
   return createServerClient(
@@ -26,4 +27,16 @@ export async function createClient() {
       },
     }
   )
-}
+})
+
+/**
+ * Memoized per-request user lookup so Header, Page, and nested server components
+ * never perform duplicate network round-trips to Supabase Auth in the same render.
+ */
+export const getCachedUser = cache(async () => {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  return user
+})

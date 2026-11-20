@@ -1,14 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Suspense } from "react";
-import { unstable_noStore as noStore } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import AdBanner from "@/components/AdBanner";
 import BlogFilters from "./BlogFilters";
 import styles from "./Blog.module.css";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 export const metadata = {
   title: "Cultura | Bassfactory",
@@ -20,17 +18,13 @@ export default async function BlogFeed({
 }: {
   searchParams: Promise<{ q?: string; category?: string }>;
 }) {
-  noStore();
-  const supabase = await createClient();
-  const resolvedSearchParams = await searchParams;
+  const [supabase, resolvedSearchParams] = await Promise.all([
+    createClient(),
+    searchParams,
+  ]);
 
   const q = resolvedSearchParams.q || "";
   const category = resolvedSearchParams.category || "";
-
-  const { data: categories } = await supabase
-    .from("categories")
-    .select("id, name, slug")
-    .order("name");
 
   const categorySelect = category
     ? "categories!inner ( name, slug )"
@@ -59,9 +53,12 @@ export default async function BlogFeed({
     query = query.ilike("title", `%${q}%`);
   }
 
-  const { data: allPosts, error } = await query.order("created_at", {
-    ascending: false,
-  });
+  const [{ data: categories }, { data: allPosts, error }] = await Promise.all([
+    supabase.from("categories").select("id, name, slug").order("name"),
+    query.order("created_at", {
+      ascending: false,
+    }),
+  ]);
 
   if (error) {
     console.error("Error fetching blog posts:", error);

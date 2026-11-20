@@ -64,10 +64,14 @@ export async function POST(req: Request) {
       });
     }
 
+    const metaRole = data.user.user_metadata?.role;
+    const effectiveRole =
+      metaRole === "scanner" ? "scanner" : profile?.role || metaRole;
+
     let redirectUrl = "/account";
-    if (profile && (profile.role === "admin" || profile.role === "superadmin")) {
+    if (effectiveRole === "admin" || effectiveRole === "superadmin") {
       redirectUrl = "/admin";
-    } else if (profile && profile.role === "scanner") {
+    } else if (effectiveRole === "scanner") {
       redirectUrl = "/scanner";
     }
 

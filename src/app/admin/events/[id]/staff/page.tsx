@@ -36,7 +36,7 @@ export default async function EventStaffPage({ params }: { params: Promise<{ id:
     adminDb.from("events").select("id, title").eq("id", id).single(),
     getAssignmentsForEvent(id),
     adminDb.from("profiles").select("id, full_name, role").order("created_at", { ascending: false }),
-    adminDb.auth.admin.listUsers()
+    adminDb.auth.admin.listUsers({ page: 1, perPage: 1000 })
   ]);
 
   if (!event) {

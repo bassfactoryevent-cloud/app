@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/utils/supabase/server";
 import AdSliderClient from "./AdSliderClient";
 import AdSingleClient from "./AdSingleClient";
@@ -9,46 +10,48 @@ interface AdBannerProps {
   className?: string;
 }
 
-export default async function AdBanner({ placementName, className = "" }: AdBannerProps) {
+const getAdsForPlacement = cache(async (placementName: string) => {
   const supabase = await createClient();
 
-  // Check if placement is VIP and active
-  const { data: placement } = await supabase.from("ad_placements").select("is_vip, is_active").eq("name", placementName).single();
-  
-  if (placement && placement.is_active === false) {
-    return null; // The placement has been globally turned off
-  }
-
-  const isVip = placement?.is_vip;
-
-  // Buscar banners activos para este placement
-  let query = supabase
+  const { data: adsRaw } = await supabase
     .from("ads")
     .select(`
       id,
       image_url,
       target_url,
-      ad_placements!inner(name),
+      ad_placements!inner(name, is_vip, is_active),
       ad_campaigns!inner(is_active, start_date, end_date)
     `)
     .eq("is_active", true)
     .eq("ad_campaigns.is_active", true)
+    .eq("ad_placements.is_active", true)
     .eq("ad_placements.name", placementName)
     .order("order_index", { ascending: true });
-    
-  // Si no es VIP, limitamos a 1
-  if (!isVip) {
-    query = query.limit(1);
-  }
 
-  const { data: adsRaw } = await query;
+  return adsRaw || [];
+});
+
+export default async function AdBanner({ placementName, className = "" }: AdBannerProps) {
+  const adsRaw = await getAdsForPlacement(placementName);
 
   if (!adsRaw || adsRaw.length === 0) return null;
 
+  const firstPlacement = Array.isArray((adsRaw[0] as any)?.ad_placements)
+    ? (adsRaw[0] as any).ad_placements[0]
+    : (adsRaw[0] as any)?.ad_placements;
+
+  if (firstPlacement && firstPlacement.is_active === false) {
+    return null;
+  }
+
+  const isVip = Boolean(firstPlacement?.is_vip);
+
   // Filter out any where the campaign end_date is in the past
+  const now = new Date();
   const validAds = adsRaw.filter((ad: any) => {
-    if (ad.ad_campaigns.end_date) {
-      if (new Date() > new Date(ad.ad_campaigns.end_date)) {
+    const campaign = Array.isArray(ad.ad_campaigns) ? ad.ad_campaigns[0] : ad.ad_campaigns;
+    if (campaign?.end_date) {
+      if (now > new Date(campaign.end_date)) {
         return false;
       }
     }

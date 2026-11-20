@@ -26,9 +26,12 @@ export async function signIn(formData: FormData) {
       .eq('id', user.id)
       .single();
 
-    if (profile && (profile.role === 'admin' || profile.role === 'superadmin')) {
+    const metaRole = user.user_metadata?.role;
+    const effectiveRole = metaRole === 'scanner' ? 'scanner' : (profile?.role || metaRole);
+
+    if (effectiveRole === 'admin' || effectiveRole === 'superadmin') {
       return redirect("/admin");
-    } else if (profile && profile.role === 'scanner') {
+    } else if (effectiveRole === 'scanner') {
       return redirect("/scanner");
     } else {
       return redirect("/account");

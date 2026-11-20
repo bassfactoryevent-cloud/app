@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { getCachedUser } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { Package } from "lucide-react";
 import Link from "next/link";
@@ -10,10 +10,7 @@ const adminDb = getAdminClient();
 export const dynamic = "force-dynamic";
 
 export default async function AccountOrdersPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCachedUser();
 
   if (!user) redirect("/login");
 
@@ -33,21 +30,18 @@ export default async function AccountOrdersPage() {
     .or(`user_id.eq.${user.id},customer_email.ilike.${user.email}`)
     .order("created_at", { ascending: false });
 
-  let orderTicketsMap: Record<string, any[]> = {};
+  const orderTicketsMap: Record<string, any[]> = {};
   if (orders && orders.length > 0) {
     const orderIds = orders.map((o: any) => o.id);
     const { data: tickets } = await adminDb
       .from("tickets")
-      .select("id, order_id, status, tier_id, qr_dispatched")
-      .in("order_id", orderIds);
-
-    if (tickets && tickets.length > 0) {
-      const tierIds = Array.from(
-        new Set(tickets.map((t: any) => t.tier_id).filter(Boolean))
-      );
-      const { data: tiers } = await adminDb
-        .from("ticket_tiers")
-        .select(`
+      .select(`
+        id,
+        order_id,
+        status,
+        tier_id,
+        qr_dispatched,
+        ticket_tiers (
           id,
           name,
           events (
@@ -55,18 +49,16 @@ export default async function AccountOrdersPage() {
             start_date,
             location_name
           )
-        `)
-        .in("id", tierIds);
+        )
+      `)
+      .in("order_id", orderIds);
 
-      const tierMap = new Map((tiers || []).map((t: any) => [t.id, t]));
+    if (tickets && tickets.length > 0) {
       for (const t of tickets) {
         if (!orderTicketsMap[t.order_id]) {
           orderTicketsMap[t.order_id] = [];
         }
-        orderTicketsMap[t.order_id].push({
-          ...t,
-          ticket_tiers: tierMap.get(t.tier_id),
-        });
+        orderTicketsMap[t.order_id].push(t);
       }
     }
   }

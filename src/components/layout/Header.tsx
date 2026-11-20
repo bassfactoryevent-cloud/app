@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import styles from "./Header.module.css";
 import CartIcon from "@/components/CartIcon";
-import { createClient } from "@/utils/supabase/server";
+import { createClient, getCachedUser } from "@/utils/supabase/server";
 import UserMenu from "./UserMenu";
 import { MobileBottomNav } from "./MobileBottomNav";
 import MobileNavDrawer from "./MobileNavDrawer";
@@ -11,9 +11,8 @@ import { getUserTicketsData } from "@/utils/userTickets";
 import { getUserNotifications } from "@/utils/notifications";
 
 export default async function Header() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
+  const [supabase, user] = await Promise.all([createClient(), getCachedUser()]);
+
   let profile = null;
   let ticketsData = null;
   let notifications: any[] = [];
@@ -95,6 +94,7 @@ export default async function Header() {
                 userEmail={user.email || ''} 
                 userName={profile?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario'} 
                 avatarUrl={profile?.avatar_url}
+                userRole={user.user_metadata?.role === 'scanner' ? 'scanner' : (profile?.role || user.user_metadata?.role)}
               />
             ) : (
               <Link href="/login" className={styles.loginBtn}>
