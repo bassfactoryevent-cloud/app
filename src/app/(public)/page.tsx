@@ -79,10 +79,10 @@ export default async function Home() {
     }
   }
 
-  const events = eventsRes.data;
-  const merch = merchRes.data;
-  const posts = postsRes.data;
-  const principalPost = principalPostsRes.data?.[0];
+  const events: any[] | null = eventsRes.data;
+  const merch: any[] | null = merchRes.data;
+  const posts: any[] | null = postsRes.data;
+  const principalPost: any = principalPostsRes.data?.[0];
   const heroSettings = heroSettingsRes.data;
 
   // Parse Hero Spotlight Multi-Slide configuration
@@ -112,7 +112,7 @@ export default async function Home() {
 
             {/* 1. Eventos con icono Canvas Radar */}
             <HorizontalScroll title="Eventos" viewAllLink="/events" canvasIcon="radar">
-              {events && events.slice(0, 8).map(event => {
+              {events && events.slice(0, 8).map((event: any) => {
                 const isAttending = attendingEventIds.has(event.id);
                 const isToday = isEventToday(event.start_date);
                 return (
@@ -164,7 +164,7 @@ export default async function Home() {
                     </div>
                     <div className={styles.cardSubtitle} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.2rem', flex: 1 }}>
                       <MapPin size={12} />
-                      <span>{event.location || event.location_name || "Colombia"}</span>
+                      <span>{event.location_name || "Colombia"}</span>
                     </div>
                     <span className={styles.cardButton}>{isAttending ? 'Ver Mi Entrada' : (isToday || event.is_free) ? 'Adquirir Entrada' : 'Comprar Tickets'}</span>
                   </Link>
